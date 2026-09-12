@@ -23,6 +23,16 @@
         "audit event required after successful persistence",
         "normalized HTML, JSON, and Turbo Stream responses"
       ]
+    },
+    {
+      "name": "hotwire_ui_foundations",
+      "status": "implemented",
+      "guarantees": [
+        "no jQuery runtime dependency",
+        "light, dark, and system theme modes",
+        "accessible filter, table, and form primitives",
+        "visible focus and reduced-motion support"
+      ]
     }
   ],
   "providers": {},

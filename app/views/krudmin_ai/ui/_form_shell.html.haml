@@ -1,0 +1,5 @@
+%section.krudmin-ai-form-shell{ aria: { label: local_assigns.fetch(:label, "Resource form") } }
+  = form_with model: local_assigns.fetch(:record), class: "krudmin-ai-form-grid" do |form|
+    = yield form
+    .krudmin-ai-form-actions
+      = form.submit local_assigns.fetch(:submit_label, "Save"), class: "krudmin-ai-button krudmin-ai-button--primary"

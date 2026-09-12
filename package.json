@@ -1,0 +1,8 @@
+{
+  "name": "krudmin-ai",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:javascript": "node --test test/javascript/**/*.test.js"
+  }
+}
