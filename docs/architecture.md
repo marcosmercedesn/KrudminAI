@@ -9,3 +9,5 @@ Field adapters will render deterministically for form, list, show, search, and J
 AI context comes only from policy-authorized, tenant-scoped data with approved field allowlists. AI is suggestion-only by default. Mutations require explicit approval and a trace.
 
 The UI foundation is Hotwire-first: engine-owned CSS tokens, light/dark/system theme selection, and Stimulus controllers support accessible resource tables, filters, and form shells. See [ui_foundations.md](ui_foundations.md).
+
+Install and resource generators use idempotent file contracts. Generated resources preserve authentication, tenant checks, policy scope, deny-by-default action predicates, and matching request-test scaffolds. The docs-only generator mode is restricted to generated documentation and AI instruction artifacts; see [generators.md](generators.md).

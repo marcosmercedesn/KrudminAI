@@ -33,6 +33,16 @@
         "accessible filter, table, and form primitives",
         "visible focus and reduced-motion support"
       ]
+    },
+    {
+      "name": "generator_contracts",
+      "status": "implemented",
+      "generators": ["install", "resource", "docs-sync"],
+      "guarantees": [
+        "idempotent generated files and routes",
+        "documentation-only sync mode",
+        "authenticated and deny-by-default resource scaffolds"
+      ]
     }
   ],
   "providers": {},
