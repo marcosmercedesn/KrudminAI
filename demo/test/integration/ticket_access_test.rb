@@ -72,6 +72,31 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_equal "create", DemoAuditEvent.order(:created_at).last.operation
   end
 
+  test "empty results and invalid ticket submissions render accessible operational states" do
+    sign_in(@north_agent)
+
+    get tickets_path, params: { filters: { state: "resolved" } }
+
+    assert_response :success
+    assert_includes response.body, "No tickets found"
+    assert_includes response.body, "Create ticket"
+
+    post tickets_path, params: {
+      demo_ticket: {
+        title: "",
+        description: "Missing title.",
+        state: "open",
+        priority: "normal",
+        assignee: @north_agent.name
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Ticket could not be saved"
+    assert_select ".validation-summary li", "Title can't be blank"
+    assert_includes response.body, "aria-invalid=\"true\""
+  end
+
   test "support agents can render and submit the edit ticket form with an audit event" do
     sign_in(@north_agent)
 

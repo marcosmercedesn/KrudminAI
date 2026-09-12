@@ -35,7 +35,11 @@
       "guarantees": [
         "no jQuery runtime dependency",
         "light, dark, and system theme modes",
+        "inline Lucide SVG icons with resource-level icon configuration",
+        "engine default admin shell with host-configured, access-context-filtered navigation",
         "accessible filter, table, and form primitives",
+        "companion resource empty, validation-error, loading, disabled, notice, alert, and text-labelled status treatments",
+        "deterministic authenticated companion screenshots across light/dark desktop, tablet, and mobile states with heading, icon, and overflow assertions",
         "visible focus and reduced-motion support"
       ]
     },
@@ -73,6 +77,7 @@
       "guarantees": [
         "tenant-separated support operations demo data",
         "evaluator and agent walkthroughs",
+        "persisted collapsible desktop navigation rail and accessible mobile overlay drawer",
         "CI conformance against capability registry"
       ]
     },

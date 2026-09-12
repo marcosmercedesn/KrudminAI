@@ -42,6 +42,7 @@ module KrudminAI
           class #{plural_constant_name}Resource < KrudminAI::Resources::Base
             model #{singular_constant_name}
             routes :#{plural_file_name}
+            icon :file_text
             tenant_key :tenant
             permit
 

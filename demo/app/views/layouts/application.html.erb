@@ -19,10 +19,10 @@
           <span class="brand-mark">K</span><span>Krudmin<span class="brand-accent">AI</span></span>
         <% end %>
         <% if signed_in? %>
-          <nav aria-label="Main navigation">
-            <%= link_to tickets_path, class: (current_page?(tickets_path) ? "is-active" : nil) do %><span class="nav-glyph">T</span>Tickets<% end %>
-            <%= link_to dashboard_path, class: (current_page?(dashboard_path) ? "is-active" : nil) do %><span class="nav-glyph">D</span>Dashboard<% end %>
-            <%= link_to companion_path, class: (current_page?(companion_path) ? "is-active" : nil) do %><span class="nav-glyph">A</span>Companion<% end %>
+          <nav id="primary-navigation" aria-label="Main navigation">
+            <%= link_to tickets_path, class: (current_page?(tickets_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(TicketsResource.icon, class: "nav-icon") %>Tickets<% end %>
+            <%= link_to dashboard_path, class: (current_page?(dashboard_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(:layout_dashboard, class: "nav-icon") %>Dashboard<% end %>
+            <%= link_to companion_path, class: (current_page?(companion_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(:sparkles, class: "nav-icon") %>Companion<% end %>
           </nav>
           <div class="sidebar-footer">
             <div class="identity"><strong><%= current_user.name %></strong><span><%= current_tenant %> / <%= current_user.roles.join(", ") %></span></div>
@@ -30,9 +30,15 @@
           </div>
         <% end %>
       </header>
+      <button class="sidebar-backdrop" type="button" aria-label="Close navigation" data-sidebar-backdrop></button>
       <main class="page-shell">
         <% if signed_in? %>
           <div class="workspace-bar">
+            <button class="nav-toggle" type="button" aria-controls="primary-navigation" aria-expanded="true" data-sidebar-toggle>
+              <%= krudmin_ai_icon(:panel_left_close, class: "nav-toggle-icon nav-toggle-icon--collapse") %>
+              <%= krudmin_ai_icon(:menu, class: "nav-toggle-icon nav-toggle-icon--open") %>
+              <span class="sr-only" data-sidebar-toggle-label>Collapse navigation</span>
+            </button>
             <p><span class="workspace-indicator"></span><%= current_tenant %> workspace</p>
             <label class="theme-picker">
               <span>Appearance</span>
@@ -50,6 +56,47 @@
       </main>
     </div>
     <script>
+      (() => {
+        const collapsedKey = "krudmin-ai-sidebar-collapsed";
+        const root = document.documentElement;
+        const controls = document.querySelectorAll("[data-sidebar-toggle]");
+        const backdrop = document.querySelector("[data-sidebar-backdrop]");
+        const mobileQuery = window.matchMedia("(max-width: 70rem)");
+        const mobile = () => mobileQuery.matches;
+        const closeMobileNavigation = () => { delete root.dataset.sidebarOpen; sync(); };
+        const sync = () => {
+          const expanded = mobile() ? root.dataset.sidebarOpen === "true" : root.dataset.sidebarCollapsed !== "true";
+          controls.forEach((control) => {
+            control.setAttribute("aria-expanded", String(expanded));
+            control.querySelector("[data-sidebar-toggle-label]").textContent = expanded ? "Collapse navigation" : "Open navigation";
+          });
+        };
+        const restore = () => {
+          if (mobile()) {
+            delete root.dataset.sidebarCollapsed;
+            delete root.dataset.sidebarOpen;
+          } else {
+            root.dataset.sidebarCollapsed = localStorage.getItem(collapsedKey) === "true" ? "true" : "false";
+            delete root.dataset.sidebarOpen;
+          }
+          sync();
+        };
+        controls.forEach((control) => control.addEventListener("click", () => {
+          if (mobile()) {
+            root.dataset.sidebarOpen = root.dataset.sidebarOpen === "true" ? "false" : "true";
+          } else {
+            const collapsed = root.dataset.sidebarCollapsed !== "true";
+            root.dataset.sidebarCollapsed = String(collapsed);
+            localStorage.setItem(collapsedKey, String(collapsed));
+          }
+          sync();
+        }));
+        backdrop?.addEventListener("click", closeMobileNavigation);
+        document.addEventListener("keydown", (event) => { if (event.key === "Escape" && mobile()) closeMobileNavigation(); });
+        document.querySelectorAll("#primary-navigation a").forEach((link) => link.addEventListener("click", () => { if (mobile()) closeMobileNavigation(); }));
+        mobileQuery.addEventListener("change", restore);
+        restore();
+      })();
       (() => {
         const select = document.querySelector("[data-theme-select]");
         if (!select) return;

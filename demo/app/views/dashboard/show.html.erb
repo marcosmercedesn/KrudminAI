@@ -9,17 +9,17 @@
 
 <div class="metric-grid">
 	<section class="metric-card">
-		<p>Visible tickets</p>
+		<div class="metric-card-header"><p>Visible tickets</p><span class="metric-icon metric-icon--blue"><%= krudmin_ai_icon(TicketsResource.icon) %></span></div>
 		<strong><%= @tickets.count %></strong>
 		<span class="metric-note">In your current workspace</span>
 	</section>
 	<section class="metric-card">
-		<p>Open queue</p>
+		<div class="metric-card-header"><p>Open queue</p><span class="metric-icon metric-icon--amber"><%= krudmin_ai_icon(:circle_alert) %></span></div>
 		<strong><%= @open_count %></strong>
 		<span class="metric-note metric-note--positive">Needs attention</span>
 	</section>
 	<section class="metric-card">
-		<p>Assigned</p>
+		<div class="metric-card-header"><p>Assigned</p><span class="metric-icon metric-icon--green"><%= krudmin_ai_icon(:user_check) %></span></div>
 		<strong><%= @assigned_count %></strong>
 		<span class="metric-note">Work in progress</span>
 	</section>

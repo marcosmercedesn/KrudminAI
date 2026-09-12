@@ -13,6 +13,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "erb", ">= 4.0", "< 6.0"
   spec.add_dependency "json", ">= 2.0", "< 3.0"
+  spec.add_dependency "lucide-rails", ">= 0.7", "< 1.0"
   spec.add_dependency "rails", ">= 8.1", "< 10.0"
   spec.add_dependency "propshaft", ">= 1.0"
   spec.add_dependency "stimulus-rails", ">= 1.3"

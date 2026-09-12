@@ -1,5 +1,11 @@
 <%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "ticket-form" do |form| %>
-  <label class="field">Title <%= form.text_field :title, required: true %></label>
+  <% if model.errors.any? %>
+    <section class="validation-summary" role="alert" aria-labelledby="validation-summary-title">
+      <h2 id="validation-summary-title">Ticket could not be saved</h2>
+      <ul><% model.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </section>
+  <% end %>
+  <label class="field">Title <%= form.text_field :title, required: true, aria: { invalid: model.errors[:title].any? } %></label>
   <label class="field">Description <%= form.text_area :description %></label>
   <label class="field">State <%= form.select :state, DemoTicket::STATES %></label>
   <label class="field">Priority <%= form.select :priority, DemoTicket::PRIORITIES %></label>

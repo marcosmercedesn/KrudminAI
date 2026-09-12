@@ -5,7 +5,16 @@
   <label class="field">Priority <%= form.select "filters[priority]", DemoTicket::PRIORITIES, include_blank: "Any priority", selected: params.dig(:filters, :priority) %></label>
   <%= form.submit "Apply filters", class: "button" %>
 <% end %>
-<div class="table-wrap"><table><thead><tr><th>Title</th><th>State</th><th>Priority</th><th>Assignee</th><th>Updated</th></tr></thead><tbody>
-  <% models.each do |model| %><tr><td><%= link_to model.title, resource_path(model) %></td><td><span class="badge state-<%= model.state %>"><%= model.state %></span></td><td><%= model.priority %></td><td><%= model.assignee || "Unassigned" %></td><td><%= model.updated_at.strftime("%b %-d, %H:%M") %></td></tr><% end %>
-</tbody></table></div>
+<% if models.any? %>
+  <div class="table-wrap"><table><thead><tr><th>Title</th><th>State</th><th>Priority</th><th>Assignee</th><th>Updated</th></tr></thead><tbody>
+    <% models.each do |model| %><tr><td><%= link_to model.title, resource_path(model) %></td><td><span class="badge state-<%= model.state %>"><%= model.state %></span></td><td><%= model.priority %></td><td><%= model.assignee || "Unassigned" %></td><td><%= model.updated_at.strftime("%b %-d, %H:%M") %></td></tr><% end %>
+  </tbody></table></div>
+<% else %>
+  <section class="empty-state" aria-labelledby="empty-tickets-title">
+    <%= krudmin_ai_icon(:inbox, class: "empty-state-icon") %>
+    <h2 id="empty-tickets-title">No tickets found</h2>
+    <p>There are no tickets matching the current filters in this workspace.</p>
+    <%= link_to "Create ticket", new_resource_path, class: "button" %>
+  </section>
+<% end %>
 <p class="lede">Page <%= @query_result.page %>, <%= models.size %> ticket(s) shown.</p>

@@ -7,7 +7,7 @@ module KrudminAI
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
                     :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute,
-                    :route_key
+                    :route_key, :icon_name
 
         def inherited(subclass)
           super
@@ -21,6 +21,7 @@ module KrudminAI
           subclass.instance_variable_set(:@permitted_attributes, permitted_attributes.dup)
           subclass.instance_variable_set(:@tenant_attribute, tenant_attribute)
           subclass.instance_variable_set(:@route_key, route_key)
+          subclass.instance_variable_set(:@icon_name, icon_name)
         end
 
         def model(value = nil)
@@ -66,6 +67,12 @@ module KrudminAI
           return route_key unless key
 
           @route_key = key.to_sym
+        end
+
+        def icon(value = nil)
+          return icon_name unless value
+
+          @icon_name = value.to_sym
         end
 
         def filter(name, &block)
@@ -133,6 +140,7 @@ module KrudminAI
       @permitted_attributes = [].freeze
       @tenant_attribute = :tenant
       @route_key = nil
+      @icon_name = :file_text
     end
   end
 end

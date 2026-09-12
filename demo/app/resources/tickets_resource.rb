@@ -1,6 +1,7 @@
 class TicketsResource < KrudminAI::Resources::Base
   model DemoTicket
   routes :tickets
+  icon :ticket
   tenant_key :tenant
   permit :title, :description, :state, :priority, :assignee
 

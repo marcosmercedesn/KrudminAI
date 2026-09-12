@@ -10,6 +10,12 @@ This file is the task index for the repo. You do not need to copy/paste the whol
 - 4 — Documentation and Capability Registry Maintenance
 - 5 — Next-Slice Planner for the Product Roadmap
 - 6 — Focused Regression Check Before Any New Feature Work
+- 7 — UI Foundation Consolidation
+- 8 — Responsive Navigation and Sidebar Validation
+- 9 — Engine-Owned Admin Shell and Resource Navigation
+- 10 — Resource Screens and Operational UI States
+- 11 — Visual Regression Coverage
+- 12 — UI Documentation and Release Checkpoint
 
 ## Short aliases
 
@@ -21,6 +27,12 @@ This file is the task index for the repo. You do not need to copy/paste the whol
 - “baseline” = run task 6
 - “plan next” = run task 5
 - “docs” = run task 4
+- “ui foundation” = run task 7
+- “navigation” = run task 8
+- “admin shell” = run task 9
+- “resource ui” = run task 10
+- “visual checks” = run task 11
+- “finish ui” = run task 12
 
 ## How to use this file
 
@@ -316,3 +328,156 @@ Deliverable:
 6. Task 5: plan the next slice after the current base is green (alias: plan next)
 
 This is the ordered execution sequence. Use “start”, “do 1”, “do next”, or “continue” to move through it without copy/pasting the full prompt text.
+
+---
+
+## UI and Templating Workstream
+
+Run these tasks after the relevant beta foundation is stable. They are intentionally ordered so visual refinement does not keep masking structural layout defects.
+
+### Task 7: UI Foundation Consolidation
+
+Goal:
+- Consolidate the demo and engine CSS into one deliberate cascade per surface: tokens, base elements, application shell, shared controls, resource screens, dashboards, and responsive rules.
+
+Scope:
+- Remove superseded rules and duplicate token blocks without changing established UI behavior.
+- Ensure every responsive breakpoint has one authoritative definition for the shell and navigation.
+- Preserve semantic color tokens for light and dark themes.
+
+Acceptance criteria:
+1. No legacy rule silently overrides a newer layout rule.
+2. Page content has no arbitrary desktop max-width cap unless a component specifically needs one.
+3. Sidebar, page shell, forms, tables, and dashboard CSS each have an identifiable ownership block.
+
+Validation:
+- Run the demo ticket integration test.
+- Inspect the computed styles of the page shell and sidebar at each supported viewport.
+- Run `git diff --check`.
+
+Alias: `ui foundation`
+
+### Task 8: Responsive Navigation and Sidebar Validation
+
+Goal:
+- Deliver a navigation model that works for large resource menus and behaves correctly at actual desktop, tablet, and mobile viewport widths.
+
+Scope:
+- Keep a persisted desktop sidebar collapse preference under `krudmin-ai-sidebar-collapsed`.
+- Keep mobile navigation as a closed-by-default drawer that closes on navigation, backdrop selection, and Escape.
+- Support long menus with scrolling inside the navigation region, never horizontal link strips or content overlap.
+
+Acceptance criteria:
+1. A desktop rail expands and collapses without moving content into a zero-width or orphaned grid column.
+2. Collapse state survives a full navigation to list, new, edit, and show routes.
+3. A menu with at least ten items is usable at desktop, tablet, and mobile widths.
+4. All toggle controls expose correct `aria-expanded` and accessible names.
+
+Validation:
+- Browser-check `1440px`, `768px`, and `390px` widths using an authenticated session.
+- Capture expanded and collapsed desktop screenshots plus open and closed mobile-drawer screenshots.
+- Run the demo ticket integration test.
+
+Alias: `navigation`
+
+### Task 9: Engine-Owned Admin Shell and Resource Navigation
+
+Goal:
+- Move reusable shell and navigation behavior out of the companion demo into a host-configurable KrudminAI presentation contract.
+
+Scope:
+- Define a navigation item contract with label, route, icon, visibility/authorization, and active-state support.
+- Use each resource's `icon` setting in generated navigation where applicable.
+- Allow a host to provide its own layout and navigation while retaining engine defaults.
+
+Non-goals:
+- Do not reintroduce the legacy Krudmin navigation architecture.
+- Do not couple the engine to demo-only route names or session models.
+
+Acceptance criteria:
+1. A generated host can render an engine default admin shell without copying demo layout code.
+2. Resource icons use `krudmin_ai_icon` and have a deterministic fallback.
+3. Authorization and visibility rules control navigation affordances as well as endpoint access.
+
+Validation:
+- Add engine request/view coverage for default shell rendering.
+- Add a generated-host integration proof with at least two resource navigation entries.
+- Run generator and demo integration suites.
+
+Alias: `admin shell`
+
+### Task 10: Resource Screens and Operational UI States
+
+Goal:
+- Make the generated list, form, show, filter, and dashboard surfaces feel like a complete operational admin interface.
+
+Scope:
+- Apply the established design system to headers, action toolbars, tables, filter panels, forms, empty states, pagination, and status badges.
+- Add consistent loading, success, validation-error, authorization-denied, disabled, and empty-state treatments.
+- Use Lucide icons and semantic tones for standard actions and dashboard metrics.
+
+Acceptance criteria:
+1. Generated resource index, new, edit, and show screens work in both light and dark themes.
+2. Tables remain readable and usable without layout breakage on small screens.
+3. Icon-only controls have labels or tooltips; primary actions retain clear text labels.
+4. No UI state relies on color alone to convey its meaning.
+
+Validation:
+- Add focused component/request coverage for error and empty states.
+- Browser-check list, new, edit, show, and dashboard screens in both themes.
+- Run the relevant demo integration suite.
+
+Alias: `resource ui`
+
+### Task 11: Visual Regression Coverage
+
+Goal:
+- Establish repeatable visual evidence for the admin presentation before further feature work changes it.
+
+Scope:
+- Add deterministic browser screenshot coverage for authenticated demo screens.
+- Cover the intended desktop, tablet, and mobile breakpoints in light and dark modes.
+- Make fixture data and browser setup stable enough for screenshots to be meaningful.
+
+Acceptance criteria:
+1. Screenshots cover dashboard, resource list, new form, edit form, and show view.
+2. Coverage includes expanded/collapsed desktop navigation and the mobile drawer.
+3. The checks fail on meaningful layout overflow, missing primary content, or missing icons.
+
+Validation:
+- Run the new screenshot suite locally.
+- Run existing request/integration coverage.
+- Document how to update approved snapshots.
+
+Alias: `visual checks`
+
+### Task 12: UI Documentation and Release Checkpoint
+
+Goal:
+- Reconcile documentation and capability metadata with verified UI behavior before closing the styling and templating session.
+
+Scope:
+- Update UI, architecture, generator, and capability registry documentation for the implementation actually delivered.
+- Record supported navigation behavior, icon configuration, host override points, theme behavior, and visual test evidence.
+- Identify remaining design or browser-coverage gaps honestly.
+
+Acceptance criteria:
+1. Documentation distinguishes engine capabilities from companion-demo presentation choices.
+2. The capability registry is valid JSON and does not overstate browser or generated-host evidence.
+3. A release checkpoint lists completed UI tasks, test evidence, and explicitly deferred work.
+
+Validation:
+- Parse `docs/capability_registry.json`.
+- Run `git diff --check`.
+- Run the focused engine, generator, demo integration, and visual regression suites.
+
+Alias: `finish ui`
+
+### UI Workstream Order
+
+1. Task 7: UI Foundation Consolidation
+2. Task 8: Responsive Navigation and Sidebar Validation
+3. Task 9: Engine-Owned Admin Shell and Resource Navigation
+4. Task 10: Resource Screens and Operational UI States
+5. Task 11: Visual Regression Coverage
+6. Task 12: UI Documentation and Release Checkpoint

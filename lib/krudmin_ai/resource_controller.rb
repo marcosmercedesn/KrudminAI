@@ -1,10 +1,12 @@
 module KrudminAI
   class ResourceController < ActionController::Base
+    helper KrudminAI::IconHelper
     class_attribute :resource_class, instance_accessor: false
-    layout "application"
+    layout "krudmin_ai/application"
 
     helper_method :model, :models, :resource_path, :new_resource_path, :edit_resource_path,
-                  :collection_path, :resource_label, :current_user, :current_tenant, :signed_in?
+                  :collection_path, :resource_label, :current_user, :current_tenant, :signed_in?,
+                  :navigation_items
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy]
@@ -77,6 +79,10 @@ module KrudminAI
 
     def signed_in?
       current_actor.present?
+    end
+
+    def navigation_items
+      KrudminAI.config.navigation_items.select { |item| item.visible?(access_context) }
     end
 
     private

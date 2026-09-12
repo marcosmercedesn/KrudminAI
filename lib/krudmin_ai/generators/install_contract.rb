@@ -37,6 +37,12 @@ module KrudminAI
           KrudminAI.configure do |config|
             # Configure host authentication, tenancy, authorization, and auditing providers here.
             # Provider omissions fail closed for generated admin resources.
+            #
+            # Register visible navigation using host route helpers. A resource supplies its
+            # plural label and configured icon, while the visibility predicate receives the
+            # same access context used by resource requests.
+            # config.navigation_item resource: OrdersResource, route: :orders_path,
+            #   visible: ->(context) { OrderPolicy.new(context.actor, Order).index? }
           end
         RUBY
       end
