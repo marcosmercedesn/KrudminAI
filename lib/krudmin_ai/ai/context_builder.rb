@@ -27,7 +27,9 @@ module KrudminAI
       attr_reader :resource, :context, :params, :max_records
 
       def serialize(record)
-        resource.ai_context_fields.to_h { |field, serializer| [field, serializer.call(record)] }
+        resource.ai_context_fields.filter_map do |field, serializer|
+          [field, serializer.call(record)] if resource.field_readable?(field, record, context)
+        end.to_h
       end
     end
   end

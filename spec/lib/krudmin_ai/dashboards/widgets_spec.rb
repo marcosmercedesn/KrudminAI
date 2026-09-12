@@ -2,6 +2,7 @@ require "spec_helper"
 require "krudmin_ai/access_context"
 require "krudmin_ai/resources/base"
 require "krudmin_ai/query_access_pipeline"
+require "krudmin_ai/dashboards/base"
 require "krudmin_ai/dashboards/widgets/base"
 require "krudmin_ai/dashboards/widgets/count"
 require "krudmin_ai/dashboards/widgets/table"
@@ -30,6 +31,10 @@ RSpec.describe "dashboard widgets" do
 
     def offset(value)
       with(records.drop(value), [:offset, value])
+    end
+
+    def to_a
+      records
     end
 
     def count
@@ -81,6 +86,14 @@ RSpec.describe "dashboard widgets" do
     expect(widget.records.operations.map(&:first)).to eq(%i[tenant policy order limit offset])
   end
 
+  it "filters dashboard table columns through field read policy" do
+    resource.authorize_field :name, read: ->(_record, _context) { true }, write: ->(_record, _context) { false }
+    resource.authorize_field :amount, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
+    widget = KrudminAI::Dashboards::Widgets::Table.new(resource:, context:, relation:, columns: %i[name amount], limit: 10)
+
+    expect(widget.visible_columns(relation.records.first)).to eq([:name])
+  end
+
   it "summarizes only authorized tenant data" do
     widget = KrudminAI::Dashboards::Widgets::Summary.new(
       resource:,
@@ -97,5 +110,56 @@ RSpec.describe "dashboard widgets" do
     widget = KrudminAI::Dashboards::Widgets::Summary.new(resource:, context:, relation:, summarize: ->(_relation) { raise "unsafe" })
 
     expect { widget.value }.to raise_error(KrudminAI::AuthorizationDenied)
+  end
+
+  it "renders only visible widgets with scoped field-filtered rows and safe drill-down filters" do
+    resource.authorize_field :name, read: ->(_record, _context) { true }, write: ->(_record, _context) { false }
+    resource.authorize_field :amount, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
+    resource.filter(:name) { |scoped_relation, _value, _context| scoped_relation }
+    configured_resource = resource
+    configured_relation = relation
+    dashboard = Class.new(KrudminAI::Dashboards::Base) do
+      label "Operations"
+      widget :recent,
+        widget_class: KrudminAI::Dashboards::Widgets::Table,
+        resource: configured_resource,
+        relation: ->(_context) { configured_relation },
+        visible: ->(access_context) { access_context.roles.include?(:manager) },
+        columns: %i[name amount],
+        limit: 10,
+        drill_down_filters: { name: "North", amount: "ignored" }
+      widget :hidden,
+        widget_class: KrudminAI::Dashboards::Widgets::Count,
+        resource: configured_resource,
+        relation: ->(_context) { configured_relation },
+        visible: ->(_access_context) { false }
+    end
+
+    result = dashboard.new(context:).render
+
+    expect(result).to contain_exactly(have_attributes(name: :recent, state: :ready, columns: [:name], rows: [{ name: "North allowed" }], drill_down_params: { filters: { name: "North" } }))
+  end
+
+  it "represents loading, empty, and unexpected widget errors without broadening data access" do
+    configured_resource = resource
+    configured_relation = DashboardRelation.new([], [])
+    dashboard = Class.new(KrudminAI::Dashboards::Base) do
+      widget :empty,
+        widget_class: KrudminAI::Dashboards::Widgets::Table,
+        resource: configured_resource,
+        relation: ->(_context) { configured_relation },
+        visible: ->(_access_context) { true },
+        columns: [:name],
+        limit: 10
+      widget :broken,
+        widget_class: KrudminAI::Dashboards::Widgets::Summary,
+        resource: configured_resource,
+        relation: ->(_context) { configured_relation },
+        visible: ->(_access_context) { true },
+        summarize: ->(_scope) { raise "unavailable" }
+    end
+
+    expect(dashboard.new(context:).render(loading: true).map(&:state)).to eq(%i[loading loading])
+    expect(dashboard.new(context:).render.map(&:state)).to eq(%i[empty error])
   end
 end

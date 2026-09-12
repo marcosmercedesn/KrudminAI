@@ -1,0 +1,10 @@
+<div class="krudmin-ai-table-wrap">
+  <table class="krudmin-ai-table">
+    <thead><tr><% fields.each do |field| %><th scope="col"><%= resource.model_class.human_attribute_name(field) %></th><% end %></tr></thead>
+    <tbody>
+      <% records.each do |record| %>
+        <tr><% fields.each_with_index do |field, index| %><td><% if field_readable?(field, record) %><% value = record.public_send(field) %><% if index.zero? %><%= link_to value, resource_path(record) %><% elsif field == :state %><span class="krudmin-ai-status-badge"><%= value %></span><% else %><%= value %><% end %><% end %></td><% end %></tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

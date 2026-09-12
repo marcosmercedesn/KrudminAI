@@ -22,6 +22,14 @@ class DemoTicketPolicy
     same_tenant? && user.manager?
   end
 
+  def assign_to_me?
+    same_tenant?
+  end
+
+  def resolve?
+    same_tenant? && user.manager?
+  end
+
   class Scope
     def initialize(user, scope)
       @user = user

@@ -1,3 +1,4 @@
+require "erb"
 require "rails"
 require "rspec/rails"
 require "krudmin_ai"

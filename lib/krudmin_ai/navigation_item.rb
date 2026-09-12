@@ -25,7 +25,9 @@ module KrudminAI
     end
 
     def visible?(context)
-      visibility.call(context)
+      visibility.call(context) == true
+    rescue StandardError
+      false
     end
 
     def path_for(view_context)
@@ -35,9 +37,11 @@ module KrudminAI
     end
 
     def active?(view_context)
-      return active.call(view_context) if active.respond_to?(:call)
+      return active.call(view_context) == true if active.respond_to?(:call)
 
       view_context.current_page?(path_for(view_context))
+    rescue StandardError
+      false
     end
   end
 end

@@ -6,17 +6,30 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "krudmin_ai/application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags "krudmin_ai" %>
   </head>
   <body>
-    <div class="krudmin-ai-shell">
-      <aside class="krudmin-ai-sidebar">
-        <%= link_to "KrudminAI", collection_path, class: "krudmin-ai-brand" %>
+    <div class="krudmin-ai-shell" data-controller="krudmin-ai-navigation" data-action="keydown@document->krudmin-ai-navigation#closeOnEscape">
+      <aside id="krudmin-ai-navigation" class="krudmin-ai-sidebar" data-krudmin-ai-navigation-target="panel">
+        <%= link_to collection_path, class: "krudmin-ai-brand", aria: { label: "KrudminAI home" } do %><%= krudmin_ai_icon(:panel_left) %><span>KrudminAI</span><% end %>
         <%= render "krudmin_ai/ui/navigation", items: navigation_items %>
       </aside>
+      <button class="krudmin-ai-sidebar-backdrop" type="button" aria-label="Close navigation" data-krudmin-ai-navigation-target="backdrop" data-action="krudmin-ai-navigation#close"></button>
       <main class="krudmin-ai-admin">
+        <div class="krudmin-ai-workspace-bar">
+          <button class="krudmin-ai-navigation-toggle" type="button" aria-controls="krudmin-ai-navigation" data-krudmin-ai-navigation-target="toggle" data-action="krudmin-ai-navigation#toggle"><%= krudmin_ai_icon(:menu) %><span class="krudmin-ai-sr-only" data-krudmin-ai-navigation-target="toggleLabel">Open navigation</span></button>
+          <label class="krudmin-ai-theme-picker" data-controller="krudmin-ai-theme">
+            <span>Appearance</span>
+            <select aria-label="Appearance" data-krudmin-ai-theme-target="select" data-action="krudmin-ai-theme#select">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </label>
+        </div>
         <div id="krudmin-ai-flash">
-          <% if flash[:notice] %><p class="krudmin-ai-notice" role="status"><%= flash[:notice] %></p><% end %>
-          <% if flash[:alert] %><p class="krudmin-ai-alert" role="alert"><%= flash[:alert] %></p><% end %>
+          <%= render "krudmin_ai/ui/status", state: :success, message: flash[:notice] if flash[:notice] %>
+          <%= render "krudmin_ai/ui/status", state: :error, message: flash[:alert] if flash[:alert] %>
         </div>
         <%= yield %>
       </main>

@@ -1,6 +1,6 @@
 # Mutation Pipeline
 
-`KrudminAI::MutationPipeline` accepts only `create`, `update`, and `destroy`. Each command validates the authenticated actor and tenant, checks record tenancy, evaluates the explicit action policy, persists the record, and emits an audit event. For Active Record records, persistence and audit recording share one database transaction: an audit exception rolls back the mutation. Missing authorization, tenant ownership, or audit configuration stops the command before persistence.
+`KrudminAI::MutationPipeline` accepts `create`, `update`, `destroy`, archive lifecycle operations, and resource-declared custom actions/transitions. Each command validates the authenticated actor and tenant, checks record tenancy, evaluates the explicit action policy, checks field write policies for action-declared writes, persists the record, and emits an audit event. For Active Record records, persistence and audit recording share one database transaction: an audit exception rolls back the mutation. Missing authorization, tenant ownership, field permission, or audit configuration stops the command before persistence. See [resource_actions.md](resource_actions.md) for action and transition declarations.
 
 ```ruby
 class OrdersResource < KrudminAI::Resources::Base

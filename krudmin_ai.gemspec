@@ -11,7 +11,8 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.3"
   spec.files = Dir.chdir(__dir__) { Dir["{app,config,lib,templates}/**/*", "LICENSE", "README.md"] }
 
-  spec.add_dependency "erb", ">= 4.0", "< 6.0"
+  spec.add_dependency "csv", ">= 3.3", "< 4.0"
+  spec.add_dependency "erb", ">= 4.0", "< 5.0"
   spec.add_dependency "json", ">= 2.0", "< 3.0"
   spec.add_dependency "lucide-rails", ">= 0.7", "< 1.0"
   spec.add_dependency "rails", ">= 8.1", "< 10.0"
@@ -19,5 +20,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "stimulus-rails", ">= 1.3"
   spec.add_dependency "turbo-rails", ">= 2.0"
   spec.add_development_dependency "rubocop", ">= 1.0"
+  spec.add_development_dependency "rubocop-rails-omakase", ">= 1.0"
   spec.add_development_dependency "rspec-rails", ">= 7.0"
 end

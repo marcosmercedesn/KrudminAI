@@ -2,11 +2,13 @@ class DashboardController < ApplicationController
   before_action :require_sign_in
 
   def show
-    pipeline = KrudminAI::QueryAccessPipeline.new(resource: TicketsResource, context: access_context)
-    @tickets = pipeline.authorized_relation(DemoTicket.all)
-    @open_count = @tickets.where(state: "open").count
-    @assigned_count = @tickets.where(state: "assigned").count
-    @recent_tickets = pipeline.call(DemoTicket.all).records.first(5)
-    @audit_events = DemoAuditEvent.where(tenant: current_tenant).order(created_at: :desc).limit(6)
+    @dashboard = TicketsDashboard.new(context: access_context, params: request.query_parameters)
+    @widgets = @dashboard.render
+  end
+
+  def refresh
+    @dashboard = TicketsDashboard.new(context: access_context, params: request.query_parameters)
+    @widgets = @dashboard.render
+    render formats: [:turbo_stream]
   end
 end

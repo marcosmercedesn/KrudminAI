@@ -1,5 +1,6 @@
 pin "krudmin_ai", to: "krudmin_ai/index.js"
 pin "krudmin_ai/controllers/filter_panel_controller", to: "krudmin_ai/controllers/filter_panel_controller.js"
+pin "krudmin_ai/controllers/navigation_controller", to: "krudmin_ai/controllers/navigation_controller.js"
 pin "krudmin_ai/controllers/nested_fields_controller", to: "krudmin_ai/controllers/nested_fields_controller.js"
 pin "krudmin_ai/controllers/theme_controller", to: "krudmin_ai/controllers/theme_controller.js"
 pin "krudmin_ai/theme_mode", to: "krudmin_ai/theme_mode.js"

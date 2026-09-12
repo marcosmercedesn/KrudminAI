@@ -1,24 +1,24 @@
-<%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-form-grid" do |form| %>
-  <% if model.errors.any? %>
-    <section class="validation-summary krudmin-ai-validation-summary" role="alert" aria-labelledby="validation-summary-title">
-      <h2 id="validation-summary-title"><%= resource_label.capitalize %> could not be saved</h2>
-      <ul><% model.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
-    </section>
-  <% end %>
+<section class="krudmin-ai-form-shell" aria-label="<%= model.persisted? ? "Edit #{resource_label}" : "New #{resource_label}" %>">
+  <%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-form-grid" do |form| %>
+    <% if model.errors.any? %>
+      <section class="validation-summary krudmin-ai-validation-summary" role="alert" aria-labelledby="validation-summary-title">
+        <h2 id="validation-summary-title"><%= resource_label.capitalize %> could not be saved</h2>
+        <ul><% model.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+      </section>
+    <% end %>
 
-  <% resource.form.each do |field| %>
-    <div class="krudmin-ai-field">
-      <%= form.label field %>
-      <%= form.text_field field, aria: { invalid: model.errors[field].any? } %>
+    <% readable_fields(resource.form).each do |field| %>
+      <% writable = field_writable?(field) %>
+      <%= render "krudmin_ai/ui/field", form: form, field: field, writable: writable, access_note_id: "#{field}-access-note", errors: model.errors.full_messages_for(field) %>
+    <% end %>
+
+    <% resource.relationships.each_value do |relationship| %>
+      <%= render "krudmin_ai/resources/has_many", form: form, relationship: relationship %>
+    <% end %>
+
+    <div class="krudmin-ai-form-actions">
+      <%= link_to "Cancel", model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-button" %>
+      <%= form.submit "Save #{resource_label}", class: "krudmin-ai-button krudmin-ai-button--primary" %>
     </div>
   <% end %>
-
-  <% resource.relationships.each_value do |relationship| %>
-    <%= render "krudmin_ai/resources/has_many", form: form, relationship: relationship %>
-  <% end %>
-
-  <div class="krudmin-ai-form-actions">
-    <%= link_to "Cancel", model.persisted? ? resource_path(model) : collection_path %>
-    <%= form.submit "Save #{resource_label}", class: "krudmin-ai-button krudmin-ai-button--primary" %>
-  </div>
-<% end %>
+</section>

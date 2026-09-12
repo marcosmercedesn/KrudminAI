@@ -34,7 +34,36 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
-      - run: bundle update rails erb --conservative
-      - run: bundle exec rspec
-      - run: bundle exec rubocop
+      - run: bundle update rails erb json --conservative
+      - run: bundle exec ruby -S rspec
+      - run: bundle exec ruby -S rubocop
       - run: ruby bin/verify_showcase
+      - run: bundle install
+        working-directory: demo
+      - run: bundle update rails erb json --conservative
+        working-directory: demo
+      - run: bundle exec bin/rails test test/integration/ticket_access_test.rb
+        working-directory: demo
+      - run: ruby bin/verify_showcase --host demo
+
+  browser:
+    name: browser accessibility and screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+      - uses: browser-actions/setup-chrome@v1
+      - run: bundle install
+      - run: bundle install
+        working-directory: demo
+      - run: bundle exec bin/rails test:system test/system/admin_visual_regression_test.rb
+        working-directory: demo
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: companion-visual-regression
+          path: demo/tmp/visual_regression
+          if-no-files-found: warn

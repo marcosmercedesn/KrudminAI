@@ -1,5 +1,6 @@
 <section class="krudmin-ai-resource-show">
-  <% title = resource.show.lazy.map { |field| model.public_send(field) }.find(&:present?) || resource_label %>
+  <% visible_fields = readable_fields(resource.show) %>
+  <% title = visible_fields.lazy.map { |field| model.public_send(field) }.find(&:present?) || resource_label %>
   <div class="krudmin-ai-resource-heading">
     <div>
       <p class="krudmin-ai-resource-eyebrow"><%= resource_label %></p>
@@ -7,15 +8,9 @@
     </div>
     <div class="krudmin-ai-resource-actions">
       <% if authorized_action?(:update) %><%= link_to "Edit", edit_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary" %><% end %>
+      <% resource_actions.each do |action| %><%= button_to action.label, resource_action_path(model, action.name), method: :post, class: "krudmin-ai-button" %><% end %>
       <% if authorized_action?(:destroy) %><%= button_to resource_path, method: :delete, class: "krudmin-ai-button krudmin-ai-button--danger krudmin-ai-icon-button", aria: { label: "Delete #{resource_label}" }, title: "Delete #{resource_label}" do %><%= krudmin_ai_icon(:trash_2) %><% end %><% end %>
     </div>
   </div>
-  <dl class="krudmin-ai-record-details">
-    <% resource.show.each do |field| %>
-      <div class="krudmin-ai-record-detail">
-        <dt><%= resource.model_class.human_attribute_name(field) %></dt>
-        <dd><%= model.public_send(field).presence || "Not provided" %></dd>
-      </div>
-    <% end %>
-  </dl>
+  <%= render "krudmin_ai/ui/record_details", resource: resource, record: model, fields: visible_fields %>
 </section>

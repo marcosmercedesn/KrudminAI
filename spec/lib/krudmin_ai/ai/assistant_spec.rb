@@ -61,6 +61,12 @@ RSpec.describe KrudminAI::Ai::Assistant do
     end
   end
 
+  class FailingProvider
+    def call(_request)
+      raise "provider unavailable"
+    end
+  end
+
   let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [:manager]) }
   let(:relation) do
     AiRelation.new([
@@ -76,6 +82,7 @@ RSpec.describe KrudminAI::Ai::Assistant do
       policy_scope { |scoped_relation, access_context| scoped_relation.policy(access_context.roles) }
       sortable :title
       default_sort_by :title
+      authorize_field :title, read: ->(_record, _context) { true }, write: ->(_record, _context) { false }
       ai_field :title
     end
   end
@@ -112,6 +119,14 @@ RSpec.describe KrudminAI::Ai::Assistant do
     expect(provider.requests.first.context.to_s).not_to include("secret", "South ticket", "Denied ticket")
   end
 
+  it "omits an AI allowlisted field when its field policy denies read access" do
+    resource.authorize_field :title, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
+
+    assistant.call(task: :record_q_and_a, resource:, relation:, prompt_template: "support/q-and-a")
+
+    expect(provider.requests.first.context).to eq([{}])
+  end
+
   it "rejects unsafe provider tool calls and traces the rejection" do
     unsafe_provider = RecordingProvider.new(output: "Attempting mutation", tool_calls: [{ name: :delete_record }])
     unsafe_assistant = described_class.new(context:, provider: unsafe_provider, provider_name: "test-provider", tracer:)
@@ -133,5 +148,18 @@ RSpec.describe KrudminAI::Ai::Assistant do
 
     expect(result.status).to eq(:approval_required)
     expect(provider.requests).to be_empty
+  end
+
+  it "contains provider failures and records a failure trace without provider details" do
+    result = described_class.new(context:, provider: FailingProvider.new, provider_name: "offline-provider", tracer:).call(
+      task: :record_summary,
+      resource:,
+      relation:,
+      prompt_template: "support/summary"
+    )
+
+    expect(result).to have_attributes(status: :provider_failed, output: nil)
+    expect(result.errors).to eq([{ code: :provider_failed, detail: "The AI provider is temporarily unavailable" }])
+    expect(tracer.traces.last).to have_attributes(provider: "offline-provider", status: :provider_failed)
   end
 end

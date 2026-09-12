@@ -49,4 +49,31 @@ RSpec.describe KrudminAI::Resources::Base do
     expect(child_resource).to be_archivable
     expect(child_resource.archive_attribute).to eq(:archived_at)
   end
+
+  it "denies field access by default and fails closed when a policy raises" do
+    resource = Class.new(described_class) do
+      authorize_field :name, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+      authorize_field :secret, read: ->(_record, _context) { raise "unavailable" }, write: ->(_record, _context) { false }
+    end
+
+    expect(resource).to be_field_readable(:name, Object.new, Object.new)
+    expect(resource).to be_field_writable(:name, Object.new, Object.new)
+    expect(resource).not_to be_field_readable(:secret, Object.new, Object.new)
+    expect(resource).not_to be_field_writable(:secret, Object.new, Object.new)
+    expect(resource).not_to be_field_readable(:unconfigured, Object.new, Object.new)
+    expect(resource).not_to be_field_writable(:unconfigured, Object.new, Object.new)
+  end
+
+  it "declares inheritable custom actions and state transitions" do
+    resource = Class.new(described_class) do
+      action(:assign_to_me, label: "Assign to me", writes: [:assignee]) { |_record, _context| true }
+      transition :resolve, from: %i[open assigned], to: :resolved
+    end
+    record = Struct.new(:state).new("open")
+
+    expect(resource.action_for(:assign_to_me)).to have_attributes(label: "Assign to me", writes: [:assignee])
+    expect(resource).to be_action(:resolve)
+    expect(resource.action_for(:resolve).call(record, Object.new)).to be(true)
+    expect(record.state).to eq("resolved")
+  end
 end

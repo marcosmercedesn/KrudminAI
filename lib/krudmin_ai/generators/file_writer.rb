@@ -20,7 +20,7 @@ module KrudminAI
         write(path, contents)
       end
 
-      def replace_managed_block(path, marker:, contents:)
+      def replace_managed_block(path, marker:, contents:, inside_routes: false)
         absolute_path = File.join(destination_root, path)
         start_marker = "# BEGIN #{marker}"
         end_marker = "# END #{marker}"
@@ -29,6 +29,8 @@ module KrudminAI
         pattern = /#{Regexp.escape(start_marker)}.*?#{Regexp.escape(end_marker)}\n?/m
         replacement = if existing.match?(pattern)
           existing.sub(pattern, block)
+        elsif inside_routes && (closing_index = existing.rindex("\nend"))
+          existing.dup.insert(closing_index + 1, "\n#{block}")
         elsif existing.empty?
           block
         else
@@ -39,6 +41,8 @@ module KrudminAI
       end
 
       private
+
+      public
 
       attr_reader :destination_root
     end

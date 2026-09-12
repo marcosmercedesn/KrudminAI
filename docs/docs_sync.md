@@ -1,5 +1,5 @@
 # Documentation Sync Contract
 
-The future install generator will place a versioned package under `docs/krudmin_ai/` in host applications and write an AI instruction file at the host-app root.
+`rails generate krudmin_ai:docs_sync` refreshes the generated package under `docs/krudmin_ai/`, the generated capability registry, and the `KRUDMIN_AI_GENERATED_INSTRUCTIONS` block in the host `AGENTS.md`. `rails generate krudmin_ai:install --docs-only` provides the same operation.
 
-The future `docs-sync` generator updates only that package, the generated capability registry, and the generated instruction file. It must not modify runtime application code, routes, initializers, or dependency manifests. Re-runs must be idempotent and preserve host-authored content outside generated markers.
+It must not modify runtime application code, routes, initializers, dependencies, migrations, or host files outside the managed instruction block. Re-runs are idempotent. The capability registry preserves host-authored keys while adding generator-owned release, enabled-module, provider-binding-slot, and feature-flag metadata. Generated provider slots must not contain secrets.

@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+require "json"
+require_relative "../lib/krudmin_ai/migration/legacy_resource_audit"
+
+path = ARGV.fetch(0) do
+  warn "Usage: bin/krudmin_ai_migrate path/to/legacy_resource_manager.rb"
+  exit 64
+end
+
+report = KrudminAI::Migration::LegacyResourceAudit.new.call(path)
+puts JSON.pretty_generate(report.to_h)
+exit(report.success? ? 0 : 2)

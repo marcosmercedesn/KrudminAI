@@ -35,6 +35,54 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Workspace overview"
     assert_includes response.body, @north_ticket.title
     assert_not_includes response.body, @south_ticket.title
+    assert_not_includes response.body, "Manager queue"
+    assert_includes response.body, "Recent tickets"
+
+    get dashboard_refresh_path, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "dashboard-widgets"
+  end
+
+  test "dashboard widgets respect role visibility, safe drill-downs, and table pagination" do
+    6.times { |index| DemoTicket.create!(tenant: "northwind", title: "North ticket #{index}", state: "open", priority: "normal", assignee: @north_agent.name) }
+    sign_in(@north_agent)
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select ".dashboard-widget--recent_tickets tbody tr", 5
+    assert_select "a[href*='filters%5Bstate%5D=open']", text: "View records"
+    assert_not_includes response.body, @south_ticket.title
+
+    sign_in(@north_manager)
+    get dashboard_path
+
+    assert_response :success
+    assert_includes response.body, "Manager queue"
+  end
+
+  test "resource pagination preserves declared filters without exposing another tenant" do
+    20.times do |index|
+      DemoTicket.create!(tenant: "northwind", title: "Paged ticket #{index}", state: "open", priority: "normal", assignee: @north_agent.name)
+    end
+    sign_in(@north_agent)
+
+    get tickets_path, params: { filters: { state: "open" } }
+
+    assert_response :success
+    assert_includes response.body, "Next page"
+    assert_includes response.body, "filters%5Bstate%5D=open"
+    assert_includes response.body, "page=2"
+    assert_not_includes response.body, @south_ticket.title
+
+    get tickets_path, params: { filters: { state: "open" }, page: 2 }
+
+    assert_response :success
+    assert_includes response.body, "Page 2"
+    assert_select ".krudmin-ai-table tbody tr", 1
+    assert_not_includes response.body, @south_ticket.title
   end
 
   test "archive filters default to active records and reject invalid values safely" do
@@ -281,6 +329,51 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "aria-invalid=\"true\""
   end
 
+  test "field policies hide data, disable readable fields, and reject crafted HTML and JSON writes" do
+    original_description_policy = TicketsResource.field_authorizers[:description]
+    original_priority_policy = TicketsResource.field_authorizers[:priority]
+    TicketsResource.authorize_field :description, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
+    TicketsResource.authorize_field :priority,
+      read: ->(_record, _context) { true },
+      write: ->(_record, context) { context.roles.include?(:manager) }
+    sign_in(@north_agent)
+
+    get edit_ticket_path(@north_ticket)
+
+    assert_response :success
+    assert_select "input[name='demo_ticket[description]']", count: 0
+    assert_select "input[name='demo_ticket[priority]'][disabled]"
+    assert_includes response.body, "You are not authorized to edit this field."
+
+    assert_no_difference -> { DemoAuditEvent.count } do
+      patch ticket_path(@north_ticket), params: { demo_ticket: { priority: "urgent" } }
+    end
+
+    assert_response :forbidden
+    assert_equal "high", @north_ticket.reload.priority
+
+    patch ticket_path(@north_ticket), params: { demo_ticket: { priority: "urgent" } }, as: :json
+
+    assert_response :forbidden
+    assert_equal "forbidden", JSON.parse(response.body).fetch("errors").first.fetch("code")
+    assert_equal "high", @north_ticket.reload.priority
+
+    patch ticket_path(@north_ticket), params: { demo_ticket: { priority: "urgent" } }, as: :turbo_stream
+
+    assert_response :forbidden
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "krudmin-ai-flash"
+
+    sign_in(@north_manager)
+    patch ticket_path(@north_ticket), params: { demo_ticket: { priority: "urgent" } }
+
+    assert_redirected_to ticket_path(@north_ticket)
+    assert_equal "urgent", @north_ticket.reload.priority
+  ensure
+    TicketsResource.field_authorizers[:description] = original_description_policy
+    TicketsResource.field_authorizers[:priority] = original_priority_policy
+  end
+
   test "support agents can render and submit the edit ticket form with an audit event" do
     sign_in(@north_agent)
 
@@ -307,6 +400,61 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_redirected_to ticket_path(@north_ticket)
     assert_equal "Updated Northwind export", @north_ticket.reload.title
     assert_equal "update", DemoAuditEvent.order(:created_at).last.operation
+  end
+
+  test "custom actions are visible only when authorized and audit successful HTML mutations" do
+    sign_in(@north_agent)
+
+    get ticket_path(@north_ticket)
+
+    assert_response :success
+    assert_includes response.body, "Assign to me"
+    assert_not_includes response.body, "Resolve"
+
+    assert_difference -> { DemoAuditEvent.count }, 1 do
+      post action_ticket_path(@north_ticket, action_name: "assign_to_me")
+    end
+
+    assert_redirected_to ticket_path(@north_ticket)
+    assert_equal @north_agent.name, @north_ticket.reload.assignee
+    assert_equal "assign_to_me", DemoAuditEvent.order(:created_at).last.operation
+  end
+
+  test "transitions enforce role, state, tenant, and response contracts" do
+    sign_in(@north_agent)
+
+    assert_no_difference -> { DemoAuditEvent.count } do
+      post action_ticket_path(@north_ticket, action_name: "resolve")
+    end
+
+    assert_response :forbidden
+    assert_equal "open", @north_ticket.reload.state
+
+    post action_ticket_path(@south_ticket, action_name: "assign_to_me")
+
+    assert_response :not_found
+
+    sign_in(@north_manager)
+    post action_ticket_path(@north_ticket, action_name: "resolve"), as: :json
+
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert_equal "success", json.fetch("outcome")
+    assert_equal "resolved", json.fetch("data").fetch("state")
+    assert_equal "resolve", DemoAuditEvent.order(:created_at).last.operation
+
+    @north_ticket.update!(state: "assigned")
+    post action_ticket_path(@north_ticket, action_name: "resolve"), as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_equal ticket_path(@north_ticket), response.headers.fetch("Turbo-Location")
+    assert_includes response.body, "krudmin-ai-flash"
+
+    post action_ticket_path(@north_ticket, action_name: "resolve")
+
+    assert_response :unprocessable_entity
+    assert_equal "resolved", @north_ticket.reload.state
   end
 
   test "the local companion is read-only, tenant-scoped, and traced" do

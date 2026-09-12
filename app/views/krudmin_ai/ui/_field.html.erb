@@ -1,0 +1,6 @@
+<div class="krudmin-ai-field">
+  <%= form.label field %>
+  <%= form.text_field field, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id } %>
+  <% unless writable %><p id="<%= access_note_id %>" class="krudmin-ai-field-note">You are not authorized to edit this field.</p><% end %>
+  <% errors.each do |message| %><p class="krudmin-ai-field-error"><%= message %></p><% end %>
+</div>

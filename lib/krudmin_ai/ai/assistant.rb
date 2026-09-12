@@ -1,3 +1,7 @@
+require "krudmin_ai/observability"
+require "krudmin_ai/ai/context_builder"
+require "krudmin_ai/ai/tool_router"
+
 module KrudminAI
   module Ai
     class ApprovalRequired < StandardError; end
@@ -43,6 +47,8 @@ module KrudminAI
         complete(:configuration_error, nil, [error(:configuration_error, "AI context is not configured")], nil, prompt_template, [])
       rescue ArgumentError
         complete(:invalid_request, nil, [error(:invalid_request, "Unsupported AI request")], nil, prompt_template, [])
+      rescue StandardError
+        complete(:provider_failed, nil, [error(:provider_failed, "The AI provider is temporarily unavailable")], nil, prompt_template, [])
       end
 
       private
@@ -76,6 +82,7 @@ module KrudminAI
       def complete(status, output, errors, scoped_context, prompt_template, action_references)
         trace = Trace.new(context.actor, prompt_template, provider_name, scoped_context&.fingerprint, output, action_references, status)
         tracer.record(trace)
+        Observability.emit("ai.completed", outcome: status, provider: provider_name, tenant: context.tenant, prompt_template:, output:, action_references:)
         Result.new(status, output, errors, trace)
       end
 

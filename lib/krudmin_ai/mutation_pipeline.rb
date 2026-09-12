@@ -1,3 +1,5 @@
+require "krudmin_ai/observability"
+
 module KrudminAI
   class AuditSinkRequired < StandardError; end
   class AuditFailure < StandardError; end
@@ -21,31 +23,35 @@ module KrudminAI
     end
 
     def call(operation:, record:, attributes: {})
-      operation = normalize_operation(operation)
-      context.validate!
-      resource.validate_mutation_contract!(operation)
-      validate_auditor!
-      authorize_tenant!(record)
-      authorize_action!(operation, record)
-      validate_relationships!(record, attributes) if %i[create update].include?(operation)
-      @submitted_child_references = submitted_child_references(attributes) if %i[create update].include?(operation)
+      normalized_operation = normalize_operation(operation)
+      result = begin
+        context.validate!
+        resource.validate_mutation_contract!(normalized_operation)
+        validate_auditor!
+        authorize_tenant!(record)
+        authorize_action!(normalized_operation, record)
+        validate_action_field_writes!(normalized_operation, record) if resource.action?(normalized_operation)
+        validate_field_writes!(record, attributes) if %i[create update].include?(normalized_operation)
+        validate_relationships!(record, attributes) if %i[create update].include?(normalized_operation)
+        @submitted_child_references = submitted_child_references(attributes) if %i[create update].include?(normalized_operation)
 
-      persisted, event = persist_and_audit(operation, record, attributes)
-      return failure(operation, :invalid, record_errors(record)) unless persisted
-
-      MutationResult.new(operation, :success, record, [], event)
-    rescue AuthenticationRequired
-      failure(operation, :unauthenticated, [error(:unauthenticated, "An authenticated actor is required")])
-    rescue TenantRequired
-      failure(operation, :tenant_required, [error(:tenant_required, "A tenant is required")])
-    rescue AuthorizationDenied, ScopeViolation
-      failure(operation, :forbidden, [error(:forbidden, "You are not authorized to perform this action")])
-    rescue Resources::ConfigurationError, AuditSinkRequired
-      failure(operation, :configuration_error, [error(:configuration_error, "Mutation security is not configured")])
-    rescue AuditFailure
-      failure(operation, :audit_failed, [error(:audit_failed, "The mutation could not be audited")])
-    rescue StandardError
-      failure(operation, :persistence_failed, [error(:persistence_failed, "The mutation could not be completed")])
+        persisted, event = persist_and_audit(normalized_operation, record, attributes)
+        persisted ? MutationResult.new(normalized_operation, :success, record, [], event) : failure(normalized_operation, :invalid, record_errors(record))
+      rescue AuthenticationRequired
+        failure(normalized_operation, :unauthenticated, [error(:unauthenticated, "An authenticated actor is required")])
+      rescue TenantRequired
+        failure(normalized_operation, :tenant_required, [error(:tenant_required, "A tenant is required")])
+      rescue AuthorizationDenied, ScopeViolation
+        failure(normalized_operation, :forbidden, [error(:forbidden, "You are not authorized to perform this action")])
+      rescue Resources::ConfigurationError, AuditSinkRequired
+        failure(normalized_operation, :configuration_error, [error(:configuration_error, "Mutation security is not configured")])
+      rescue AuditFailure
+        failure(normalized_operation, :audit_failed, [error(:audit_failed, "The mutation could not be audited")])
+      rescue StandardError
+        failure(normalized_operation, :persistence_failed, [error(:persistence_failed, "The mutation could not be completed")])
+      end
+      Observability.emit("mutation.completed", operation: normalized_operation, outcome: result.outcome, resource: resource.name, tenant: context.tenant)
+      result
     end
 
     private
@@ -54,7 +60,7 @@ module KrudminAI
 
     def normalize_operation(operation)
       normalized = operation.to_sym
-      return normalized if OPERATIONS.include?(normalized)
+      return normalized if OPERATIONS.include?(normalized) || resource.action?(normalized)
 
       raise ArgumentError, "Unsupported mutation operation: #{operation}"
     end
@@ -89,6 +95,12 @@ module KrudminAI
 
       if %i[archive restore].include?(operation)
         record.public_send("#{resource.archive_attribute}=", operation == :archive ? Time.now : nil)
+        return record.save
+      end
+
+      if resource.action?(operation)
+        return false unless resource.action_for(operation).call(record, context)
+
         return record.save
       end
 
@@ -131,6 +143,7 @@ module KrudminAI
         affected_child_references(record)
       )
       auditor.record(event)
+      Observability.emit("audit.recorded", operation:, resource: resource.name, tenant: context.tenant, audit_event: event)
       event
     rescue StandardError
       raise AuditFailure
@@ -155,6 +168,38 @@ module KrudminAI
           raise AuthorizationDenied, "Nested record access rejected"
         end
       end
+    end
+
+    def validate_field_writes!(record, attributes)
+      submitted_fields(attributes, resource.permitted_attributes).each do |field|
+        next if resource.field_writable?(field, record, context)
+
+        raise AuthorizationDenied, "Field write access rejected"
+      end
+
+      resource.relationships.each_value do |relationship|
+        nested_rows(attributes, relationship.name).each do |row|
+          child = relationship_child(record, relationship, row)
+          submitted_fields(row, relationship.fields).each do |field|
+            next if relationship.field_writable?(field, child, context)
+
+            raise AuthorizationDenied, "Nested field write access rejected"
+          end
+        end
+      end
+    end
+
+    def validate_action_field_writes!(operation, record)
+      resource.action_for(operation).writes.each do |field|
+        next if resource.field_writable?(field, record, context)
+
+        raise AuthorizationDenied, "Action field write access rejected"
+      end
+    end
+
+    def submitted_fields(attributes, allowed_fields)
+      values = attributes.respond_to?(:to_unsafe_h) ? attributes.to_unsafe_h : attributes.to_h
+      allowed_fields.select { |field| values.key?(field) || values.key?(field.to_s) }
     end
 
     def nested_rows(attributes, name)

@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+
+require "json"
+
+root = File.expand_path("..", __dir__)
+required_files = %w[
+  docs/observability.md
+  docs/governance.md
+  docs/runbooks/incident_response.md
+  docs/decisions/ADR_TEMPLATE.md
+  docs/release_approval.md
+]
+missing = required_files.reject { |path| File.file?(File.join(root, path)) }
+abort "Missing operational artifacts: #{missing.join(', ')}" if missing.any?
+
+registry = JSON.parse(File.read(File.join(root, "docs/capability_registry.json")))
+capability = registry.fetch("capabilities").find { |item| item.fetch("name") == "observability_and_governance" }
+abort "Operational capability is not registered" unless capability
+
+puts "Operational readiness artifacts OK"

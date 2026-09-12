@@ -3,7 +3,7 @@ require "krudmin_ai/navigation_item"
 module KrudminAI
   class Configuration
     attr_accessor :authentication_provider, :authorization_provider, :tenant_provider, :audit_provider,
-      :notification_provider
+      :notification_provider, :observability_logger, :metrics_provider, :tracing_provider
 
     def validate_providers!
       Providers.validate!(self)

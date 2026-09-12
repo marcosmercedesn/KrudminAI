@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require "json"
+
+root = File.expand_path("..", __dir__)
+decision_path = File.join(root, "docs/beta_release_decision.md")
+abort "Missing beta decision record" unless File.file?(decision_path)
+
+registry = JSON.parse(File.read(File.join(root, "docs/capability_registry.json")))
+decision = registry.fetch("beta_release_decision")
+record = File.read(decision_path)
+abort "Beta decision record and registry outcome disagree" unless record.include?("**#{decision.fetch('outcome').capitalize} beta.**")
+abort "Beta decision has no assigned blockers" if decision.fetch("blockers").empty?
+abort "Beta decision has no owner or target" if decision.fetch("owner").empty? || decision.fetch("target").empty?
+
+puts "Beta decision record OK: #{decision.fetch('outcome')}"

@@ -1,52 +1,5 @@
 <div class="page-heading">
-	<div>
-		<p class="eyebrow">Workspace overview</p>
-		<h1>Operations dashboard</h1>
-		<p class="lede">Live ticket visibility for the current tenant and your current policy scope.</p>
-	</div>
-	<%= link_to "New ticket", new_ticket_path, class: "button" %>
+  <div><p class="eyebrow"><%= @dashboard.label %></p><h1>Operations dashboard</h1><p class="lede">Live ticket visibility for the current tenant and policy scope.</p></div>
+  <div><%= link_to "Refresh", dashboard_refresh_path, class: "text-action", data: { turbo_stream: true } %> <%= link_to "New ticket", new_ticket_path, class: "button" %></div>
 </div>
-
-<div class="metric-grid">
-	<section class="metric-card">
-		<div class="metric-card-header"><p>Visible tickets</p><span class="metric-icon metric-icon--blue"><%= krudmin_ai_icon(TicketsResource.icon) %></span></div>
-		<strong><%= @tickets.count %></strong>
-		<span class="metric-note">In your current workspace</span>
-	</section>
-	<section class="metric-card">
-		<div class="metric-card-header"><p>Open queue</p><span class="metric-icon metric-icon--amber"><%= krudmin_ai_icon(:circle_alert) %></span></div>
-		<strong><%= @open_count %></strong>
-		<span class="metric-note metric-note--positive">Needs attention</span>
-	</section>
-	<section class="metric-card">
-		<div class="metric-card-header"><p>Assigned</p><span class="metric-icon metric-icon--green"><%= krudmin_ai_icon(:user_check) %></span></div>
-		<strong><%= @assigned_count %></strong>
-		<span class="metric-note">Work in progress</span>
-	</section>
-</div>
-
-<div class="dashboard-grid">
-	<section class="panel panel--flush">
-		<header class="panel-header">
-			<div><h2>Recent tickets</h2><p>Latest work visible to your role</p></div>
-			<%= link_to "View all", tickets_path, class: "text-action" %>
-		</header>
-		<ul class="activity-list">
-			<% @recent_tickets.each do |ticket| %>
-				<li>
-					<div><%= link_to ticket.title, ticket_path(ticket) %><span><%= ticket.assignee.presence || "Unassigned" %></span></div>
-					<span class="badge state-<%= ticket.state %>"><%= ticket.state %></span>
-				</li>
-			<% end %>
-		</ul>
-	</section>
-	<section class="panel panel--flush">
-		<header class="panel-header"><div><h2>Audit activity</h2><p>Recent changes in this workspace</p></div></header>
-		<ul class="activity-list activity-list--audit">
-			<% @audit_events.each do |event| %>
-				<li><div><strong><%= event.operation.presence || event.event_type %></strong><span><%= event.actor_name %></span></div><time><%= event.created_at.strftime("%H:%M") %></time></li>
-			<% end %>
-			<% if @audit_events.empty? %><li><div><span>No activity has been recorded for this tenant.</span></div></li><% end %>
-		</ul>
-	</section>
-</div>
+<div id="dashboard-widgets"><%= render "widgets", widgets: @widgets %></div>

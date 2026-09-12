@@ -4,6 +4,7 @@ require "krudmin_ai/generators/install_contract"
 module KrudminAI
   module Generators
     class InstallGenerator < Rails::Generators::Base
+      namespace "krudmin_ai:install"
       class_option :docs_only, type: :boolean, default: false, desc: "Update generated docs and AI instructions only"
 
       def install_krudmin_ai

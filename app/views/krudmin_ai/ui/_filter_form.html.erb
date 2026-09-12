@@ -1,0 +1,11 @@
+<%= form_with url: collection_path, method: :get, class: "krudmin-ai-filter-form" do |form| %>
+  <div class="krudmin-ai-filter-grid">
+    <% resource.filters.each_key do |field| %>
+      <div class="krudmin-ai-field">
+        <%= form.label "filters[#{field}]", resource.model_class.human_attribute_name(field) %>
+        <%= form.text_field "filters[#{field}]", value: params.dig(:filters, field), class: "krudmin-ai-input" %>
+      </div>
+    <% end %>
+  </div>
+  <div class="krudmin-ai-form-actions"><%= form.submit "Apply filters", class: "krudmin-ai-button" %></div>
+<% end %>

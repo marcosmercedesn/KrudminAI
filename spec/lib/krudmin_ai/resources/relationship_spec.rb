@@ -11,7 +11,10 @@ RSpec.describe KrudminAI::Resources::Base do
         maximum: 4,
         order: :position,
         authorize: ->(_record, _action, _context) { true },
-        tenant_record: ->(_record, _context) { true }
+        tenant_record: ->(_record, _context) { true },
+        field_authorizers: {
+          name: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }
+        }
     end
   end
 
@@ -20,6 +23,10 @@ RSpec.describe KrudminAI::Resources::Base do
 
     expect(relationship).to have_attributes(fields: %i[name age], label: "Passengers", maximum: 4, order: :position)
     expect(resource.nested_permitted_attributes).to eq([{ passengers_attributes: %i[id _destroy name age] }])
+    expect(relationship).to be_field_readable(:name, Object.new, Object.new)
+    expect(relationship).to be_field_writable(:name, Object.new, Object.new)
+    expect(relationship).not_to be_field_readable(:age, Object.new, Object.new)
+    expect(relationship).not_to be_field_writable(:age, Object.new, Object.new)
   end
 
   it "requires child authorization and tenant checks" do

@@ -1,0 +1,7 @@
+# Governance
+
+The maintainers own engine security, compatibility, release approval, and operational policy. A designated release owner records the release decision in [release_approval.md](release_approval.md). Security-sensitive changes require one maintainer approval plus security-owner approval; emergency changes require incident commander approval and retrospective review within two business days.
+
+Architecture decisions use [the ADR template](decisions/ADR_TEMPLATE.md). An ADR is required for authorization, tenant isolation, audit durability, AI mutation approval, telemetry/redaction, retention, provider contracts, and public compatibility changes. Owners review operational alerts weekly and after every incident. Escalate suspected cross-tenant disclosure, audit loss, credential exposure, or unapproved AI mutation immediately through the host incident channel and suspend affected workflows where safe.
+
+Hotfixes are minimal, tested, and independently reviewed. The release owner selects rollback when a release violates a security invariant, loses auditability, or causes sustained protected-workflow failures. Rollback restores the previous verified gem and host configuration; schema changes require an explicit reversible or forward-recovery plan in the ADR.

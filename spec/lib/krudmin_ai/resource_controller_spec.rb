@@ -25,4 +25,13 @@ RSpec.describe KrudminAI::ResourceController do
 
     controller.send(:route_helper, "orders_path")
   end
+
+  it "places Rails and custom route prefixes before the controller namespace" do
+    controller = described_class.allocate
+    allow(controller).to receive(:controller_path).and_return("admin/orders")
+
+    expect(controller.send(:namespaced_route_helper, "new_order_path")).to eq("new_admin_order_path")
+    expect(controller.send(:namespaced_route_helper, "edit_order_path")).to eq("edit_admin_order_path")
+    expect(controller.send(:namespaced_route_helper, "action_order_path")).to eq("action_admin_order_path")
+  end
 end

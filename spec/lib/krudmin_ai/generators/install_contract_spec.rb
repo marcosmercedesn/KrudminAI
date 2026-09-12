@@ -17,6 +17,7 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     described_class.new(destination_root:, template_root:).install
 
     expect(File.read(File.join(destination_root, "config/initializers/krudmin_ai.rb"))).to include("KrudminAI.configure", "config.authentication_provider = HostAuthenticationProvider.new", "config.navigation_item resource: OrdersResource")
+    expect(File.read(File.join(destination_root, "config/importmap.rb"))).to include("pin \"krudmin_ai\"", "controllers/navigation_controller")
     expect(File.read(File.join(destination_root, "AGENTS.md"))).to include("KRUDMIN_AI_GENERATED_INSTRUCTIONS")
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/architecture.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/provider_contracts.md"))
@@ -35,6 +36,20 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/README.md"))
   end
 
+  it "preserves host registry metadata while recording generated installation metadata" do
+    registry_path = File.join(destination_root, "docs/krudmin_ai/capability_registry.json")
+    FileUtils.mkdir_p(File.dirname(registry_path))
+    File.write(registry_path, JSON.generate("host_owner" => "operations", "feature_flags" => { "bulk_exports" => false }))
+
+    described_class.new(destination_root:, template_root:).install
+    registry = JSON.parse(File.read(registry_path))
+
+    expect(registry).to include("host_owner" => "operations")
+    expect(registry.fetch("feature_flags")).to eq("bulk_exports" => false)
+    expect(registry.fetch("enabled_modules")).to include("install")
+    expect(registry.fetch("provider_bindings").values).to all(be_nil)
+  end
+
   it "replaces generated instructions without duplicating host content" do
     agents_path = File.join(destination_root, "AGENTS.md")
     File.write(agents_path, "  # Host rules\n")
@@ -45,5 +60,18 @@ RSpec.describe KrudminAI::Generators::InstallContract do
 
     expect(File.read(agents_path)).to start_with("  # Host rules\n")
     expect(File.read(agents_path).scan("BEGIN KRUDMIN_AI_GENERATED_INSTRUCTIONS").length).to eq(1)
+  end
+
+  it "keeps host import-map pins while replacing the engine block" do
+    importmap_path = File.join(destination_root, "config/importmap.rb")
+    FileUtils.mkdir_p(File.dirname(importmap_path))
+    File.write(importmap_path, "pin \"application\"\n")
+    contract = described_class.new(destination_root:, template_root:)
+
+    contract.install
+    contract.install
+
+    expect(File.read(importmap_path)).to include("pin \"application\"")
+    expect(File.read(importmap_path).scan("BEGIN KRUDMIN_AI_IMPORTMAP").length).to eq(1)
   end
 end

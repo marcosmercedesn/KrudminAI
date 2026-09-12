@@ -1,6 +1,7 @@
 require "spec_helper"
 require "krudmin_ai/access_context"
 require "krudmin_ai/providers"
+require "krudmin_ai/resources/relationship"
 require "krudmin_ai/resources/base"
 require "krudmin_ai/mutation_pipeline"
 require "krudmin_ai/mutation_response"
@@ -54,6 +55,7 @@ RSpec.describe KrudminAI::MutationPipeline do
     Class.new(KrudminAI::Resources::Base) do
       model FakeRecord
       tenant_record { |_record, _context| true }
+      authorize_field :name, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
       authorize(:create) { |_record, access_context| access_context.roles.include?(:operator) }
       authorize(:update) { |_record, access_context| access_context.roles.include?(:manager) }
       authorize(:destroy) { |_record, access_context| access_context.roles.include?(:manager) }
@@ -134,6 +136,64 @@ RSpec.describe KrudminAI::MutationPipeline do
     expect(result.outcome).to eq(:forbidden)
     expect(record.attributes).to be_empty
     expect(auditor.events).to be_empty
+  end
+
+  it "rejects crafted write-denied fields before assignment or audit" do
+    resource.permit :name, :secret
+    resource.authorize_field :secret, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
+    record = FakeRecord.new
+
+    result = described_class.new(resource:, context:, auditor:).call(
+      operation: :update,
+      record:,
+      attributes: { name: "Allowed", secret: "Crafted" }
+    )
+
+    expect(result.outcome).to eq(:forbidden)
+    expect(record.attributes).to be_empty
+    expect(auditor.events).to be_empty
+  end
+
+  it "rejects crafted write-denied nested fields before assignment or audit" do
+    nested_record_class = Class.new
+    relationship_association = Struct.new(:klass).new(nested_record_class)
+    resource.has_many :passengers,
+      fields: %i[name secret],
+      label: "Passengers",
+      authorize: ->(_record, _action, _context) { true },
+      tenant_record: ->(_record, _context) { true },
+      field_authorizers: {
+        name: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } },
+        secret: { read: ->(_record, _context) { false }, write: ->(_record, _context) { false } }
+      }
+    record = FakeRecord.new
+    record.define_singleton_method(:association) { |_name| relationship_association }
+
+    result = described_class.new(resource:, context:, auditor:).call(
+      operation: :update,
+      record:,
+      attributes: { passengers_attributes: { "0" => { name: "Allowed", secret: "Crafted" } } }
+    )
+
+    expect(result.outcome).to eq(:forbidden)
+    expect(record.attributes).to be_empty
+    expect(auditor.events).to be_empty
+  end
+
+  it "runs declared actions through authorization, persistence, and audit" do
+    resource.authorize(:assign_to_me) { |_record, _context| true }
+    resource.action :assign_to_me, writes: [:name] do |record, _context|
+      record.assign_attributes(name: "Morgan")
+      true
+    end
+    record = FakeRecord.new
+
+    result = described_class.new(resource:, context:, auditor:).call(operation: :assign_to_me, record:)
+
+    expect(result).to be_success
+    expect(record.attributes).to eq(name: "Morgan")
+    expect(record.save_calls).to eq(1)
+    expect(auditor.events.first.operation).to eq(:assign_to_me)
   end
 
   it "returns validation errors without creating an audit event" do

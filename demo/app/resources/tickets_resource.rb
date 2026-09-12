@@ -4,6 +4,9 @@ class TicketsResource < KrudminAI::Resources::Base
   icon :ticket
   tenant_key :tenant
   permit :title, :description, :state, :priority, :assignee
+  %i[title description state priority assignee].each do |field|
+    authorize_field field, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+  end
   label "ticket"
   plural_label "tickets"
   list :title, :state, :priority, :assignee
@@ -21,7 +24,11 @@ class TicketsResource < KrudminAI::Resources::Base
       policy = DemoTicketPolicy.new(context.actor, ticket)
       action == :create ? policy.create? : policy.update?
     },
-    tenant_record: ->(passenger, context) { passenger.tenant.blank? || passenger.tenant == context.tenant }
+    tenant_record: ->(passenger, context) { passenger.tenant.blank? || passenger.tenant == context.tenant },
+    field_authorizers: {
+      name: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } },
+      position: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }
+    }
 
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoTicketPolicy::Scope.new(context.actor, relation).resolve }
@@ -37,6 +44,14 @@ class TicketsResource < KrudminAI::Resources::Base
   authorize(:destroy) { |record, context| DemoTicketPolicy.new(context.actor, record).destroy? }
   authorize(:archive) { |record, context| DemoTicketPolicy.new(context.actor, record).destroy? }
   authorize(:restore) { |record, context| DemoTicketPolicy.new(context.actor, record).restore? }
+  authorize(:assign_to_me) { |record, context| DemoTicketPolicy.new(context.actor, record).assign_to_me? }
+  authorize(:resolve) { |record, context| DemoTicketPolicy.new(context.actor, record).resolve? }
+
+  action :assign_to_me, label: "Assign to me", writes: [:assignee] do |record, context|
+    record.assignee = context.actor.name
+    true
+  end
+  transition :resolve, from: %i[open assigned], to: :resolved, label: "Resolve"
 
   ai_field :title
   ai_field :state

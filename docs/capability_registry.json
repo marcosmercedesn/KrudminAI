@@ -2,6 +2,18 @@
   "schema_version": 1,
   "engine": "KrudminAI",
   "release": "0.1.0.pre.1",
+  "beta_release_decision": {
+    "outcome": "hold",
+    "decision_date": "2026-09-12",
+    "owner": "KrudminAI maintainers",
+    "target": "0.1.0.beta.1 after all assigned beta exit criteria pass",
+    "blockers": [
+      "Root CI lint command has unresolved repository-wide offenses.",
+      "Independent generated-host CRUD, relationship, dashboard, and browser evidence is incomplete.",
+      "Remote CI history has not established passing blocking compatibility lanes.",
+      "Provider/security, response/audit, lifecycle, field, action, and AI production evidence remains companion-only or incomplete."
+    ]
+  },
   "capabilities": [
     {
       "name": "resource_query_pipeline",
@@ -97,32 +109,79 @@
       "evidence_gap": "An independently generated Rails host must prove archive, restore, eager loading, and invalid query behavior."
     },
     {
+      "name": "field_level_authorization",
+      "status": "companion_evidence",
+      "guarantees": [
+        "field read and write decisions deny by default when missing, false, or raising",
+        "read-denied fields are omitted from generic presentation, mutation JSON, AI context, and dashboard table column selection",
+        "readable write-denied form controls are disabled with an accessible explanation",
+        "forged scalar and declared nested field writes fail before persistence and audit",
+        "HTML, JSON, and Turbo Stream use the standard forbidden response contract"
+      ],
+      "evidence_gap": "An independently generated Rails host must prove field decisions across role-specific presentation, nested relationships, dashboards, AI, and any future export selection."
+    },
+    {
+      "name": "resource_actions_and_transitions",
+      "status": "companion_evidence",
+      "guarantees": [
+        "resource-declared actions and state transitions require matching action authorization",
+        "tenant, provider, and declared field-write checks run before action handlers",
+        "successful actions persist and audit through the mutation transaction",
+        "generic show controls use the same endpoint authorization decision",
+        "HTML, JSON, and Turbo Stream use the normalized mutation response contract"
+      ],
+      "evidence_gap": "An independently generated Rails host must prove permitted, forbidden, invalid-state, and cross-tenant action behavior."
+    },
+    {
+      "name": "dashboard_lifecycle_and_drill_downs",
+      "status": "companion_evidence",
+      "guarantees": [
+        "widgets register a resource, relation factory, explicit visibility predicate, and optional allowlisted drill-down filters",
+        "missing, false, or exception-producing visibility decisions hide a widget",
+        "ready, empty, error, and loading states are normalized without exposing internal errors",
+        "table rows serialize only field-readable columns and use bounded pagination",
+        "companion Turbo refresh renders the same scoped widget lifecycle"
+      ],
+      "evidence_gap": "An independently generated Rails host must prove visible and hidden widgets, filtered drill-downs, state rendering, and table pagination."
+    },
+    {
       "name": "hotwire_ui_foundations",
-      "status": "implemented",
+      "status": "companion_evidence",
       "guarantees": [
         "no jQuery runtime dependency",
         "light, dark, and system theme modes",
         "inline Lucide SVG icons with resource-level icon configuration",
-        "engine default admin shell with host-configured, access-context-filtered navigation",
-        "accessible filter, table, and form primitives",
-        "companion resource empty, validation-error, loading, disabled, notice, alert, and text-labelled status treatments",
+        "engine default admin shell with host-configured, access-context-filtered navigation and fail-closed visibility or active predicates",
+        "install generator manages all engine import-map pins without overwriting host pins",
+        "desktop rail collapse persists locally; mobile drawer starts closed and closes on navigation, backdrop, or Escape with synchronized accessible toggle state",
+        "documented engine components for status, empty, field, filter, table, pagination, and record-detail states",
+        "generic resource pages use field-policy-aware components for empty, validation-error, disabled, notice, alert, and text-labelled status treatments",
+        "pagination retains only allowlisted resource query parameters",
         "deterministic authenticated companion screenshots across light/dark desktop, tablet, and mobile states with heading, icon, and overflow assertions",
-        "visible focus and reduced-motion support"
-      ]
+        "Selenium headless Chrome companion suite runs in CI with screenshot artifact upload and a zero-retry flake budget",
+        "visible focus, named form controls, minimum touch-target, and reduced-motion support"
+      ],
+      "evidence_gap": "An independently generated Rails host must prove a menu of at least ten authorized resources and default-shell index, new, edit, and show states across light, dark, and system modes at 1440px, 768px, and 390px with accessibility and reduced-motion assertions; screen-reader review and portable pixel-diff baselines remain pending."
     },
     {
       "name": "generator_contracts",
-      "status": "implemented",
+      "status": "companion_evidence",
       "generators": [
         "install",
         "resource",
-        "docs-sync"
+        "action",
+        "dashboard",
+        "docs-sync",
+        "showcase"
       ],
       "guarantees": [
-        "idempotent generated files and routes",
-        "documentation-only sync mode",
-        "authenticated and deny-by-default resource scaffolds"
-      ]
+        "idempotent generated files, managed resource action requires, routes, and dashboard declarations",
+        "documentation-only sync preserves runtime host artifacts and content outside managed instruction markers",
+        "Rails inflection supplies resource filenames, constants, and routes",
+        "generated host registries retain host metadata while recording enabled modules and secret-free provider binding slots",
+        "generated resource scaffolds use authenticated deny-by-default policies and Rails integration-test conventions"
+      ],
+      "evidence_gap": "A clean independently created Rails host must prove generated resource rendering and full CRUD/action/dashboard authorization behavior, including collision cases beyond managed files."
     },
     {
       "name": "policy_aware_dashboard_widgets",
@@ -140,13 +199,14 @@
     },
     {
       "name": "showcase_admin_panel",
-      "status": "implemented",
+      "status": "companion_evidence",
       "guarantees": [
-        "tenant-separated support operations demo data",
-        "evaluator and agent walkthroughs",
-        "persisted collapsible desktop navigation rail and accessible mobile overlay drawer",
-        "CI conformance against capability registry"
-      ]
+        "lightweight and full install modes with a version-locked showcase manifest",
+        "full mode supplies seeded two-tenant, support-agent and manager action/transition scenarios",
+        "full mode validates generic resource CRUD/filter scope, audited mutations, and lifecycle dashboard relation output in a disposable companion host",
+        "CI runs static manifest checks and the disposable full showcase host verifier"
+      ],
+      "evidence_gap": "A separately created clean host and stable browser suite must still prove full presentation, navigation, association editing, and AI walkthroughs."
     },
     {
       "name": "in_app_ai_assistant",
@@ -165,6 +225,82 @@
       ]
     },
     {
+      "name": "production_ai_provider_routing_and_trace_operations",
+      "status": "companion_evidence",
+      "guarantees": [
+        "missing, malformed, and exception-producing task-specific providers fail closed with a safe traced provider_failed result",
+        "provider tool calls remain restricted to the V1 read-only allowlist unless an explicit approval policy authorizes a traced mutation proposal",
+        "reference retained traces bind to a tenant, redact output by default, and limit search/export to safe metadata"
+      ],
+      "evidence_gap": "No durable trace/operation store, persisted queued/running lifecycle, authenticated trace controller, Turbo progress/fallback UI, browser/request delivery evidence, or production provider adapter exists yet."
+    },
+    {
+      "name": "ai_v11_reviewable_analysis",
+      "status": "companion_evidence",
+      "operations": [
+        "reviewable_structured_extraction",
+        "cross_record_analysis",
+        "dashboard_narrative",
+        "task_bound_prompt_templates"
+      ],
+      "guarantees": [
+        "structured extraction produces a non-persisting pending-review draft with evidence and a scoped-context fingerprint",
+        "every multi-source input independently applies tenant, policy, and AI field allowlists",
+        "cross-record and dashboard analysis run read-only and reject unsafe provider tool calls",
+        "prompt templates are bound to their declared task"
+      ],
+      "evidence_gap": "No durable draft store, reviewer confirmation UI, request/browser proof, document attachment adapter, or provider-specific structured-output validation exists yet."
+    },
+    {
+      "name": "ai_v2_approved_automation",
+      "status": "companion_evidence",
+      "guarantees": [
+        "automation requires an approval policy returning exactly true before scoped target lookup or mutation",
+        "approved tool execution traces actor, roles, tenant, operation, target identifier, and source-context fingerprint before the mutation",
+        "target records resolve through the canonical tenant and policy-scoped relation and mutations use MutationPipeline"
+      ],
+      "evidence_gap": "No durable reviewed-proposal store, escalation workflow, guided-workflow UI, outbox/retry recovery implementation, authenticated request/browser proof, or multi-source provider adapter exists yet."
+    },
+    {
+      "name": "legacy_migration_and_1_0_release_contract",
+      "status": "companion_evidence",
+      "guarantees": [
+        "a Ripper-backed audit maps recognized legacy resource constants without modifying host code",
+        "the audit emits actionable manual-review warnings and exits non-zero for unsupported automatic translations",
+        "the migration guide provides a direct Car/Passenger has_many recipe and an executable host validation checklist",
+        "the 1.0 release gate requires beta closure, migration evidence, compatibility, security review, rollback ownership, and release approval"
+      ],
+      "evidence_gap": "No independently migrated legacy Car/Passenger host, runtime compatibility shim/deprecation warning, codemod rewrite, remote CI evidence, or approved beta/1.0 release exists yet."
+    },
+    {
+      "name": "import_export_and_large_data_operations",
+      "status": "companion_evidence",
+      "operations": [
+        "profiled_csv_export",
+        "csv_import_preview",
+        "transactional_create_only_csv_import"
+      ],
+      "guarantees": [
+        "exports apply tenant, policy, archive, filter, sort, and field-read controls before optional per-field masking",
+        "exports intentionally exclude ordinary index pagination",
+        "imports validate mapped permitted and writable fields without persisting during preview",
+        "accepted import rows execute through the mutation and audit pipeline",
+        "Active Record audit or row failure rolls back the enclosing import"
+      ],
+      "evidence_gap": "No authenticated controller/UI endpoint, browser/request delivery evidence, durable atomic idempotency-operation store, or persisted background-job retry contract exists yet. A bare fetch/record store is not crash-safe after commit."
+    },
+    {
+      "name": "observability_and_governance",
+      "status": "implemented",
+      "guarantees": [
+        "request, mutation, audit, and AI completion events share a correlation ID",
+        "structured logs, ActiveSupport notifications, metric tags, and tracing payloads redact tenant, field, audit, and AI-sensitive values",
+        "telemetry adapter failures do not alter authorization, mutation, or audit outcomes",
+        "incident response, ADR, governance, and release approval requirements are validated by the operational readiness verifier"
+      ],
+      "evidence_gap": "Hosts must configure production alert routes, retention schedules, and access controls for their selected log, metric, trace, audit, and compliance-export stores."
+    },
+    {
       "name": "companion_demo_application",
       "status": "integration_reference",
       "guarantees": [
@@ -179,6 +315,31 @@
   "feature_flags": {},
   "compatibility": {
     "rails": ">= 8.1, < 10.0",
-    "ruby": ">= 3.3"
+    "ruby": ">= 3.3",
+    "erb": ">= 4.0, < 5.0",
+    "json": ">= 2.0, < 3.0",
+    "ci_lanes": {
+      "minimum": {
+        "ruby": "3.3",
+        "rails": "~> 8.1.3",
+        "blocking": true
+      },
+      "stable": {
+        "ruby": "3.4",
+        "rails": ">= 8.1, < 10.0",
+        "blocking": true
+      },
+      "latest": {
+        "ruby": "4.0",
+        "rails": ">= 8.1, < 10.0",
+        "blocking": true
+      },
+      "preview": {
+        "ruby": "head",
+        "rails": ">= 9.0.a",
+        "blocking": false
+      }
+    },
+    "evidence_gap": "Remote CI results must establish a passing history for every blocking lane; browser and independent generated-host coverage across the matrix remain pending."
   }
 }

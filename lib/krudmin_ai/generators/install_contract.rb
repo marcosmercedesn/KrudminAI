@@ -1,10 +1,12 @@
 require "json"
 require "krudmin_ai/generators/file_writer"
+require "krudmin_ai/generators/host_manifest"
 
 module KrudminAI
   module Generators
     class InstallContract
       DOCS_MARKER = "KRUDMIN_AI_GENERATED_INSTRUCTIONS".freeze
+      IMPORTMAP_MARKER = "KRUDMIN_AI_IMPORTMAP".freeze
 
       def initialize(destination_root:, template_root:)
         @writer = FileWriter.new(destination_root)
@@ -13,8 +15,10 @@ module KrudminAI
 
       def install
         writer.create("config/initializers/krudmin_ai.rb", initializer)
+        sync_importmap
         sync_docs
         writer.create("app/resources/.keep", "# Generated resources live here.\n")
+        manifest.enable("install")
       end
 
       def sync_docs
@@ -22,12 +26,20 @@ module KrudminAI
         writer.write("docs/krudmin_ai/README.md", template("docs/README.md"))
         writer.write("docs/krudmin_ai/architecture.md", template("docs/architecture.md"))
         writer.write("docs/krudmin_ai/provider_contracts.md", template("docs/provider_contracts.md"))
-        writer.write("docs/krudmin_ai/capability_registry.json", capability_registry)
+        manifest.install
+      end
+
+      def sync_importmap
+        writer.replace_managed_block("config/importmap.rb", marker: IMPORTMAP_MARKER, contents: importmap)
       end
 
       private
 
       attr_reader :writer, :template_root
+
+      def manifest
+        @manifest ||= HostManifest.new(writer)
+      end
 
       def template(path)
         File.read(File.join(template_root, path))
@@ -57,16 +69,17 @@ module KrudminAI
         RUBY
       end
 
-      def capability_registry
-        JSON.pretty_generate(
-          schema_version: 1,
-          engine: "KrudminAI",
-          generated_by: "install generator",
-          capabilities: [],
-          providers: {},
-          feature_flags: {}
-        ) + "\n"
+      def importmap
+        <<~RUBY
+          pin "krudmin_ai", to: "krudmin_ai/index.js"
+          pin "krudmin_ai/controllers/filter_panel_controller", to: "krudmin_ai/controllers/filter_panel_controller.js"
+          pin "krudmin_ai/controllers/navigation_controller", to: "krudmin_ai/controllers/navigation_controller.js"
+          pin "krudmin_ai/controllers/nested_fields_controller", to: "krudmin_ai/controllers/nested_fields_controller.js"
+          pin "krudmin_ai/controllers/theme_controller", to: "krudmin_ai/controllers/theme_controller.js"
+          pin "krudmin_ai/theme_mode", to: "krudmin_ai/theme_mode.js"
+        RUBY
       end
+
     end
   end
 end

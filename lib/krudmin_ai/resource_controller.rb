@@ -6,10 +6,13 @@ module KrudminAI
 
     helper_method :model, :models, :resource, :resource_path, :new_resource_path, :edit_resource_path,
             :collection_path, :resource_label, :resources_label, :current_user, :current_tenant,
-          :signed_in?, :navigation_items, :authorized_action?
+          :signed_in?, :navigation_items, :authorized_action?, :field_readable?, :field_writable?,
+          :readable_fields, :readable_relationship_fields, :relationship_field_writable?, :resource_actions,
+            :resource_action_path, :pagination_path
 
     before_action :authenticate_resource_request
-    before_action :load_model, only: %i[show edit update destroy restore]
+    before_action :load_model, only: %i[show edit update destroy restore perform_action]
+    around_action :observe_resource_request
 
     class << self
       def resource(value = nil)
@@ -55,6 +58,13 @@ module KrudminAI
       persist(:restore)
     end
 
+    def perform_action
+      action = resource.action_for(params[:action_name])
+      raise ActionController::RoutingError, "Unknown resource action" unless action
+
+      persist(action.name)
+    end
+
     def model
       @model
     end
@@ -79,6 +89,10 @@ module KrudminAI
       route_helper("#{route_key}_path")
     end
 
+    def pagination_path(page)
+      route_helper("#{route_key}_path", query_params.merge(page: page))
+    end
+
     def resource_label
       resource.label || resource.model_class.model_name.human
     end
@@ -97,6 +111,34 @@ module KrudminAI
       )
     rescue StandardError
       false
+    end
+
+    def field_readable?(field, record = model)
+      resource.field_readable?(field, record, access_context)
+    end
+
+    def field_writable?(field, record = model)
+      resource.field_writable?(field, record, access_context)
+    end
+
+    def readable_fields(fields, record = model)
+      resource.readable_fields(fields, record, access_context)
+    end
+
+    def readable_relationship_fields(relationship, record)
+      relationship.readable_fields(record, access_context)
+    end
+
+    def resource_actions(record = model)
+      resource.resource_actions.values.select { |action| authorized_action?(action.name, record) }
+    end
+
+    def resource_action_path(record, action)
+      route_helper("action_#{route_key.singularize}_path", record, action_name: action)
+    end
+
+    def relationship_field_writable?(relationship, field, record)
+      relationship.field_writable?(field, record, access_context)
     end
 
     def current_user
@@ -119,6 +161,16 @@ module KrudminAI
 
     def authenticate_resource_request
       redirect_to sign_in_path unless access_context.actor
+    end
+
+    def observe_resource_request
+      Observability.with_correlation(request.request_id) do
+        yield
+        Observability.emit("request.completed", method: request.request_method, path: request.path, resource: resource.name, status: response.status)
+      end
+    rescue StandardError => error
+      Observability.emit("request.failed", method: request.request_method, path: request.path, resource: resource.name, error_class: error.class.name)
+      raise
     end
 
     def access_context
@@ -168,7 +220,7 @@ module KrudminAI
         .call(operation:, record: model, attributes: permitted_attributes)
       response = MutationResponseAdapter.for(result, format: request.format.symbol)
 
-      return render json: response.payload, status: response.status if response.format == :json
+      return render json: response.payload.merge(data: serialize_json_record(response.payload[:data])), status: response.status if response.format == :json
       return render_turbo_mutation(response, result, operation) if response.format == :turbo_stream
 
       render_html_mutation(response, result, operation)
@@ -195,7 +247,8 @@ module KrudminAI
         flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")
       end
 
-      render template: response.payload[:template], formats: [:turbo_stream], status: response.status
+      template = resource.action?(operation) ? "krudmin_ai/mutations/action_#{result.success? ? "success" : "error"}" : response.payload[:template]
+      render template:, formats: [:turbo_stream], status: response.status
     end
 
     def query_pipeline(archive: nil)
@@ -222,6 +275,12 @@ module KrudminAI
       )
     end
 
+    def serialize_json_record(record)
+      return unless record
+
+      readable_fields(resource.show, record).to_h { |field| [field, record.public_send(field)] }
+    end
+
     def route_key
       resource.route_key&.to_s || controller_name
     end
@@ -234,7 +293,8 @@ module KrudminAI
       namespace = controller_path.split("/")[0...-1]
       return name if namespace.empty?
 
-      "#{namespace.join("_")}_#{name}"
+      prefix, route_name = name.match(/\A(new|edit|action)_(.+)\z/)&.captures || [nil, name]
+      [prefix, namespace.join("_"), route_name].compact.join("_")
     end
 
     def render_resource_template(name, status: :ok)

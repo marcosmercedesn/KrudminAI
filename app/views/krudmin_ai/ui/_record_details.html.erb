@@ -1,0 +1,8 @@
+<dl class="krudmin-ai-record-details">
+  <% fields.each do |field| %>
+    <div class="krudmin-ai-record-detail">
+      <dt><%= resource.model_class.human_attribute_name(field) %></dt>
+      <dd><%= record.public_send(field).presence || "Not provided" %></dd>
+    </div>
+  <% end %>
+</dl>

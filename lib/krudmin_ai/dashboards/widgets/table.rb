@@ -13,8 +13,18 @@ module KrudminAI
 
         attr_reader :columns
 
+        def visible_columns(record)
+          resource.readable_fields(columns, record, context)
+        end
+
         def records
           paginated_relation(per_page: limit)
+        end
+
+        def rows
+          records.map do |record|
+            visible_columns(record).to_h { |field| [field, record.public_send(field)] }
+          end
         end
 
         private

@@ -5,6 +5,7 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
 
   setup do
     DemoAuditEvent.delete_all
+    DemoPassenger.delete_all
     DemoTicket.delete_all
     DemoUser.delete_all
 
@@ -74,6 +75,45 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     assert_equal ["Added passenger"], @ticket.passengers.reload.pluck(:name)
   end
 
+  test "supports keyboard filtering and announces validation errors" do
+    sign_in
+
+    fill_in "State", with: "not-a-state"
+    click_button "Apply filters"
+    assert_selector ".krudmin-ai-empty-state"
+
+    visit new_ticket_path
+    click_button "Save ticket"
+    assert_selector "[role='alert']", text: "Ticket could not be saved"
+    assert_selector "input[aria-invalid='true']"
+  end
+
+  test "exposes named controls, keyboard focus, and sized touch targets" do
+    sign_in
+    visit ticket_path(@ticket)
+
+    assert_accessibility_baseline
+    assert page.evaluate_script(<<~JAVASCRIPT), "Expected every visible form control to have an accessible name"
+      [...document.querySelectorAll("button, input:not([type=hidden]), select, textarea")]
+        .filter((control) => control.offsetParent !== null)
+        .every((control) => control.labels.length > 0 || control.getAttribute("aria-label") || control.getAttribute("aria-labelledby") || control.innerText.trim() || control.value)
+    JAVASCRIPT
+    assert page.evaluate_script(<<~JAVASCRIPT), "Expected visible form controls to provide a 32px minimum touch target"
+      [...document.querySelectorAll("button, input:not([type=hidden]), select, textarea")]
+        .filter((control) => control.offsetParent !== null)
+        .every((control) => {
+          const bounds = control.getBoundingClientRect()
+          return bounds.width >= 32 && bounds.height >= 32
+        })
+    JAVASCRIPT
+
+    edit_link = find_link("Edit")
+    page.execute_script("arguments[0].focus()", edit_link)
+    edit_link.send_keys(:tab)
+    assert_not page.evaluate_script("document.activeElement === arguments[0]", edit_link)
+    assert_operator page.evaluate_script("parseFloat(getComputedStyle(document.activeElement).outlineWidth)"), :>, 0
+  end
+
   test "captures desktop rail and mobile drawer states" do
     sign_in
 
@@ -106,6 +146,13 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     assert_equal "true", find("[data-sidebar-toggle]")["aria-expanded"]
     capture_screen("navigation-mobile-open-light")
 
+    page.send_keys(:escape)
+    assert_equal "false", find("[data-sidebar-toggle]")["aria-expanded"]
+
+    click_button "Open navigation"
+    find("[data-sidebar-backdrop]").click
+    assert_equal "false", find("[data-sidebar-toggle]")["aria-expanded"]
+
     visit tickets_path
     apply_theme("dark")
     capture_screen("navigation-mobile-closed-dark")
@@ -132,11 +179,22 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
   def capture_screen(name)
     assert_selector "h1"
     assert_selector "svg.krudmin-ai-icon", minimum: 1
-    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth"), "Expected no document-level horizontal overflow"
+    assert_accessibility_baseline
 
     FileUtils.mkdir_p(SCREENSHOT_DIRECTORY)
     screenshot_path = SCREENSHOT_DIRECTORY.join("#{name}.png")
     page.save_screenshot(screenshot_path)
     assert File.exist?(screenshot_path), "Expected screenshot at #{screenshot_path}"
+  end
+
+  def assert_accessibility_baseline
+    assert_selector "main"
+    assert_selector "nav[aria-label='Main navigation']", visible: :all
+    assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth"), "Expected no document-level horizontal overflow"
+
+    focus_target = page.first("a, button, input, select, textarea")
+    page.execute_script("arguments[0].focus()", focus_target)
+    assert page.evaluate_script("document.activeElement === arguments[0]", focus_target)
+    assert_operator page.evaluate_script("parseFloat(getComputedStyle(document.activeElement).outlineWidth)"), :>, 0, "Expected focused controls to have a visible outline"
   end
 end

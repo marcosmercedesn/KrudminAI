@@ -1,0 +1,7 @@
+<% previous_page = page > 1 ? page - 1 : nil %>
+<% next_page = records_count == per_page ? page + 1 : nil %>
+<nav class="krudmin-ai-pagination" aria-label="Pagination">
+  <% if previous_page %><%= link_to "Previous page", pagination_path(previous_page), class: "krudmin-ai-button" %><% else %><span class="krudmin-ai-button" aria-disabled="true">Previous page</span><% end %>
+  <span class="krudmin-ai-pagination__current" aria-current="page">Page <%= page %></span>
+  <% if next_page %><%= link_to "Next page", pagination_path(next_page), class: "krudmin-ai-button" %><% else %><span class="krudmin-ai-button" aria-disabled="true">Next page</span><% end %>
+</nav>

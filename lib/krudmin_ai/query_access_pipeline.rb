@@ -23,6 +23,10 @@ module KrudminAI
       apply_filters(apply_eager_loading(apply_archive_visibility(policy_scoped)))
     end
 
+    def export_relation(relation)
+      apply_sort(authorized_relation(relation))
+    end
+
     private
 
     attr_reader :resource, :context, :params, :authorization_provider

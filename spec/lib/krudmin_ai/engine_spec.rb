@@ -1,4 +1,7 @@
-require "rails_helper"
+require "spec_helper"
+require "erb"
+require "rails"
+require "krudmin_ai/engine"
 
 RSpec.describe KrudminAI::Engine do
   it "is an isolated Rails engine" do

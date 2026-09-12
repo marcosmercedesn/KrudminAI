@@ -1,0 +1,4 @@
+<% state = local_assigns.fetch(:state).to_sym %>
+<% message = local_assigns.fetch(:message) %>
+<% role = state == :error ? "alert" : "status" %>
+<p class="krudmin-ai-status krudmin-ai-status--<%= state %>" role="<%= role %>" aria-live="polite"><%= message %></p>

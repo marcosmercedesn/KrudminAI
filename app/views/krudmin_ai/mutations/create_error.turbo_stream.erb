@@ -1,3 +1,7 @@
+<%= turbo_stream.replace "krudmin-ai-flash" do %>
+  <p class="krudmin-ai-alert" role="alert"><%= flash[:alert] %></p>
+<% end %>
+
 <%= turbo_stream.replace "krudmin-ai-resource-form" do %>
   <section id="krudmin-ai-resource-form" class="krudmin-ai-resource-form">
     <h1>New <%= resource_label %></h1>

@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { normalizeThemeMode, resolveTheme, THEME_STORAGE_KEY } from "krudmin_ai/theme_mode"
 
 export default class extends Controller {
+  static targets = ["select"]
   static values = { mode: String }
 
   connect() {
@@ -24,6 +25,7 @@ export default class extends Controller {
     document.documentElement.dataset.theme = resolveTheme(this.mode, this.mediaQuery.matches)
     document.documentElement.dataset.themeMode = this.mode
     window.localStorage.setItem(THEME_STORAGE_KEY, this.mode)
+    if (this.hasSelectTarget) this.selectTarget.value = this.mode
   }
 
   handleSystemChange() {

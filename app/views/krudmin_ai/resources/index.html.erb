@@ -7,32 +7,15 @@
   </div>
 
   <% if resource.filters.any? %>
-    <%= form_with url: collection_path, method: :get, class: "krudmin-ai-filter-form" do |form| %>
-      <% resource.filters.each_key do |field| %>
-        <div class="krudmin-ai-field">
-          <%= form.label "filters[#{field}]", resource.model_class.human_attribute_name(field) %>
-          <%= form.text_field "filters[#{field}]", value: params.dig(:filters, field) %>
-        </div>
-      <% end %>
-      <%= form.submit "Apply filters", class: "krudmin-ai-button" %>
-    <% end %>
+    <%= render "krudmin_ai/ui/filter_form" %>
   <% end %>
 
   <% if models.any? %>
-    <div class="krudmin-ai-table-wrap">
-      <table class="krudmin-ai-table">
-        <thead><tr><% resource.list.each do |field| %><th scope="col"><%= resource.model_class.human_attribute_name(field) %></th><% end %></tr></thead>
-        <tbody>
-          <% models.each do |record| %>
-            <tr><% resource.list.each_with_index do |field, index| %><td><% value = record.public_send(field) %><%= index.zero? ? link_to(value, resource_path(record)) : value %></td><% end %></tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+    <% list_fields = resource.list.select { |field| models.any? { |record| field_readable?(field, record) } } %>
+    <%= render "krudmin_ai/ui/list_table", resource: resource, records: models, fields: list_fields %>
+    <%= render "krudmin_ai/ui/pagination", page: @query_result.page, per_page: @query_result.per_page, records_count: models.length %>
   <% else %>
-    <section class="krudmin-ai-empty-state" aria-labelledby="empty-resource-title">
-      <h2 id="empty-resource-title">No <%= resources_label.downcase %> found</h2>
-      <% if authorized_action?(:create, resource.model_class.new) %><%= link_to "Create #{resource_label}", new_resource_path, class: "krudmin-ai-button" %><% end %>
-    </section>
+    <% create_action = authorized_action?(:create, resource.model_class.new) ? link_to("Create #{resource_label}", new_resource_path, class: "krudmin-ai-button") : nil %>
+    <%= render "krudmin_ai/ui/empty_state", id: "empty-resource-title", title: "No #{resources_label.downcase} found", action: create_action %>
   <% end %>
 </section>

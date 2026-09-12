@@ -36,4 +36,19 @@ RSpec.describe KrudminAI::NavigationItem do
 
     expect(item).to be_visible(context)
   end
+
+  it "fails closed when a visibility predicate raises or does not return true" do
+    context = Struct.new(:roles).new([:manager])
+    raising_item = described_class.new(label: "Admin", route: :admin_path, visible: ->(_access_context) { raise "unavailable" })
+    ambiguous_item = described_class.new(label: "Reports", route: :reports_path, visible: ->(_access_context) { "yes" })
+
+    expect(raising_item).not_to be_visible(context)
+    expect(ambiguous_item).not_to be_visible(context)
+  end
+
+  it "fails inactive when its custom active predicate raises" do
+    item = described_class.new(label: "Reports", route: :reports_path, active: ->(_view_context) { raise "unavailable" })
+
+    expect(item).not_to be_active(Object.new)
+  end
 end

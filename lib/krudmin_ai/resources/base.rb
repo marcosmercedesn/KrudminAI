@@ -1,3 +1,6 @@
+require "krudmin_ai/resources/action"
+require "krudmin_ai/data_operations/profile"
+
 module KrudminAI
   module Resources
     class ConfigurationError < StandardError; end
@@ -9,7 +12,8 @@ module KrudminAI
                     :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute,
                     :route_key, :icon_name, :resource_label, :resources_label, :list_fields,
                     :form_fields, :show_fields, :relationships, :included_associations,
-                    :preloaded_associations, :archive_attribute
+                    :preloaded_associations, :archive_attribute, :field_authorizers, :resource_actions,
+                    :export_profiles, :import_profiles
 
         def inherited(subclass)
           super
@@ -18,6 +22,8 @@ module KrudminAI
           subclass.instance_variable_set(:@default_sort, default_sort.dup)
           subclass.instance_variable_set(:@pagination_options, pagination_options.dup)
           subclass.instance_variable_set(:@action_authorizers, action_authorizers.dup)
+          subclass.instance_variable_set(:@resource_actions, resource_actions.dup)
+          subclass.instance_variable_set(:@field_authorizers, field_authorizers.dup)
           subclass.instance_variable_set(:@tenant_record_handler, tenant_record_handler)
           subclass.instance_variable_set(:@ai_context_fields, ai_context_fields.dup)
           subclass.instance_variable_set(:@permitted_attributes, permitted_attributes.dup)
@@ -33,6 +39,8 @@ module KrudminAI
           subclass.instance_variable_set(:@included_associations, included_associations.dup)
           subclass.instance_variable_set(:@preloaded_associations, preloaded_associations.dup)
           subclass.instance_variable_set(:@archive_attribute, archive_attribute)
+          subclass.instance_variable_set(:@export_profiles, export_profiles.dup)
+          subclass.instance_variable_set(:@import_profiles, import_profiles.dup)
         end
 
         def model(value = nil)
@@ -60,8 +68,84 @@ module KrudminAI
           action_authorizers[action.to_sym] = handler
         end
 
+        def action(name, label: nil, writes: [], &block)
+          raise ArgumentError, "An action handler is required" unless block
+
+          normalized_name = name.to_sym
+          resource_actions[normalized_name] = Action.new(
+            name: normalized_name,
+            label: label || normalized_name.to_s.tr("_", " ").capitalize,
+            writes:,
+            handler: block
+          )
+        end
+
+        def transition(name, from:, to:, attribute: :state, label: nil)
+          allowed_states = Array(from).map(&:to_s).freeze
+          target_state = to.to_s
+          state_attribute = attribute.to_sym
+          raise ArgumentError, "At least one source state is required" if allowed_states.empty?
+
+          action(name, label:, writes: [state_attribute]) do |record, _context|
+            if allowed_states.include?(record.public_send(state_attribute).to_s)
+              record.public_send("#{state_attribute}=", target_state)
+              true
+            else
+              record.errors.add(state_attribute, "cannot transition from the current state") if record.respond_to?(:errors)
+              false
+            end
+          end
+        end
+
+        def action?(name)
+          resource_actions.key?(name.to_sym)
+        end
+
+        def action_for(name)
+          resource_actions[name.to_sym]
+        end
+
+        def authorize_field(attribute, read:, write:)
+          raise ArgumentError, "A field read authorization handler is required" unless read
+          raise ArgumentError, "A field write authorization handler is required" unless write
+
+          field_authorizers[attribute.to_sym] = { read:, write: }.freeze
+        end
+
+        def field_readable?(attribute, record, context)
+          authorize_field_decision(attribute, :read, record, context)
+        end
+
+        def field_writable?(attribute, record, context)
+          authorize_field_decision(attribute, :write, record, context)
+        end
+
+        def readable_fields(fields, record, context)
+          fields.select { |field| field_readable?(field, record, context) }
+        end
+
+        def writable_fields(fields, record, context)
+          fields.select { |field| field_writable?(field, record, context) }
+        end
+
         def ai_field(attribute, &block)
           ai_context_fields[attribute.to_sym] = block || ->(record) { record.public_send(attribute) }
+        end
+
+        def export_profile(name, fields:, masks: {})
+          normalized_fields = fields.map(&:to_sym).uniq.freeze
+          raise ArgumentError, "Export fields are required" if normalized_fields.empty?
+          raise ArgumentError, "Export masks must be callables" unless masks.values.all? { |mask| mask.respond_to?(:call) }
+
+          export_profiles[name.to_sym] = DataOperations::ExportProfile.new(name.to_sym, normalized_fields, masks.transform_keys(&:to_sym).freeze)
+        end
+
+        def import_profile(name, mapping:, required: [])
+          normalized_mapping = mapping.transform_keys(&:to_s).transform_values(&:to_sym).freeze
+          raise ArgumentError, "Import mapping is required" if normalized_mapping.empty?
+          raise ArgumentError, "Required import fields must be mapped" unless Array(required).map(&:to_sym).all? { |field| normalized_mapping.value?(field) }
+
+          import_profiles[name.to_sym] = DataOperations::ImportProfile.new(name.to_sym, normalized_mapping, Array(required).map(&:to_sym).uniq.freeze)
         end
 
         def permit(*attributes)
@@ -118,7 +202,7 @@ module KrudminAI
           !archive_attribute.nil?
         end
 
-        def has_many(name, fields:, label: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil)
+        def has_many(name, fields:, label: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {})
           raise ArgumentError, "Nested fields are required" if fields.empty?
           raise ArgumentError, "maximum must be positive" unless maximum.positive?
           raise ArgumentError, "A child authorization handler is required" unless authorize
@@ -131,7 +215,8 @@ module KrudminAI
             maximum:,
             order:,
             authorizer: authorize,
-            tenant_record_handler: tenant_record
+            tenant_record_handler: tenant_record,
+            field_authorizers:
           )
         end
 
@@ -211,6 +296,12 @@ module KrudminAI
 
           raise ArgumentError, "Sort direction must be :asc or :desc"
         end
+
+        def authorize_field_decision(attribute, decision, record, context)
+          field_authorizers.dig(attribute.to_sym, decision)&.call(record, context) == true
+        rescue StandardError
+          false
+        end
       end
 
       @filters = {}.freeze
@@ -218,6 +309,8 @@ module KrudminAI
       @default_sort = {}.freeze
       @pagination_options = { per_page: 25, max_per_page: 100 }.freeze
       @action_authorizers = {}.freeze
+      @resource_actions = {}.freeze
+      @field_authorizers = {}.freeze
       @tenant_record_handler = nil
       @ai_context_fields = {}.freeze
       @permitted_attributes = [].freeze
@@ -233,6 +326,8 @@ module KrudminAI
       @included_associations = [].freeze
       @preloaded_associations = [].freeze
       @archive_attribute = nil
+      @export_profiles = {}.freeze
+      @import_profiles = {}.freeze
     end
   end
 end

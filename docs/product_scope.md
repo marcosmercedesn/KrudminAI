@@ -6,7 +6,7 @@ KrudminAI provides an admin-panel-first Rails engine with authenticated resource
 
 ## V1.1 and V2
 
-V1.1 adds reviewable document extraction, cross-record analysis, dashboard narratives, and reusable AI prompt templates. V2 adds guided workflow assistants, approved agent automation, and multi-source analysis.
+V1.1 adds reviewable document extraction, cross-record analysis, dashboard narratives, and reusable AI prompt templates. Provider proposals remain drafts until a human reviewer confirms them through normal authorization and mutation paths. V2 adds guided workflow assistants, approved agent automation, and multi-source analysis. Automation is an explicit reviewed proposal with an approval policy, canonical scoped record lookup, mutation-pipeline execution, and actor/role/tenant trace; it is never autonomous.
 
 ## Non-goals
 
