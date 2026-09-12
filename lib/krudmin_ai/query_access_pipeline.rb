@@ -1,7 +1,4 @@
 module KrudminAI
-  class AuthorizationDenied < StandardError; end
-  class ScopeViolation < StandardError; end
-
   QueryResult = Data.define(:records, :page, :per_page)
 
   class QueryAccessPipeline

@@ -1,6 +1,8 @@
 module KrudminAI
   class AuthenticationRequired < StandardError; end
   class TenantRequired < StandardError; end
+  class AuthorizationDenied < StandardError; end
+  class ScopeViolation < StandardError; end
 
   class AccessContext
     attr_reader :actor, :tenant, :roles

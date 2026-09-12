@@ -5,7 +5,8 @@ module KrudminAI
     class Base
       class << self
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
-                    :sortable_attributes, :default_sort, :pagination_options
+                    :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
+                    :action_authorizers
 
         def inherited(subclass)
           super
@@ -13,6 +14,8 @@ module KrudminAI
           subclass.instance_variable_set(:@sortable_attributes, sortable_attributes.dup)
           subclass.instance_variable_set(:@default_sort, default_sort.dup)
           subclass.instance_variable_set(:@pagination_options, pagination_options.dup)
+          subclass.instance_variable_set(:@action_authorizers, action_authorizers.dup)
+          subclass.instance_variable_set(:@tenant_record_handler, tenant_record_handler)
         end
 
         def model(value = nil)
@@ -27,6 +30,17 @@ module KrudminAI
 
         def policy_scope(callable = nil, &block)
           @policy_scope_handler = callable || block
+        end
+
+        def tenant_record(callable = nil, &block)
+          @tenant_record_handler = callable || block
+        end
+
+        def authorize(action, callable = nil, &block)
+          handler = callable || block
+          raise ArgumentError, "An authorization handler is required" unless handler
+
+          action_authorizers[action.to_sym] = handler
         end
 
         def filter(name, &block)
@@ -63,6 +77,12 @@ module KrudminAI
           raise ConfigurationError, "Default sort must be sortable" unless sortable_attributes.include?(default_sort[:attribute])
         end
 
+        def validate_mutation_contract!(operation)
+          raise ConfigurationError, "Resource model is required" unless model_class
+          raise ConfigurationError, "Tenant record check is required" unless tenant_record_handler
+          raise AuthorizationDenied, "No authorization policy for #{operation}" unless action_authorizers[operation.to_sym]
+        end
+
         private
 
         def normalize_direction(direction)
@@ -77,6 +97,8 @@ module KrudminAI
       @sortable_attributes = [].freeze
       @default_sort = {}.freeze
       @pagination_options = { per_page: 25, max_per_page: 100 }.freeze
+      @action_authorizers = {}.freeze
+      @tenant_record_handler = nil
     end
   end
 end

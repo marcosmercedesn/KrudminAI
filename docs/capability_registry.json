@@ -2,7 +2,29 @@
   "schema_version": 1,
   "engine": "KrudminAI",
   "release": "0.1.0.pre.1",
-  "capabilities": [],
+  "capabilities": [
+    {
+      "name": "resource_query_pipeline",
+      "status": "implemented",
+      "guarantees": [
+        "authenticated actor required",
+        "tenant scope before policy scope",
+        "whitelisted filters and sort fields",
+        "bounded pagination"
+      ]
+    },
+    {
+      "name": "crud_mutation_pipeline",
+      "status": "implemented",
+      "operations": ["create", "update", "destroy"],
+      "guarantees": [
+        "explicit action authorization",
+        "record tenant access check",
+        "audit event required after successful persistence",
+        "normalized HTML, JSON, and Turbo Stream responses"
+      ]
+    }
+  ],
   "providers": {},
   "feature_flags": {},
   "compatibility": {
