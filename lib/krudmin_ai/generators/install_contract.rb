@@ -21,6 +21,7 @@ module KrudminAI
         writer.replace_managed_block("AGENTS.md", marker: DOCS_MARKER, contents: template("host_app/AGENTS.md"))
         writer.write("docs/krudmin_ai/README.md", template("docs/README.md"))
         writer.write("docs/krudmin_ai/architecture.md", template("docs/architecture.md"))
+        writer.write("docs/krudmin_ai/provider_contracts.md", template("docs/provider_contracts.md"))
         writer.write("docs/krudmin_ai/capability_registry.json", capability_registry)
       end
 
@@ -35,8 +36,17 @@ module KrudminAI
       def initializer
         <<~RUBY
           KrudminAI.configure do |config|
-            # Configure host authentication, tenancy, authorization, and auditing providers here.
-            # Provider omissions fail closed for generated admin resources.
+            # Every provider below is required. Missing or malformed adapters stop boot.
+            # authenticate(controller:) -> actor or nil
+            # resolve(controller:, actor:) -> tenant or nil
+            # scope(relation:, resource:, context:) -> restricted relation or nil
+            # authorize?(action:, record:, resource:, context:) -> true or false
+            # record(event) and deliver(notification:) must be implemented by their adapters.
+            # config.authentication_provider = HostAuthenticationProvider.new
+            # config.tenant_provider = HostTenantProvider.new
+            # config.authorization_provider = HostAuthorizationProvider.new
+            # config.audit_provider = HostAuditProvider.new
+            # config.notification_provider = HostNotificationProvider.new
             #
             # Register visible navigation using host route helpers. A resource supplies its
             # plural label and configured icon, while the visibility predicate receives the

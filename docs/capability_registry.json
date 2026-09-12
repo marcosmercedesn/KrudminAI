@@ -30,6 +30,45 @@
       ]
     },
     {
+      "name": "generic_resource_rendering",
+      "status": "companion_evidence",
+      "guarantees": [
+        "engine-owned index, new, edit, and show templates render when a host resource template is absent",
+        "singular and plural resource labels are configurable",
+        "list, form, and show fields default to permitted scalar attributes and can be explicitly configured",
+        "host resource templates remain intentional action-level overrides"
+      ],
+      "evidence_gap": "A disposable generated Rails host has not yet proved boot, request, and system behavior."
+    },
+    {
+      "name": "nested_association_editors",
+      "status": "companion_evidence",
+      "relationships": [
+        "has_many"
+      ],
+      "guarantees": [
+        "declared child field allowlist and maximum row limit",
+        "keyboard-accessible Stimulus add and remove controls without jQuery",
+        "parent-association child ID lookup before assignment",
+        "child tenant and action checks reject crafted cross-tenant IDs",
+        "atomic Active Record parent-child persistence with retained nested validation rows",
+        "affected child identifiers in parent audit metadata"
+      ],
+      "evidence_gap": "The demo Rails host covers Passenger create, validation, add, remove, and cross-tenant rejection; a separately generated Car/Passenger host plus has_one and nested belongs_to support remain pending."
+    },
+    {
+      "name": "provider_contracts_and_security_baseline",
+      "status": "companion_evidence",
+      "guarantees": [
+        "authentication, tenant, authorization, audit, and notification interfaces are validated at boot",
+        "missing or malformed provider configuration raises a deterministic configuration error",
+        "authorization provider denials and exceptions prevent queries and mutations",
+        "the companion uses explicit local provider adapters",
+        "generated-host documentation defines session, CSRF, cookie, header, redaction, tenant, and super-admin requirements"
+      ],
+      "evidence_gap": "An independently generated Rails host must still prove boot-time configuration failure before serving protected resources."
+    },
+    {
       "name": "hotwire_ui_foundations",
       "status": "implemented",
       "guarantees": [

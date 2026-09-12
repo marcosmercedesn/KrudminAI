@@ -1,6 +1,7 @@
 require "spec_helper"
 require "krudmin_ai/navigation_item"
 require "krudmin_ai/configuration"
+require "krudmin_ai/providers"
 require "krudmin_ai/resources/base"
 
 RSpec.describe KrudminAI::Configuration do
@@ -16,16 +17,42 @@ RSpec.describe KrudminAI::Configuration do
     expect(configuration.navigation_items.map(&:icon)).to eq([:shopping_cart, :chart_no_axes_combined])
   end
 
-  it "exposes host-provider configuration points" do
-    configuration = described_class.new
-    configuration.authentication_provider = :host_authentication
-    configuration.tenant_provider = :host_tenancy
+  let(:authentication_provider) { KrudminAI::Providers::TestAdapters::Authentication.new(Object.new) }
+  let(:authorization_provider) { KrudminAI::Providers::TestAdapters::Authorization.new }
+  let(:tenant_provider) { KrudminAI::Providers::TestAdapters::Tenant.new(Object.new) }
+  let(:audit_provider) { KrudminAI::Providers::TestAdapters::Audit.new }
+  let(:notification_provider) { KrudminAI::Providers::TestAdapters::Notification.new }
 
-    expect(configuration).to have_attributes(
-      authentication_provider: :host_authentication,
-      tenant_provider: :host_tenancy,
-      authorization_provider: nil,
-      audit_provider: nil
-    )
+  it "validates every configured provider interface" do
+    configuration = described_class.new
+    configuration.authentication_provider = authentication_provider
+    configuration.authorization_provider = authorization_provider
+    configuration.tenant_provider = tenant_provider
+    configuration.audit_provider = audit_provider
+    configuration.notification_provider = notification_provider
+
+    expect(configuration.validate_providers!).to be(true)
+  end
+
+  it "fails closed when a provider is missing" do
+    configuration = described_class.new
+
+    expect { configuration.validate_providers! }
+      .to raise_error(KrudminAI::ProviderConfigurationError, "authentication_provider must be configured")
+  end
+
+  it "rejects malformed implementations for every provider contract" do
+    KrudminAI::Providers::CONTRACTS.each_key do |provider_name|
+      configuration = described_class.new
+      configuration.authentication_provider = authentication_provider
+      configuration.authorization_provider = authorization_provider
+      configuration.tenant_provider = tenant_provider
+      configuration.audit_provider = audit_provider
+      configuration.notification_provider = notification_provider
+      configuration.public_send("#{provider_name}=", Object.new)
+
+      expect { configuration.validate_providers! }
+        .to raise_error(KrudminAI::ProviderConfigurationError, /#{provider_name} must respond to/)
+    end
   end
 end

@@ -2,9 +2,11 @@
 
 KrudminAI ships engine-owned CSS tokens and Hotwire modules without jQuery. Load `krudmin_ai/application.css` and `krudmin_ai/index.js` through the host application's Propshaft and import-map or JavaScript bundling setup.
 
+The generic form renders each declared direct `has_many` relationship through an accessible nested editor. Its `krudmin-ai-nested-fields` controller adds rows from an HTML template and marks persisted rows for Rails nested-attribute deletion. The server enforces the row limit and child access checks; client controls are only a convenience. See [nested_relationships.md](nested_relationships.md).
+
 `krudmin-ai-theme` persists `light`, `dark`, or `system` under `krudmin-ai-theme`. It sets `data-theme` and `data-theme-mode` on the document root; system mode reacts to operating-system preference changes.
 
-The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials are initial generated-resource primitives. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
+The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials are initial generated-resource primitives. Engine-owned default index, form, and show templates consume a resource's `list`, `form`, and `show` metadata and use normal Rails form controls for permitted scalar fields. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
 
 KrudminAI uses `lucide-rails` for inline SVG icons. Resources configure an icon with a Lucide identifier, using Ruby symbol notation; the default is `:file_text`. Render resource and action icons with `krudmin_ai_icon`, which normalizes underscores to Lucide's dashed icon names and marks decorative icons as hidden from assistive technology.
 

@@ -16,4 +16,6 @@ result = KrudminAI::MutationPipeline.new(resource: OrdersResource, context:, aud
 response = KrudminAI::MutationResponseAdapter.for(result, format: request.format.symbol)
 ```
 
+For declared direct `has_many` relationships, the pipeline validates every existing child ID through the parent association and evaluates the relationship's child tenant and action predicates before assigning nested attributes. New child rows receive the parent tenant before validation. Active Record saves parent and children atomically; invalid children retain nested errors on the parent form. Audit events include affected child IDs. See [nested_relationships.md](nested_relationships.md).
+
 The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. HTML success returns a `303` redirect, JSON create returns `201`, and Turbo Stream selects an operation-specific success or error template. Controller integration and transaction-aware audit persistence are deferred to a later Rails integration slice.

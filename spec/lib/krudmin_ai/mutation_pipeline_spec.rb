@@ -100,6 +100,30 @@ RSpec.describe KrudminAI::MutationPipeline do
     expect(auditor.events).to be_empty
   end
 
+  it "does not mutate or audit when the authorization provider denies or raises" do
+    denied_provider = KrudminAI::Providers::TestAdapters::Authorization.new(allowed: false)
+    raising_provider = Class.new do
+      def authorize?(action:, record:, resource:, context:)
+        true
+      end
+    end.new
+    allow(raising_provider).to receive(:authorize?).and_raise("provider unavailable")
+
+    denied_record = FakeRecord.new
+    raised_record = FakeRecord.new
+
+    denied_result = described_class.new(resource:, context:, auditor:, authorization_provider: denied_provider)
+      .call(operation: :destroy, record: denied_record)
+    raised_result = described_class.new(resource:, context:, auditor:, authorization_provider: raising_provider)
+      .call(operation: :destroy, record: raised_record)
+
+    expect(denied_result.outcome).to eq(:forbidden)
+    expect(raised_result.outcome).to eq(:forbidden)
+    expect(denied_record.destroy_calls).to eq(0)
+    expect(raised_record.destroy_calls).to eq(0)
+    expect(auditor.events).to be_empty
+  end
+
   it "does not mutate a record outside the current tenant" do
     resource.tenant_record { |_record, _context| false }
     record = FakeRecord.new

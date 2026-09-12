@@ -202,6 +202,29 @@
   font-size: 0.8125rem;
   font-weight: 600;
 }
+.krudmin-ai-nested-fields {
+  border: 1px solid var(--krudmin-ai-border);
+  border-radius: var(--krudmin-ai-radius);
+  display: grid;
+  gap: var(--krudmin-ai-space-3);
+  grid-column: 1 / -1;
+  padding: var(--krudmin-ai-space-4);
+}
+.krudmin-ai-nested-row {
+  align-items: end;
+  border-bottom: 1px solid var(--krudmin-ai-border);
+  display: grid;
+  gap: var(--krudmin-ai-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  padding-block: var(--krudmin-ai-space-3);
+}
+.krudmin-ai-nested-row:last-child {
+  border-bottom: 0;
+}
+.krudmin-ai-field-error {
+  color: var(--krudmin-ai-danger);
+  margin: 0;
+}
 .krudmin-ai-input,
 .krudmin-ai-select,
 .krudmin-ai-textarea {

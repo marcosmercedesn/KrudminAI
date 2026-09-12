@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_090200) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_12_110000) do
   create_table "demo_audit_events", force: :cascade do |t|
     t.string "actor_name"
     t.datetime "created_at", null: false
@@ -22,6 +22,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090200) do
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant", "created_at"], name: "index_demo_audit_events_on_tenant_and_created_at"
+  end
+
+  create_table "demo_passengers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "demo_ticket_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "tenant", null: false
+    t.datetime "updated_at", null: false
+    t.index ["demo_ticket_id", "tenant"], name: "index_demo_passengers_on_demo_ticket_id_and_tenant"
+    t.index ["demo_ticket_id"], name: "index_demo_passengers_on_demo_ticket_id"
   end
 
   create_table "demo_tickets", force: :cascade do |t|
@@ -44,4 +55,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_090200) do
     t.datetime "updated_at", null: false
     t.index ["tenant", "name"], name: "index_demo_users_on_tenant_and_name", unique: true
   end
+
+  add_foreign_key "demo_passengers", "demo_tickets"
 end

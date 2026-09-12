@@ -265,7 +265,9 @@ h2 {
   max-width: 44rem;
 }
 .toolbar,
-.form-actions {
+.form-actions,
+.krudmin-ai-resource-heading,
+.krudmin-ai-form-actions {
   align-items: end;
   display: flex;
   flex-wrap: wrap;
@@ -278,7 +280,10 @@ h2 {
 .companion-form,
 .metric,
 .panel,
-.table-wrap {
+.table-wrap,
+.krudmin-ai-filter-form,
+.krudmin-ai-form-grid,
+.krudmin-ai-table-wrap {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -286,7 +291,9 @@ h2 {
 }
 .filter-form,
 .ticket-form,
-.companion-form {
+.companion-form,
+.krudmin-ai-filter-form,
+.krudmin-ai-form-grid {
   display: grid;
   gap: 1rem;
   padding: 1rem;
@@ -294,13 +301,18 @@ h2 {
 .filter-form {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-.field {
+.krudmin-ai-filter-form {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.field,
+.krudmin-ai-field {
   display: grid;
   gap: 0.35rem;
   font-weight: 700;
 }
 .button,
-.quiet-button {
+.quiet-button,
+.krudmin-ai-button {
   align-items: center;
   background: var(--accent);
   border: 1px solid var(--accent);
@@ -315,29 +327,53 @@ h2 {
   padding: 0.62rem 0.9rem;
   text-decoration: none;
 }
-.button:hover {
+.button:hover,
+.krudmin-ai-button:hover {
   background: var(--accent-dark);
+}
+.krudmin-ai-button--danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.krudmin-ai-button--danger:hover {
+  background: var(--danger);
+  color: #ffffff;
+}
+.krudmin-ai-icon-button {
+  height: 2.625rem;
+  padding: 0;
+  width: 2.625rem;
+}
+.krudmin-ai-icon-button .krudmin-ai-icon {
+  height: 1rem;
+  width: 1rem;
 }
 .quiet-button {
   background: transparent;
   border-color: rgb(255 255 255 / 32%);
 }
-.table-wrap {
+.table-wrap,
+.krudmin-ai-table-wrap {
   overflow-x: auto;
 }
-table {
+table,
+.krudmin-ai-table {
   border-collapse: collapse;
   min-width: 42rem;
   width: 100%;
 }
 th,
-td {
+td,
+.krudmin-ai-table th,
+.krudmin-ai-table td {
   border-bottom: 1px solid var(--border);
   padding: 0.85rem;
   text-align: left;
   vertical-align: top;
 }
-th {
+th,
+.krudmin-ai-table th {
   background: var(--surface-subtle);
   color: var(--muted);
   font-size: 0.72rem;
@@ -481,6 +517,122 @@ form.button_to {
   gap: 1rem;
   justify-content: space-between;
   margin-bottom: 1.75rem;
+}
+.krudmin-ai-resource-heading {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.75rem;
+}
+.krudmin-ai-resource-heading h1 {
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+  line-height: 1.15;
+  margin: 0;
+}
+.krudmin-ai-resource-form > h1 {
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
+  line-height: 1.15;
+  margin: 0 0 1.75rem;
+}
+.krudmin-ai-resource-eyebrow {
+  color: var(--accent-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+.krudmin-ai-resource-actions {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+}
+.krudmin-ai-resource-actions form {
+  margin: 0;
+}
+.krudmin-ai-record-details {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  max-width: 58rem;
+  overflow: hidden;
+}
+.krudmin-ai-record-detail {
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 0.45rem;
+  min-height: 6.5rem;
+  padding: 1.15rem 1.25rem;
+}
+.krudmin-ai-record-detail:nth-child(odd) {
+  border-inline-end: 1px solid var(--border);
+}
+.krudmin-ai-record-detail:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+.krudmin-ai-record-detail dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.krudmin-ai-record-detail dd {
+  font-size: 1rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.krudmin-ai-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 58rem;
+}
+.krudmin-ai-form-actions,
+.krudmin-ai-validation-summary,
+.krudmin-ai-nested-fields {
+  grid-column: 1 / -1;
+}
+.krudmin-ai-nested-fields {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+  padding: 1rem;
+}
+.krudmin-ai-nested-fields legend {
+  font-weight: 700;
+  padding-inline: 0.25rem;
+}
+.krudmin-ai-nested-row {
+  align-items: end;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1fr) minmax(5rem, 7rem) auto;
+  padding-bottom: 0.85rem;
+}
+.krudmin-ai-nested-row .krudmin-ai-field {
+  min-width: 0;
+}
+.krudmin-ai-nested-row input {
+  min-width: 0;
+  width: 100%;
+}
+.krudmin-ai-nested-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.krudmin-ai-field-error {
+  color: var(--danger);
+  font-size: 0.8125rem;
+  margin: 0;
 }
 .page-heading .eyebrow {
   margin: 0 0 0.35rem;
@@ -760,17 +912,46 @@ form.button_to {
   }
   .toolbar,
   .form-actions,
-  .page-heading {
+  .page-heading,
+  .krudmin-ai-resource-heading,
+  .krudmin-ai-form-actions {
     align-items: stretch;
     flex-direction: column;
   }
   .filter-form,
+  .krudmin-ai-filter-form,
+  .krudmin-ai-form-grid,
   .grid,
   .metric-grid {
     grid-template-columns: 1fr;
   }
-  .page-heading .button {
+  .page-heading .button,
+  .krudmin-ai-resource-heading .krudmin-ai-button {
     text-align: center;
+  }
+  .krudmin-ai-nested-row {
+    align-items: stretch;
+    grid-template-columns: 1fr;
+  }
+  .krudmin-ai-record-details {
+    grid-template-columns: 1fr;
+  }
+  .krudmin-ai-record-detail,
+  .krudmin-ai-record-detail:nth-child(odd),
+  .krudmin-ai-record-detail:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--border);
+    border-inline-end: 0;
+  }
+  .krudmin-ai-record-detail:last-child {
+    border-bottom: 0;
+  }
+  .krudmin-ai-record-detail {
+    min-height: 4.75rem;
+    padding: 0.9rem 1rem;
+  }
+  .krudmin-ai-nested-row .krudmin-ai-button:not(.krudmin-ai-icon-button),
+  .krudmin-ai-form-actions .krudmin-ai-button {
+    width: 100%;
   }
   .account-card {
     align-items: stretch;

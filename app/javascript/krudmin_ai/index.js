@@ -1,7 +1,9 @@
 import { Application } from "@hotwired/stimulus"
-import FilterPanelController from "./controllers/filter_panel_controller"
-import ThemeController from "./controllers/theme_controller"
+import FilterPanelController from "krudmin_ai/controllers/filter_panel_controller"
+import NestedFieldsController from "krudmin_ai/controllers/nested_fields_controller"
+import ThemeController from "krudmin_ai/controllers/theme_controller"
 
 const application = Application.start()
 application.register("krudmin-ai-filter-panel", FilterPanelController)
+application.register("krudmin-ai-nested-fields", NestedFieldsController)
 application.register("krudmin-ai-theme", ThemeController)

@@ -2,10 +2,11 @@ module KrudminAI
   QueryResult = Data.define(:records, :page, :per_page)
 
   class QueryAccessPipeline
-    def initialize(resource:, context:, params: {})
+    def initialize(resource:, context:, params: {}, authorization_provider: nil)
       @resource = resource
       @context = context
       @params = params
+      @authorization_provider = authorization_provider
     end
 
     def call(relation)
@@ -18,15 +19,25 @@ module KrudminAI
 
       tenant_scoped = apply_scope(resource.tenant_scope_handler, relation, ScopeViolation, "Tenant scope")
       policy_scoped = apply_scope(resource.policy_scope_handler, tenant_scoped, AuthorizationDenied, "Policy scope")
+      policy_scoped = apply_provider_scope(policy_scoped)
       apply_filters(policy_scoped)
     end
 
     private
 
-    attr_reader :resource, :context, :params
+    attr_reader :resource, :context, :params, :authorization_provider
 
     def apply_scope(handler, relation, error_class, name)
       handler.call(relation, context) || raise(error_class, "#{name} denied access")
+    end
+
+    def apply_provider_scope(relation)
+      return relation unless authorization_provider
+
+      authorization_provider.scope(relation: relation, resource: resource, context: context) ||
+        raise(AuthorizationDenied, "Authorization provider denied access")
+    rescue StandardError
+      raise AuthorizationDenied, "Authorization provider denied access"
     end
 
     def apply_filters(relation)

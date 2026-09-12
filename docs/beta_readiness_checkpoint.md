@@ -31,13 +31,13 @@ end
 
 `KrudminAI::ResourceController` now owns authentication-provider access, access-context construction, secure record lookup, canonical query composition, mutation dispatch, audit sink resolution, `model`/`models`, and generic route helpers. It explicitly renders the host `application` layout so host navigation and assets remain intact.
 
-This refactor is not complete: the demo still owns ticket field markup and presentation. The next core slice must move the generic list/form/show rendering surface into the engine, driven by resource metadata. A resource-specific host view should be an optional override, not a prerequisite for CRUD.
+The demo no longer owns ticket resource templates. Engine-owned defaults render its index, new, edit, and show pages from resource labels and list/form/show metadata, while a host resource template remains an optional override. This is companion evidence only; a generated Rails host must still boot and exercise the same behavior before the generic CRUD beta blocker closes.
 
 ## Verified Current State
 
 ### Engine contracts
 
-- `Resources::Base` supports resource model, tenant/policy scopes, record tenant access, mutation action authorization, filters, sort/pagination, AI field allowlists, permitted attributes, tenant key, and route key.
+- `Resources::Base` supports resource model, tenant/policy scopes, record tenant access, mutation action authorization, direct `has_many` metadata, filters, sort/pagination, AI field allowlists, permitted attributes, tenant key, and route key.
 - `QueryAccessPipeline` applies tenant scope, policy scope, filters, sort, then pagination.
 - `MutationPipeline` supplies create/update/destroy authorization, record tenancy checks, result taxonomy, and audit hooks.
 - The response adapter models HTML, JSON, and Turbo Stream results, but the generic resource controller currently delivers only its HTML-oriented branch.
@@ -49,7 +49,7 @@ This refactor is not complete: the demo still owns ticket field markup and prese
 - Local path dependency on the engine; SQLite database and seeds.
 - Session-selected demo users represent two tenants and support-agent/manager roles.
 - `TicketsController` is a resource binding only.
-- Ticket templates use generic `model`, `models`, `collection_path`, `resource_path`, `new_resource_path`, and `edit_resource_path` helpers.
+- Ticket CRUD uses engine-owned templates and generic `model`, `models`, `collection_path`, `resource_path`, `new_resource_path`, and `edit_resource_path` helpers. Its direct `has_many` passenger editor proves nested create, validation retention, add/remove, and cross-tenant child-ID rejection in the companion only.
 - The dashboard and companion pages are still demo-specific integrations.
 - Audit events persist in the demo database; the local companion assistant makes no external provider calls.
 - A live server can be started at `http://127.0.0.1:3000`.
@@ -123,7 +123,7 @@ The original sequence in [krudminai_kickoff_prompt_pack.md](krudminai_kickoff_pr
 
 ## Beta Blockers and Risks
 
-1. **Generic CRUD is incomplete.** Without engine-owned generic rendering and generated-host execution, consumers still need resource-shaped views and can recreate the demo's duplication.
+1. **Generated-host CRUD proof is incomplete.** Engine-owned generic rendering is proven in the companion, but generated-host boot, routes, and request/system evidence are still absent.
 2. **Providers are informal.** Callable configuration can silently misbehave and lacks boot-time validation or contract tests.
 3. **Audit durability is insufficient.** A mutation can persist before audit recording fails; no transaction/outbox reconciliation exists.
 4. **Full format delivery is unproven.** HTML is covered in the generic controller; JSON and Turbo response adapters are not wired through it in request tests.

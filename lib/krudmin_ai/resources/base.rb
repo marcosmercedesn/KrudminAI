@@ -7,7 +7,8 @@ module KrudminAI
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
                     :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute,
-                    :route_key, :icon_name
+                    :route_key, :icon_name, :resource_label, :resources_label, :list_fields,
+                    :form_fields, :show_fields, :relationships
 
         def inherited(subclass)
           super
@@ -22,6 +23,12 @@ module KrudminAI
           subclass.instance_variable_set(:@tenant_attribute, tenant_attribute)
           subclass.instance_variable_set(:@route_key, route_key)
           subclass.instance_variable_set(:@icon_name, icon_name)
+          subclass.instance_variable_set(:@resource_label, resource_label)
+          subclass.instance_variable_set(:@resources_label, resources_label)
+          subclass.instance_variable_set(:@list_fields, list_fields.dup)
+          subclass.instance_variable_set(:@form_fields, form_fields.dup)
+          subclass.instance_variable_set(:@show_fields, show_fields.dup)
+          subclass.instance_variable_set(:@relationships, relationships.dup)
         end
 
         def model(value = nil)
@@ -55,6 +62,57 @@ module KrudminAI
 
         def permit(*attributes)
           @permitted_attributes = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def label(value = nil)
+          return resource_label unless value
+
+          @resource_label = value.to_s
+        end
+
+        def plural_label(value = nil)
+          return resources_label unless value
+
+          @resources_label = value.to_s
+        end
+
+        def list(*attributes)
+          return list_fields.empty? ? permitted_attributes : list_fields unless attributes.any?
+
+          @list_fields = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def form(*attributes)
+          return form_fields.empty? ? permitted_attributes : form_fields unless attributes.any?
+
+          @form_fields = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def show(*attributes)
+          return show_fields.empty? ? permitted_attributes : show_fields unless attributes.any?
+
+          @show_fields = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def has_many(name, fields:, label: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil)
+          raise ArgumentError, "Nested fields are required" if fields.empty?
+          raise ArgumentError, "maximum must be positive" unless maximum.positive?
+          raise ArgumentError, "A child authorization handler is required" unless authorize
+          raise ArgumentError, "A child tenant record handler is required" unless tenant_record
+
+          relationships[name.to_sym] = Relationship.new(
+            name:,
+            fields:,
+            label: label || name.to_s.humanize,
+            maximum:,
+            order:,
+            authorizer: authorize,
+            tenant_record_handler: tenant_record
+          )
+        end
+
+        def nested_permitted_attributes
+          relationships.values.map(&:parameter)
         end
 
         def tenant_key(attribute = nil)
@@ -141,6 +199,12 @@ module KrudminAI
       @tenant_attribute = :tenant
       @route_key = nil
       @icon_name = :file_text
+      @resource_label = nil
+      @resources_label = nil
+      @list_fields = [].freeze
+      @form_fields = [].freeze
+      @show_fields = [].freeze
+      @relationships = {}.freeze
     end
   end
 end

@@ -2,7 +2,7 @@ module KrudminAI
   class AuditSinkRequired < StandardError; end
   class AuditFailure < StandardError; end
 
-  AuditEvent = Data.define(:operation, :actor, :tenant, :roles, :record_id)
+  AuditEvent = Data.define(:operation, :actor, :tenant, :roles, :record_id, :affected_child_references)
 
   MutationResult = Data.define(:operation, :outcome, :record, :errors, :audit_event) do
     def success?
@@ -13,10 +13,11 @@ module KrudminAI
   class MutationPipeline
     OPERATIONS = %i[create update destroy].freeze
 
-    def initialize(resource:, context:, auditor:)
+    def initialize(resource:, context:, auditor:, authorization_provider: nil)
       @resource = resource
       @context = context
       @auditor = auditor
+      @authorization_provider = authorization_provider
     end
 
     def call(operation:, record:, attributes: {})
@@ -26,6 +27,8 @@ module KrudminAI
       validate_auditor!
       authorize_tenant!(record)
       authorize_action!(operation, record)
+      validate_relationships!(record, attributes) if %i[create update].include?(operation)
+      @submitted_child_references = submitted_child_references(attributes) if %i[create update].include?(operation)
 
       return failure(operation, :invalid, record_errors(record)) unless persist(operation, record, attributes)
 
@@ -47,7 +50,7 @@ module KrudminAI
 
     private
 
-    attr_reader :resource, :context, :auditor
+    attr_reader :resource, :context, :auditor, :authorization_provider
 
     def normalize_operation(operation)
       normalized = operation.to_sym
@@ -68,18 +71,46 @@ module KrudminAI
 
     def authorize_action!(operation, record)
       handler = resource.action_authorizers.fetch(operation)
-      return if handler.call(record, context)
+      return if handler.call(record, context) && provider_authorized?(operation, record)
 
       raise AuthorizationDenied, "Authorization policy rejected #{operation}"
     end
 
+    def provider_authorized?(operation, record)
+      return true unless authorization_provider
+
+      authorization_provider.authorize?(action: operation, record: record, resource: resource, context: context)
+    rescue StandardError
+      false
+    end
+
     def persist(operation, record, attributes)
-      record.assign_attributes(attributes) if %i[create update].include?(operation)
-      operation == :destroy ? record.destroy : record.save
+      return record.destroy if operation == :destroy
+
+      save_record = -> do
+        record.assign_attributes(attributes)
+        assign_nested_tenants(record)
+        record.save
+      end
+      return save_record.call unless record.class.respond_to?(:transaction)
+
+      record.class.transaction do
+        saved = save_record.call
+        raise ActiveRecord::Rollback unless saved
+
+        saved
+      end
     end
 
     def audit(operation, record)
-      event = AuditEvent.new(operation, context.actor, context.tenant, context.roles, record.respond_to?(:id) ? record.id : nil)
+      event = AuditEvent.new(
+        operation,
+        context.actor,
+        context.tenant,
+        context.roles,
+        record.respond_to?(:id) ? record.id : nil,
+        affected_child_references(record)
+      )
       auditor.record(event)
       event
     rescue StandardError
@@ -90,6 +121,71 @@ module KrudminAI
       errors = record.respond_to?(:errors) ? record.errors : []
       errors = errors.full_messages if errors.respond_to?(:full_messages)
       Array(errors).map { |message| error(:invalid, message) }
+    end
+
+    def validate_relationships!(record, attributes)
+      resource.relationships.each_value do |relationship|
+        rows = nested_rows(attributes, relationship.name)
+        raise ScopeViolation, "Nested row limit exceeded" if rows.length > relationship.maximum
+
+        rows.each do |row|
+          child = relationship_child(record, relationship, row)
+          action = nested_action(row, child)
+          next if relationship.authorizer.call(child, action, context) && relationship.tenant_record_handler.call(child, context)
+
+          raise AuthorizationDenied, "Nested record access rejected"
+        end
+      end
+    end
+
+    def nested_rows(attributes, name)
+      values = attributes["#{name}_attributes"] || attributes["#{name}_attributes".to_sym] || {}
+      values.respond_to?(:to_unsafe_h) ? values.to_unsafe_h.values : values.to_h.values
+    end
+
+    def relationship_child(record, relationship, row)
+      identifier = row["id"] || row[:id]
+      return relationship_child_class(record, relationship).new unless identifier
+
+      raise ScopeViolation, "New records cannot reference nested children" if record.new_record?
+
+      record.public_send(relationship.name).find(identifier)
+    rescue ActiveRecord::RecordNotFound
+      raise ScopeViolation, "Nested record is outside the parent association"
+    end
+
+    def relationship_child_class(record, relationship)
+      record.association(relationship.name).klass
+    end
+
+    def nested_action(row, child)
+      return :destroy if ActiveModel::Type::Boolean.new.cast(row["_destroy"] || row[:_destroy])
+
+      child.persisted? ? :update : :create
+    end
+
+    def affected_child_references(record)
+      resource.relationships.each_with_object({}) do |(name, relationship), references|
+        next unless relationship
+
+        current_ids = record.public_send(name).map(&:id).compact
+        submitted_ids = (@submitted_child_references || {}).fetch(name, [])
+        references[name] = (current_ids + submitted_ids).uniq
+      end
+    end
+
+    def submitted_child_references(attributes)
+      resource.relationships.each_with_object({}) do |(name, _relationship), references|
+        references[name] = nested_rows(attributes, name).filter_map { |row| row["id"] || row[:id] }
+      end
+    end
+
+    def assign_nested_tenants(record)
+      resource.relationships.each_key do |name|
+        record.public_send(name).each do |child|
+          child.public_send("#{resource.tenant_attribute}=", context.tenant) if child.new_record? && child.respond_to?("#{resource.tenant_attribute}=")
+        end
+      end
     end
 
     def failure(operation, outcome, errors)

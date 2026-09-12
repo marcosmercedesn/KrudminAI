@@ -3,6 +3,7 @@ require "test_helper"
 class TicketAccessTest < ActionDispatch::IntegrationTest
   setup do
     DemoAuditEvent.delete_all
+    DemoPassenger.delete_all
     DemoTicket.delete_all
     DemoUser.delete_all
 
@@ -70,6 +71,83 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_redirected_to ticket_path(ticket)
     assert_equal "northwind", ticket.tenant
     assert_equal "create", DemoAuditEvent.order(:created_at).last.operation
+  end
+
+  test "support agents create a ticket with authorized passengers in one submission" do
+    sign_in(@north_agent)
+
+    assert_difference -> { DemoTicket.count }, 1 do
+      assert_difference -> { DemoPassenger.count }, 2 do
+        post tickets_path, params: { demo_ticket: ticket_attributes.merge(passengers_attributes: {
+          "0" => { name: "Samira Chen", position: 1 },
+          "1" => { name: "Diego Ruiz", position: 2 }
+        }) }
+      end
+    end
+
+    ticket = DemoTicket.order(:created_at).last
+    assert_redirected_to ticket_path(ticket)
+    assert_equal ["Diego Ruiz", "Samira Chen"], ticket.passengers.order(:name).pluck(:name)
+    assert_equal ["northwind"], ticket.passengers.distinct.pluck(:tenant)
+    assert_equal ticket.passengers.pluck(:id).sort, DemoAuditEvent.order(:created_at).last.metadata[:affected_child_references][:passengers].sort
+  end
+
+  test "invalid nested passengers retain submitted rows and leave no partial mutation" do
+    sign_in(@north_agent)
+
+    assert_no_difference -> { DemoTicket.count } do
+      assert_no_difference -> { DemoPassenger.count } do
+        post tickets_path, params: { demo_ticket: ticket_attributes.merge(passengers_attributes: {
+          "0" => { name: "", position: 1 },
+          "1" => { name: "Retained row", position: 2 }
+        }) }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Name can&#39;t be blank"
+    assert_includes response.body, "Retained row"
+    assert_select "input[name='demo_ticket[passengers_attributes][0][name]']"
+    assert_select "input[name='demo_ticket[passengers_attributes][1][name]']"
+  end
+
+  test "authorized updates add and remove passengers atomically" do
+    existing = @north_ticket.passengers.create!(tenant: "northwind", name: "Remove me", position: 1)
+    sign_in(@north_agent)
+
+    assert_no_difference -> { DemoPassenger.count } do
+      patch ticket_path(@north_ticket), params: {
+        demo_ticket: {
+          passengers_attributes: {
+            "0" => { id: existing.id, _destroy: "1" },
+            "1" => { name: "Added passenger", position: 2 }
+          }
+        }
+      }
+    end
+
+    assert_redirected_to ticket_path(@north_ticket)
+    assert_equal ["Added passenger"], @north_ticket.passengers.reload.pluck(:name)
+    assert_equal "update", DemoAuditEvent.order(:created_at).last.operation
+    assert_includes DemoAuditEvent.order(:created_at).last.metadata[:affected_child_references][:passengers], existing.id.to_s
+  end
+
+  test "crafted cross-tenant passenger identifiers fail closed without mutation" do
+    foreign_passenger = @south_ticket.passengers.create!(tenant: "southwind", name: "Outside tenant", position: 1)
+    sign_in(@north_agent)
+
+    assert_no_difference -> { DemoAuditEvent.count } do
+      patch ticket_path(@north_ticket), params: {
+        demo_ticket: {
+          title: "Attempted overwrite",
+          passengers_attributes: { "0" => { id: foreign_passenger.id, name: "Overwritten" } }
+        }
+      }
+    end
+
+    assert_response :forbidden
+    assert_equal "Northwind export", @north_ticket.reload.title
+    assert_equal "Outside tenant", foreign_passenger.reload.name
   end
 
   test "empty results and invalid ticket submissions render accessible operational states" do
@@ -154,5 +232,15 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
   def sign_in(user)
     post session_path, params: { demo_user_id: user.id }
     assert_redirected_to tickets_path
+  end
+
+  def ticket_attributes
+    {
+      title: "Nested Northwind ticket",
+      description: "Created with passengers.",
+      state: "open",
+      priority: "normal",
+      assignee: @north_agent.name
+    }
   end
 end

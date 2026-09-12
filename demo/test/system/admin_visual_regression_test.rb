@@ -40,6 +40,40 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     end
   end
 
+  test "edits a ticket through the engine-owned default resource pages" do
+    sign_in
+
+    click_link @ticket.title
+    click_link "Edit"
+    fill_in "Title", with: "Printer queue restored"
+    click_button "Save ticket"
+
+    assert_current_path ticket_path(@ticket)
+    assert_text "Printer queue restored"
+  end
+
+  test "adds and removes passengers through the nested editor" do
+    @ticket.passengers.create!(tenant: "northwind", name: "Existing passenger", position: 1)
+    sign_in
+
+    visit edit_ticket_path(@ticket)
+    click_button "Add Passenger"
+    click_button "Add Passenger" if all(".krudmin-ai-nested-row").length == 1
+    assert_selector ".krudmin-ai-nested-row", count: 2
+
+    within all(".krudmin-ai-nested-row").last do
+      fill_in "Name", with: "Added passenger"
+      fill_in "Position", with: "2"
+    end
+    within all(".krudmin-ai-nested-row").first do
+      click_button "Remove Passenger"
+    end
+    click_button "Save ticket"
+
+    assert_current_path ticket_path(@ticket)
+    assert_equal ["Added passenger"], @ticket.passengers.reload.pluck(:name)
+  end
+
   test "captures desktop rail and mobile drawer states" do
     sign_in
 

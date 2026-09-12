@@ -4,9 +4,9 @@ module KrudminAI
     class_attribute :resource_class, instance_accessor: false
     layout "krudmin_ai/application"
 
-    helper_method :model, :models, :resource_path, :new_resource_path, :edit_resource_path,
-                  :collection_path, :resource_label, :current_user, :current_tenant, :signed_in?,
-                  :navigation_items
+    helper_method :model, :models, :resource, :resource_path, :new_resource_path, :edit_resource_path,
+            :collection_path, :resource_label, :resources_label, :current_user, :current_tenant,
+          :signed_in?, :navigation_items, :authorized_action?
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy]
@@ -22,12 +22,16 @@ module KrudminAI
     def index
       @query_result = query_pipeline.call(resource.model_class.all)
       @models = @query_result.records
+      render_resource_template(:index)
     end
 
-    def show; end
+    def show
+      render_resource_template(:show)
+    end
 
     def new
       @model = resource.model_class.new
+      render_resource_template(:new)
     end
 
     def create
@@ -35,7 +39,9 @@ module KrudminAI
       persist(:create)
     end
 
-    def edit; end
+    def edit
+      render_resource_template(:edit)
+    end
 
     def update
       persist(:update)
@@ -70,7 +76,23 @@ module KrudminAI
     end
 
     def resource_label
-      resource.model_class.model_name.human
+      resource.label || resource.model_class.model_name.human
+    end
+
+    def resources_label
+      resource.plural_label || resource.model_class.model_name.human(count: 2)
+    end
+
+    def authorized_action?(action, record = model)
+      authorizer = resource.action_authorizers[action.to_sym]
+      authorizer&.call(record, access_context) && authorization_provider.authorize?(
+        action: action.to_sym,
+        record: record,
+        resource: resource,
+        context: access_context
+      )
+    rescue StandardError
+      false
     end
 
     def current_user
@@ -100,13 +122,18 @@ module KrudminAI
     end
 
     def current_actor
-      provider = KrudminAI.config.authentication_provider
-      provider.respond_to?(:call) ? provider.call(self) : nil
+      KrudminAI.config.authentication_provider.authenticate(controller: self)
+    rescue StandardError
+      nil
     end
 
     def current_tenant
-      provider = KrudminAI.config.tenant_provider
-      provider.respond_to?(:call) ? provider.call(self) : nil
+      authorization_actor = current_actor
+      return unless authorization_actor
+
+      KrudminAI.config.tenant_provider.resolve(controller: self, actor: authorization_actor)
+    rescue StandardError
+      nil
     end
 
     def current_roles
@@ -114,8 +141,7 @@ module KrudminAI
     end
 
     def audit_sink
-      provider = KrudminAI.config.audit_provider
-      provider.respond_to?(:call) ? provider.call : provider
+      KrudminAI.config.audit_provider
     end
 
     def sign_in_path
@@ -127,7 +153,12 @@ module KrudminAI
     end
 
     def persist(operation)
-      result = MutationPipeline.new(resource:, context: access_context, auditor: audit_sink)
+      result = MutationPipeline.new(
+        resource:,
+        context: access_context,
+        auditor: audit_sink,
+        authorization_provider: authorization_provider
+      )
         .call(operation:, record: model, attributes: permitted_attributes)
 
       if result.success?
@@ -136,11 +167,23 @@ module KrudminAI
       end
 
       flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")
-      render(operation == :create ? :new : :edit, status: result.outcome == :invalid ? :unprocessable_entity : :forbidden)
+      render_resource_template(
+        operation == :create ? :new : :edit,
+        status: result.outcome == :invalid ? :unprocessable_entity : :forbidden
+      )
     end
 
     def query_pipeline
-      QueryAccessPipeline.new(resource:, context: access_context, params: query_params)
+      QueryAccessPipeline.new(
+        resource:,
+        context: access_context,
+        params: query_params,
+        authorization_provider: authorization_provider
+      )
+    end
+
+    def authorization_provider
+      KrudminAI.config.authorization_provider
     end
 
     def query_params
@@ -148,7 +191,10 @@ module KrudminAI
     end
 
     def permitted_attributes
-      params.fetch(resource.model_class.model_name.param_key, {}).permit(*resource.permitted_attributes)
+      params.fetch(resource.model_class.model_name.param_key, {}).permit(
+        *resource.permitted_attributes,
+        *resource.nested_permitted_attributes
+      )
     end
 
     def route_key
@@ -156,7 +202,22 @@ module KrudminAI
     end
 
     def route_helper(name, *arguments)
-      main_app.public_send(name, *arguments)
+      main_app.public_send(namespaced_route_helper(name), *arguments)
+    end
+
+    def namespaced_route_helper(name)
+      namespace = controller_path.split("/")[0...-1]
+      return name if namespace.empty?
+
+      "#{namespace.join("_")}_#{name}"
+    end
+
+    def render_resource_template(name, status: :ok)
+      if lookup_context.exists?(name.to_s, [controller_path], false)
+        render name, status: status
+      else
+        render template: "krudmin_ai/resources/#{name}", status: status
+      end
     end
   end
 end

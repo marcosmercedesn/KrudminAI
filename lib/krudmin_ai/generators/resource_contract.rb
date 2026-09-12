@@ -44,6 +44,8 @@ module KrudminAI
             routes :#{plural_file_name}
             icon :file_text
             tenant_key :tenant
+            label "#{singular_constant_name}"
+            plural_label "#{plural_constant_name}"
             permit
 
             tenant_scope { |relation, context| relation.where(tenant: context.tenant) }

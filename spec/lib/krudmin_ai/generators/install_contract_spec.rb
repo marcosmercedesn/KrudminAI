@@ -16,9 +16,10 @@ RSpec.describe KrudminAI::Generators::InstallContract do
   it "installs an initializer, AI instructions, and documentation package", :aggregate_failures do
     described_class.new(destination_root:, template_root:).install
 
-    expect(File.read(File.join(destination_root, "config/initializers/krudmin_ai.rb"))).to include("KrudminAI.configure", "config.navigation_item resource: OrdersResource")
+    expect(File.read(File.join(destination_root, "config/initializers/krudmin_ai.rb"))).to include("KrudminAI.configure", "config.authentication_provider = HostAuthenticationProvider.new", "config.navigation_item resource: OrdersResource")
     expect(File.read(File.join(destination_root, "AGENTS.md"))).to include("KRUDMIN_AI_GENERATED_INSTRUCTIONS")
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/architecture.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/provider_contracts.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/capability_registry.json"))
   end
 

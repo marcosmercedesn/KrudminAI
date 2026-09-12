@@ -1,0 +1,12 @@
+<section class="krudmin-ai-nested-row" data-krudmin-ai-nested-fields-target="row" data-persisted="<%= form.object.persisted? %>">
+  <%= form.hidden_field :id if form.object.persisted? %>
+  <%= form.hidden_field :_destroy, value: "0", data: { krudmin_ai_nested_fields_target: "destroyInput" } %>
+  <% relationship.fields.each do |field| %>
+    <div class="krudmin-ai-field">
+      <%= form.label field %>
+      <%= form.text_field field, aria: { invalid: form.object.errors[field].any? } %>
+      <% form.object.errors.full_messages_for(field).each do |message| %><p class="krudmin-ai-field-error"><%= message %></p><% end %>
+    </div>
+  <% end %>
+  <button class="krudmin-ai-button krudmin-ai-button--danger krudmin-ai-icon-button" type="button" aria-label="Remove <%= relationship.label.singularize %>" title="Remove <%= relationship.label.singularize %>" data-action="krudmin-ai-nested-fields#remove"><%= krudmin_ai_icon(:trash_2) %></button>
+</section>

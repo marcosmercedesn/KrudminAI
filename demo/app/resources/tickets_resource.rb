@@ -4,6 +4,22 @@ class TicketsResource < KrudminAI::Resources::Base
   icon :ticket
   tenant_key :tenant
   permit :title, :description, :state, :priority, :assignee
+  label "ticket"
+  plural_label "tickets"
+  list :title, :state, :priority, :assignee
+  form :title, :description, :state, :priority, :assignee
+  show :title, :description, :state, :priority, :assignee
+  has_many :passengers,
+    fields: %i[name position],
+    label: "Passengers",
+    maximum: 6,
+    order: :position,
+    authorize: ->(passenger, action, context) {
+      ticket = passenger.demo_ticket || DemoTicket.new(tenant: context.tenant, assignee: context.actor.name)
+      policy = DemoTicketPolicy.new(context.actor, ticket)
+      action == :create ? policy.create? : policy.update?
+    },
+    tenant_record: ->(passenger, context) { passenger.tenant.blank? || passenger.tenant == context.tenant }
 
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoTicketPolicy::Scope.new(context.actor, relation).resolve }

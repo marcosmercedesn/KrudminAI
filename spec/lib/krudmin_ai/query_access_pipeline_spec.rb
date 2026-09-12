@@ -104,6 +104,21 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
       .to raise_error(KrudminAI::AuthorizationDenied)
   end
 
+  it "fails closed when the authorization provider denies or raises" do
+    denied_provider = KrudminAI::Providers::TestAdapters::Authorization.new(allowed: false)
+    raising_provider = Class.new do
+      def scope(relation:, resource:, context:)
+        relation
+      end
+    end.new
+    allow(raising_provider).to receive(:scope).and_raise("provider unavailable")
+
+    expect { described_class.new(resource:, context:, authorization_provider: denied_provider).call(relation) }
+      .to raise_error(KrudminAI::AuthorizationDenied)
+    expect { described_class.new(resource:, context:, authorization_provider: raising_provider).call(relation) }
+      .to raise_error(KrudminAI::AuthorizationDenied)
+  end
+
   it "does not allow unknown filters or sort fields to reach the relation" do
     result = described_class.new(
       resource:,

@@ -1,5 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
-import { normalizeThemeMode, resolveTheme, THEME_STORAGE_KEY } from "../theme_mode"
+import { normalizeThemeMode, resolveTheme, THEME_STORAGE_KEY } from "krudmin_ai/theme_mode"
 
 export default class extends Controller {
   static values = { mode: String }
