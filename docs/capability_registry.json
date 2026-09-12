@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "engine": "KrudminAI",
+  "release": "0.1.0.pre.1",
+  "capabilities": [],
+  "providers": {},
+  "feature_flags": {},
+  "compatibility": {
+    "rails": ">= 8.1, < 10.0",
+    "ruby": ">= 3.3"
+  }
+}
