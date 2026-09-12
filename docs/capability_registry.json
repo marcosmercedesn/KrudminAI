@@ -62,6 +62,17 @@
         "evaluator and agent walkthroughs",
         "CI conformance against capability registry"
       ]
+    },
+    {
+      "name": "in_app_ai_assistant",
+      "status": "implemented",
+      "tasks": ["record_summary", "record_q_and_a", "document_summary", "report_insight"],
+      "guarantees": [
+        "tenant and policy-scoped allowlisted context",
+        "read-only default",
+        "explicit approval required for mutation-capable requests",
+        "traced provider outputs and rejected tool calls"
+      ]
     }
   ],
   "providers": {},

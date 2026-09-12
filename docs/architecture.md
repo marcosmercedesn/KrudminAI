@@ -6,7 +6,7 @@ The canonical query pipeline is tenant scope, policy scope, filters, sort, pagin
 
 Field adapters will render deterministically for form, list, show, search, and JSON contexts. UI affordances use the same policy decisions as their endpoints. Provider failures deny access or stop the operation; they never silently broaden access.
 
-AI context comes only from policy-authorized, tenant-scoped data with approved field allowlists. AI is suggestion-only by default. Mutations require explicit approval and a trace.
+AI context comes only from policy-authorized, tenant-scoped data with approved field allowlists. AI is suggestion-only by default. Mutations require explicit approval and a trace. The implemented assistant contract supports record summaries, record Q and A, document summaries, and report insights; see [ai_assistant.md](ai_assistant.md).
 
 The UI foundation is Hotwire-first: engine-owned CSS tokens, light/dark/system theme selection, and Stimulus controllers support accessible resource tables, filters, and form shells. See [ui_foundations.md](ui_foundations.md).
 

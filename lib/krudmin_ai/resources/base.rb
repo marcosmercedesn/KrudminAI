@@ -6,7 +6,7 @@ module KrudminAI
       class << self
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
-                    :action_authorizers
+                    :action_authorizers, :ai_context_fields
 
         def inherited(subclass)
           super
@@ -16,6 +16,7 @@ module KrudminAI
           subclass.instance_variable_set(:@pagination_options, pagination_options.dup)
           subclass.instance_variable_set(:@action_authorizers, action_authorizers.dup)
           subclass.instance_variable_set(:@tenant_record_handler, tenant_record_handler)
+          subclass.instance_variable_set(:@ai_context_fields, ai_context_fields.dup)
         end
 
         def model(value = nil)
@@ -41,6 +42,10 @@ module KrudminAI
           raise ArgumentError, "An authorization handler is required" unless handler
 
           action_authorizers[action.to_sym] = handler
+        end
+
+        def ai_field(attribute, &block)
+          ai_context_fields[attribute.to_sym] = block || ->(record) { record.public_send(attribute) }
         end
 
         def filter(name, &block)
@@ -83,6 +88,11 @@ module KrudminAI
           raise AuthorizationDenied, "No authorization policy for #{operation}" unless action_authorizers[operation.to_sym]
         end
 
+        def validate_ai_contract!
+          validate_query_contract!
+          raise ConfigurationError, "At least one AI context field is required" if ai_context_fields.empty?
+        end
+
         private
 
         def normalize_direction(direction)
@@ -99,6 +109,7 @@ module KrudminAI
       @pagination_options = { per_page: 25, max_per_page: 100 }.freeze
       @action_authorizers = {}.freeze
       @tenant_record_handler = nil
+      @ai_context_fields = {}.freeze
     end
   end
 end

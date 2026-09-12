@@ -1,0 +1,12 @@
+%section.krudmin-ai-form-shell{ aria: { label: "AI assistant" } }
+  = form_with url: local_assigns.fetch(:url), method: :post, data: { turbo: true } do |form|
+    .krudmin-ai-form-grid
+      .krudmin-ai-field
+        = form.label :task, "Task"
+        = form.select :task, [["Summarize record", "record_summary"], ["Ask about record", "record_q_and_a"], ["Summarize document", "document_summary"], ["Report insights", "report_insight"]], {}, class: "krudmin-ai-select"
+      .krudmin-ai-field
+        = form.label :prompt, "Prompt"
+        = form.text_area :prompt, class: "krudmin-ai-textarea", required: true
+    .krudmin-ai-form-actions
+      = form.submit "Ask", class: "krudmin-ai-button krudmin-ai-button--primary"
+  = turbo_frame_tag local_assigns.fetch(:frame_id, "krudmin-ai-assistant-response")
