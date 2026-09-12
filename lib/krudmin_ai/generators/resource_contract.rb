@@ -41,6 +41,9 @@ module KrudminAI
         <<~RUBY
           class #{plural_constant_name}Resource < KrudminAI::Resources::Base
             model #{singular_constant_name}
+            routes :#{plural_file_name}
+            tenant_key :tenant
+            permit
 
             tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
             policy_scope { |relation, context| #{singular_constant_name}Policy::Scope.new(context.actor, relation).resolve }
@@ -59,8 +62,8 @@ module KrudminAI
       def controller
         <<~RUBY
           module #{namespace.capitalize}
-            class #{plural_constant_name}Controller < ApplicationController
-              before_action :authenticate_user!
+            class #{plural_constant_name}Controller < KrudminAI::ResourceController
+              resource #{plural_constant_name}Resource
             end
           end
         RUBY

@@ -1,0 +1,11 @@
+<p class="eyebrow">Tenant-scoped resource</p>
+<div class="toolbar"><div><h1>Support tickets</h1><p class="lede">A real list path through KrudminAI’s tenant, policy, filter, sort, and pagination pipeline.</p></div><%= link_to "New ticket", new_resource_path, class: "button" %></div>
+<%= form_with url: collection_path, method: :get, class: "filter-form" do |form| %>
+  <label class="field">State <%= form.select "filters[state]", DemoTicket::STATES, include_blank: "Any state", selected: params.dig(:filters, :state) %></label>
+  <label class="field">Priority <%= form.select "filters[priority]", DemoTicket::PRIORITIES, include_blank: "Any priority", selected: params.dig(:filters, :priority) %></label>
+  <%= form.submit "Apply filters", class: "button" %>
+<% end %>
+<div class="table-wrap"><table><thead><tr><th>Title</th><th>State</th><th>Priority</th><th>Assignee</th><th>Updated</th></tr></thead><tbody>
+  <% models.each do |model| %><tr><td><%= link_to model.title, resource_path(model) %></td><td><span class="badge state-<%= model.state %>"><%= model.state %></span></td><td><%= model.priority %></td><td><%= model.assignee || "Unassigned" %></td><td><%= model.updated_at.strftime("%b %-d, %H:%M") %></td></tr><% end %>
+</tbody></table></div>
+<p class="lede">Page <%= @query_result.page %>, <%= models.size %> ticket(s) shown.</p>

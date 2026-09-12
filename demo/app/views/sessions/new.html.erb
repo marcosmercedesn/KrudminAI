@@ -1,0 +1,13 @@
+<section class="auth-shell">
+  <p class="eyebrow">Local companion app</p>
+  <h1>Choose a demo account</h1>
+  <p class="lede">Each account has a tenant and role. The workspace uses those values for every ticket query, mutation, audit event, and companion request.</p>
+  <div class="account-list">
+    <% @users.each do |user| %>
+      <div class="account-card">
+        <div><strong><%= user.name %></strong><br><span><%= user.tenant %> / <%= user.roles.join(", ") %></span></div>
+        <%= button_to "Enter workspace", session_path(demo_user_id: user.id), class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</section>

@@ -1,0 +1,8 @@
+<%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "ticket-form" do |form| %>
+  <label class="field">Title <%= form.text_field :title, required: true %></label>
+  <label class="field">Description <%= form.text_area :description %></label>
+  <label class="field">State <%= form.select :state, DemoTicket::STATES %></label>
+  <label class="field">Priority <%= form.select :priority, DemoTicket::PRIORITIES %></label>
+  <label class="field">Assignee <%= form.text_field :assignee %></label>
+  <div class="form-actions"><%= link_to "Cancel", model.persisted? ? resource_path(model) : collection_path %><%= form.submit class: "button" %></div>
+<% end %>

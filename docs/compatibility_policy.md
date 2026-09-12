@@ -6,4 +6,4 @@ The minimum Ruby lane is the oldest Ruby release supported by the oldest support
 
 Rails 8.1.3 and Ruby 4 are required compatibility targets during the initial release cycle. KrudminAI follows Semantic Versioning. Deprecated APIs emit actionable warnings for at least one minor release and document their replacement path before removal, except when security requires earlier removal.
 
-Rails 8.1 requires ERB below 6 because its template handler currently depends on a constant removed in ERB 6. This is a temporary compatibility constraint, tested in every required lane and removed when the Rails support window no longer needs it.
+Rails 8.1 requires ERB below 6 because its template handler currently depends on a constant removed in ERB 6. Rails 8.1.3 also requires JSON below 3 because its session and CSRF cookie decoding path invokes `JSON.parse` with the JSON 2.x interface. These are temporary compatibility constraints, tested in every required lane and removed when the Rails support window no longer needs them.

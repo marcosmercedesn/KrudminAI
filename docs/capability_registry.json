@@ -16,12 +16,17 @@
     {
       "name": "crud_mutation_pipeline",
       "status": "implemented",
-      "operations": ["create", "update", "destroy"],
+      "operations": [
+        "create",
+        "update",
+        "destroy"
+      ],
       "guarantees": [
         "explicit action authorization",
         "record tenant access check",
         "audit event required after successful persistence",
-        "normalized HTML, JSON, and Turbo Stream responses"
+        "normalized HTML, JSON, and Turbo Stream responses",
+        "generic resource controller supplies convention-based CRUD plumbing and route helpers"
       ]
     },
     {
@@ -37,7 +42,11 @@
     {
       "name": "generator_contracts",
       "status": "implemented",
-      "generators": ["install", "resource", "docs-sync"],
+      "generators": [
+        "install",
+        "resource",
+        "docs-sync"
+      ],
       "guarantees": [
         "idempotent generated files and routes",
         "documentation-only sync mode",
@@ -47,7 +56,11 @@
     {
       "name": "policy_aware_dashboard_widgets",
       "status": "implemented",
-      "widgets": ["count", "table", "summary"],
+      "widgets": [
+        "count",
+        "table",
+        "summary"
+      ],
       "guarantees": [
         "tenant scope before policy scope",
         "no precomputed aggregate input",
@@ -66,12 +79,27 @@
     {
       "name": "in_app_ai_assistant",
       "status": "implemented",
-      "tasks": ["record_summary", "record_q_and_a", "document_summary", "report_insight"],
+      "tasks": [
+        "record_summary",
+        "record_q_and_a",
+        "document_summary",
+        "report_insight"
+      ],
       "guarantees": [
         "tenant and policy-scoped allowlisted context",
         "read-only default",
         "explicit approval required for mutation-capable requests",
         "traced provider outputs and rejected tool calls"
+      ]
+    },
+    {
+      "name": "companion_demo_application",
+      "status": "integration_reference",
+      "guarantees": [
+        "local Rails host consumes the engine by path dependency",
+        "tenant-scoped ticket workspace and policy-gated mutations",
+        "local-only read-only assistant with persisted trace events",
+        "seeded accounts demonstrate tenant and role behavior"
       ]
     }
   ],

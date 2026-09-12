@@ -20,8 +20,8 @@ RSpec.describe KrudminAI::Generators::ResourceContract do
     policy = File.read(File.join(destination_root, "app/policies/order_policy.rb"))
     routes = File.read(File.join(destination_root, "config/routes.rb"))
 
-    expect(resource).to include("tenant_scope", "policy_scope", "tenant_record", "authorize(:create)")
-    expect(controller).to include("before_action :authenticate_user!")
+    expect(resource).to include("routes :orders", "tenant_key :tenant", "permit", "tenant_scope", "policy_scope", "tenant_record", "authorize(:create)")
+    expect(controller).to include("< KrudminAI::ResourceController", "resource OrdersResource")
     expect(policy).to include("def create? = false", "scope.none")
     expect(routes).to include("namespace :admin", "resources :orders")
     expect(File).to exist(File.join(destination_root, "spec/requests/admin/orders_spec.rb"))

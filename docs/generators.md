@@ -12,13 +12,15 @@ Use docs-sync to refresh only generated documentation, the capability registry, 
 rails generate krudmin_ai:install --docs-only
 ```
 
-The resource generator creates a resource contract, authenticated controller, deny-by-default policy stub, namespaced routes, and request-spec scaffold:
+The resource generator creates a resource contract, thin generic CRUD controller, deny-by-default policy stub, namespaced routes, and request-spec scaffold:
 
 ```sh
 rails generate krudmin_ai:resource Order
 ```
 
-Generated policy methods return `false` and scope resolution returns `scope.none` until the host application supplies explicit authorization rules. Update the resource's tenant scopes, policy scope, tenant record check, and action predicates together.
+Generated controllers inherit `KrudminAI::ResourceController` and contain only `resource OrdersResource`. The engine controller owns authentication through configured providers, access-context creation, tenant/policy query composition, model loading, create/update/destroy, permitted attributes, and generic `model`, `models`, `resource_path`, `new_resource_path`, `edit_resource_path`, and `collection_path` helpers.
+
+The generated `resources :orders` route is the single Rails registration point. It is idempotently managed by the generator; no CRUD action routes or resource-specific helper calls need to be handwritten. Generated policy methods return `false` and scope resolution returns `scope.none` until the host application supplies explicit authorization rules. Update the resource's tenant scopes, policy scope, tenant record check, action predicates, and `permit` list together.
 
 The generated initializer exposes host-provider placeholders through `KrudminAI.configure`. Authentication, authorization, tenant, and audit providers must be configured before generated resources are enabled.
 

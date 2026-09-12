@@ -6,7 +6,8 @@ module KrudminAI
       class << self
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
-                    :action_authorizers, :ai_context_fields
+                    :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute,
+                    :route_key
 
         def inherited(subclass)
           super
@@ -17,6 +18,9 @@ module KrudminAI
           subclass.instance_variable_set(:@action_authorizers, action_authorizers.dup)
           subclass.instance_variable_set(:@tenant_record_handler, tenant_record_handler)
           subclass.instance_variable_set(:@ai_context_fields, ai_context_fields.dup)
+          subclass.instance_variable_set(:@permitted_attributes, permitted_attributes.dup)
+          subclass.instance_variable_set(:@tenant_attribute, tenant_attribute)
+          subclass.instance_variable_set(:@route_key, route_key)
         end
 
         def model(value = nil)
@@ -46,6 +50,22 @@ module KrudminAI
 
         def ai_field(attribute, &block)
           ai_context_fields[attribute.to_sym] = block || ->(record) { record.public_send(attribute) }
+        end
+
+        def permit(*attributes)
+          @permitted_attributes = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def tenant_key(attribute = nil)
+          return tenant_attribute unless attribute
+
+          @tenant_attribute = attribute.to_sym
+        end
+
+        def routes(key = nil)
+          return route_key unless key
+
+          @route_key = key.to_sym
         end
 
         def filter(name, &block)
@@ -110,6 +130,9 @@ module KrudminAI
       @action_authorizers = {}.freeze
       @tenant_record_handler = nil
       @ai_context_fields = {}.freeze
+      @permitted_attributes = [].freeze
+      @tenant_attribute = :tenant
+      @route_key = nil
     end
   end
 end
