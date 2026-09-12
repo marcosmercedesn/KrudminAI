@@ -8,7 +8,8 @@ module KrudminAI
             :collection_path, :resource_label, :resources_label, :current_user, :current_tenant,
           :signed_in?, :navigation_items, :authorized_action?, :field_readable?, :field_writable?,
           :readable_fields, :readable_relationship_fields, :relationship_field_writable?, :resource_actions,
-            :resource_action_path, :pagination_path
+            :resource_action_path, :pagination_path, :filter_current_value, :filter_options, :relationship_records,
+            :readable_relationship_display_fields
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy restore perform_action]
@@ -141,6 +142,30 @@ module KrudminAI
       relationship.field_writable?(field, record, access_context)
     end
 
+    def relationship_records(relationship)
+      records = model.public_send(relationship.name)
+      return records unless relationship.order && records.respond_to?(:order)
+
+      records.order(relationship.order)
+    end
+
+    def readable_relationship_display_fields(relationship, record)
+      relationship.readable_display_fields(record, access_context)
+    end
+
+    def filter_current_value(definition, part = :value)
+      value = params.dig(:filters, definition.name) || params.dig("filters", definition.name.to_s)
+      return value if part == :value && !value.respond_to?(:[])
+
+      value&.[](part) || value&.[](part.to_s)
+    end
+
+    def filter_options(definition)
+      return definition.options unless definition.options.respond_to?(:call)
+
+      definition.options.arity.zero? ? definition.options.call : definition.options.call(access_context)
+    end
+
     def current_user
       current_actor
     end
@@ -265,7 +290,25 @@ module KrudminAI
     end
 
     def query_params
-      params.permit(:page, :per_page, :sort, :archive, filters: resource.filters.keys).to_h
+      params.permit(:page, :per_page, :sort, :archive).to_h.merge(filters: permitted_filters)
+    end
+
+    def permitted_filters
+      resource.filter_definitions.each_with_object({}) do |(name, definition), permitted|
+        value = params.dig(:filters, name) || params.dig("filters", name.to_s)
+        next if value.nil?
+
+        permitted[name] = permitted_filter_value(value, definition)
+      end.compact
+    end
+
+    def permitted_filter_value(value, definition)
+      return value if value.is_a?(String) || value.is_a?(Numeric)
+      return unless value.respond_to?(:to_unsafe_h)
+
+      raw = value.to_unsafe_h
+      allowed_keys = definition.type == :date_range ? %w[from to] : %w[value operator]
+      raw.slice(*allowed_keys).transform_values { |item| item if item.is_a?(String) || item.is_a?(Numeric) }.compact
     end
 
     def permitted_attributes

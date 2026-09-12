@@ -1,12 +1,13 @@
 module KrudminAI
   module Resources
     class Relationship
-      attr_reader :name, :fields, :label, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers
+      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers
 
-      def initialize(name:, fields:, label:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:)
+      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:)
         @name = name.to_sym
         @fields = fields.map(&:to_sym).freeze
         @label = label.to_s
+        @display_fields = display_fields.map(&:to_sym).freeze
         @maximum = maximum
         @order = order
         @authorizer = authorizer
@@ -26,6 +27,10 @@ module KrudminAI
 
       def readable_fields(record, context)
         fields.select { |field| field_readable?(field, record, context) }
+      end
+
+      def readable_display_fields(record, context)
+        display_fields.select { |field| field_readable?(field, record, context) }
       end
 
       def parameter

@@ -151,6 +151,34 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
     expect(result.records.operations).not_to include([:filter, :internal_sql, "unsafe"])
   end
 
+  it "passes only declared structured filter operators to operator-aware handlers" do
+    resource.filter(:name, operators: %i[contains equals]) do |scoped_relation, value, _access_context, operator|
+      scoped_relation.filter(operator, value)
+    end
+
+    result = described_class.new(
+      resource:,
+      context:,
+      params: { filters: { name: { operator: "equals", value: "North" } } }
+    ).call(relation)
+
+    expect(result.records.operations).to include([:filter, :equals, "North"])
+  end
+
+  it "does not pass malformed structured filter operators to the relation" do
+    resource.filter(:name, operators: [:equals]) do |scoped_relation, value, _access_context, operator|
+      scoped_relation.filter(operator, value)
+    end
+
+    result = described_class.new(
+      resource:,
+      context:,
+      params: { filters: { name: { operator: "unsafe", value: "North" } } }
+    ).call(relation)
+
+    expect(result.records.operations).not_to include([:filter, :unsafe, "North"])
+  end
+
   it "clamps per-page requests to the configured maximum" do
     result = described_class.new(resource:, context:, params: { page: "3", per_page: "1000" }).call(relation)
 

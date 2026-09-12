@@ -9,7 +9,12 @@ class OrdersResource < KrudminAI::Resources::Base
   model Order
   tenant_scope { |relation, context| relation.where(organization: context.tenant) }
   policy_scope { |relation, context| OrderPolicy::Scope.new(context.actor, relation).resolve }
-  filter(:status) { |relation, value, _context| relation.where(status: value) }
+  filter :status, type: :select, options: %w[open closed] do |relation, value, _context|
+    relation.where(status: value)
+  end
+  filter :customer_name, operators: %i[contains equals] do |relation, value, _context, operator|
+    operator == :equals ? relation.where(customer_name: value) : relation.where("customer_name LIKE ?", "%#{value}%")
+  end
   sortable :created_at, :status
   default_sort_by :created_at, direction: :desc
   paginate per_page: 25, max_per_page: 100
@@ -23,6 +28,10 @@ result = KrudminAI::QueryAccessPipeline.new(resource: OrdersResource, context:, 
 ```
 
 The pipeline always applies tenant scope, policy scope, provider scope, archive visibility, eager-load directives, whitelisted filters, whitelisted sort, then pagination. Unknown filters, malformed sort values, invalid page numbers, oversized page requests, and invalid archive values cannot alter the relation outside those rules.
+
+## Typed Filters
+
+`filter` declarations render secure generic controls as well as registering their query handler. `:text` filters support `contains`, `equals`, `starts_with`, and `ends_with` by default; `:select` filters use an explicit static or context-aware option collection; and `:date_range` filters submit bounded `from` and `to` values. A handler with four parameters receives the allowlisted operator as its fourth value. Existing three-parameter handlers continue receiving a scalar value.
 
 ## Eager Loading
 

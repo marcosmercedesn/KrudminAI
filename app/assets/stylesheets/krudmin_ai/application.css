@@ -290,6 +290,22 @@
   gap: var(--krudmin-ai-space-4);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
 }
+.krudmin-ai-filter-value,
+.krudmin-ai-filter-range {
+  display: grid;
+  gap: var(--krudmin-ai-space-2);
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(0, 1.2fr);
+}
+.krudmin-ai-relationship-details {
+  margin-block-start: var(--krudmin-ai-space-6);
+}
+.krudmin-ai-relationship-details h2 {
+  font-size: 1rem;
+  margin: 0 0 var(--krudmin-ai-space-3);
+}
+.krudmin-ai-muted {
+  color: var(--krudmin-ai-text-muted);
+}
 
 .krudmin-ai-field {
   display: grid;
@@ -423,6 +439,10 @@
   }
   .krudmin-ai-button {
     inline-size: 100%;
+  }
+  .krudmin-ai-filter-value,
+  .krudmin-ai-filter-range {
+    grid-template-columns: 1fr;
   }
 }
 

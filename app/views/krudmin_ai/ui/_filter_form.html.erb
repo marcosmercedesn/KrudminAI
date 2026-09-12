@@ -1,9 +1,21 @@
 <%= form_with url: collection_path, method: :get, class: "krudmin-ai-filter-form" do |form| %>
   <div class="krudmin-ai-filter-grid">
-    <% resource.filters.each_key do |field| %>
+    <% resource.filter_definitions.each_value do |definition| %>
       <div class="krudmin-ai-field">
-        <%= form.label "filters[#{field}]", resource.model_class.human_attribute_name(field) %>
-        <%= form.text_field "filters[#{field}]", value: params.dig(:filters, field), class: "krudmin-ai-input" %>
+        <%= form.label "filters[#{definition.name}][value]", definition.label %>
+        <% if definition.type == :select %>
+          <%= form.select "filters[#{definition.name}][value]", options_for_select(filter_options(definition), filter_current_value(definition)), { include_blank: "Any" }, class: "krudmin-ai-select" %>
+        <% elsif definition.type == :date_range %>
+          <div class="krudmin-ai-filter-range">
+            <%= form.date_field "filters[#{definition.name}][from]", value: filter_current_value(definition, :from), class: "krudmin-ai-input", aria: { label: "#{definition.label} from" } %>
+            <%= form.date_field "filters[#{definition.name}][to]", value: filter_current_value(definition, :to), class: "krudmin-ai-input", aria: { label: "#{definition.label} to" } %>
+          </div>
+        <% else %>
+          <div class="krudmin-ai-filter-value">
+            <%= form.select "filters[#{definition.name}][operator]", options_for_select(definition.operators.map { |operator| [operator.to_s.humanize, operator] }, filter_current_value(definition, :operator) || definition.operators.first), {}, class: "krudmin-ai-select", aria: { label: "#{definition.label} operator" } %>
+            <%= form.text_field "filters[#{definition.name}][value]", value: filter_current_value(definition), class: "krudmin-ai-input" %>
+          </div>
+        <% end %>
       </div>
     <% end %>
   </div>

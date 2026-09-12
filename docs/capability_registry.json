@@ -155,6 +155,7 @@
         "install generator manages all engine import-map pins without overwriting host pins",
         "desktop rail collapse persists locally; mobile drawer starts closed and closes on navigation, backdrop, or Escape with synchronized accessible toggle state",
         "documented engine components for status, empty, field, filter, table, pagination, and record-detail states",
+        "typed text, select, and date-range filters with allowlisted operators and generic relationship detail tables filtered through child field-read policy",
         "generic resource pages use field-policy-aware components for empty, validation-error, disabled, notice, alert, and text-labelled status treatments",
         "pagination retains only allowlisted resource query parameters",
         "deterministic authenticated companion screenshots across light/dark desktop, tablet, and mobile states with heading, icon, and overflow assertions",

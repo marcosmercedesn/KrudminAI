@@ -1,4 +1,5 @@
 require "krudmin_ai/resources/action"
+require "krudmin_ai/resources/filter"
 require "krudmin_ai/data_operations/profile"
 
 module KrudminAI
@@ -9,7 +10,7 @@ module KrudminAI
       class << self
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
-                    :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute,
+                    :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute, :filter_definitions,
                     :route_key, :icon_name, :resource_label, :resources_label, :list_fields,
                     :form_fields, :show_fields, :relationships, :included_associations,
                     :preloaded_associations, :archive_attribute, :field_authorizers, :resource_actions,
@@ -18,6 +19,7 @@ module KrudminAI
         def inherited(subclass)
           super
           subclass.instance_variable_set(:@filters, filters.dup)
+          subclass.instance_variable_set(:@filter_definitions, filter_definitions.dup)
           subclass.instance_variable_set(:@sortable_attributes, sortable_attributes.dup)
           subclass.instance_variable_set(:@default_sort, default_sort.dup)
           subclass.instance_variable_set(:@pagination_options, pagination_options.dup)
@@ -202,7 +204,7 @@ module KrudminAI
           !archive_attribute.nil?
         end
 
-        def has_many(name, fields:, label: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {})
+        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {})
           raise ArgumentError, "Nested fields are required" if fields.empty?
           raise ArgumentError, "maximum must be positive" unless maximum.positive?
           raise ArgumentError, "A child authorization handler is required" unless authorize
@@ -212,6 +214,7 @@ module KrudminAI
             name:,
             fields:,
             label: label || name.to_s.humanize,
+            display_fields: display || fields,
             maximum:,
             order:,
             authorizer: authorize,
@@ -242,10 +245,19 @@ module KrudminAI
           @icon_name = value.to_sym
         end
 
-        def filter(name, &block)
+        def filter(name, type: :text, label: nil, operators: nil, options: nil, &block)
           raise ArgumentError, "A filter handler is required" unless block
 
-          filters[name.to_sym] = block
+          normalized_name = name.to_sym
+          filters[normalized_name] = block
+          filter_definitions[normalized_name] = Filter.new(
+            name: normalized_name,
+            type:,
+            label: label || normalized_name.to_s.tr("_", " ").capitalize,
+            operators:,
+            options:,
+            handler: block
+          )
         end
 
         def sortable(*attributes)
@@ -305,6 +317,7 @@ module KrudminAI
       end
 
       @filters = {}.freeze
+      @filter_definitions = {}.freeze
       @sortable_attributes = [].freeze
       @default_sort = {}.freeze
       @pagination_options = { per_page: 25, max_per_page: 100 }.freeze

@@ -33,8 +33,19 @@ class TicketsResource < KrudminAI::Resources::Base
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoTicketPolicy::Scope.new(context.actor, relation).resolve }
   tenant_record { |record, context| record.tenant == context.tenant }
-  filter(:state) { |relation, value, _context| value.present? ? relation.where(state: value) : relation }
-  filter(:priority) { |relation, value, _context| value.present? ? relation.where(priority: value) : relation }
+  filter :title, label: "Title", operators: %i[contains equals starts_with] do |relation, value, _context, operator|
+    case operator
+    when :equals then relation.where(title: value)
+    when :starts_with then relation.where("title LIKE ?", "#{value}%")
+    else relation.where("title LIKE ?", "%#{value}%")
+    end
+  end
+  filter :state, type: :select, label: "State", options: DemoTicket::STATES do |relation, value, _context|
+    value.present? ? relation.where(state: value) : relation
+  end
+  filter :priority, type: :select, label: "Priority", options: DemoTicket::PRIORITIES do |relation, value, _context|
+    value.present? ? relation.where(priority: value) : relation
+  end
   sortable :created_at, :state, :priority, :title
   default_sort_by :created_at, direction: :desc
   paginate per_page: 20, max_per_page: 50

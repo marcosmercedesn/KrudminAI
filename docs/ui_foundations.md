@@ -4,6 +4,8 @@ KrudminAI ships engine-owned CSS tokens and Hotwire modules without jQuery. The 
 
 The generic form renders each declared direct `has_many` relationship through an accessible nested editor. Its `krudmin-ai-nested-fields` controller adds rows from an HTML template and marks persisted rows for Rails nested-attribute deletion. The server enforces the row limit and child access checks; client controls are only a convenience. See [nested_relationships.md](nested_relationships.md).
 
+Generic show pages render each declared relationship as a responsive table using its `display:` fields (or its editable fields by default). Every related value is individually filtered through the relationship field-read policy.
+
 `krudmin-ai-theme` persists `light`, `dark`, or `system` under `krudmin-ai-theme`. It sets `data-theme` and `data-theme-mode` on the document root; system mode reacts to operating-system preference changes.
 
 ## Component Contract
@@ -14,13 +16,13 @@ Engine-owned resource pages compose partial components instead of requiring host
 | --- | --- | --- |
 | `ui/status` | `state`, `message` | `error` announces with `role="alert"`; other states announce with `role="status"`. |
 | `ui/empty_state` | `title` | Optional `id` and `action`; retains an authorized creation affordance when available. |
-| `ui/field` | `form`, `field`, `writable`, `access_note_id`, `errors` | Renders labels, invalid state, disabled/explained authorization denial, and field errors. |
+| `ui/field` | `form`, `field`, `writable`, `access_note_id`, `errors` | Transitional generic scalar control that renders labels, invalid state, disabled/explained authorization denial, and field errors. It is not a type-specific field adapter. |
 | `ui/filter_form` | implicit resource-controller context | Renders only declared filters and preserves normal GET query behavior. |
 | `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges. |
 | `ui/pagination` | `page`, `per_page`, `records_count` | Uses `pagination_path`, which carries only the resource controller's allowlisted query parameters. |
 | `ui/record_details` | `resource`, `record`, `fields` | Renders only readable show fields and represents blank values as text. |
 
-The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials remain available for host-composed interfaces. Engine-owned default index, form, and show templates consume a resource's `list`, `form`, and `show` metadata and normal Rails controls for permitted scalar fields. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, disabled control treatment, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
+The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials remain available for host-composed interfaces. Engine-owned default index, form, and show templates consume a resource's `list`, `form`, and `show` metadata and normal Rails controls for permitted scalar fields. This is not yet type-aware: the generic form currently renders a text control and details render raw values. The field adapter foundation must replace that behavior before KrudminAI can claim field parity. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, disabled control treatment, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
 
 KrudminAI uses `lucide-rails` for inline SVG icons. Resources configure an icon with a Lucide identifier, using Ruby symbol notation; the default is `:file_text`. Render resource and action icons with `krudmin_ai_icon`, which normalizes underscores to Lucide's dashed icon names and marks decorative icons as hidden from assistive technology.
 

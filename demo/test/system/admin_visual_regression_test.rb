@@ -78,7 +78,7 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
   test "supports keyboard filtering and announces validation errors" do
     sign_in
 
-    fill_in "State", with: "not-a-state"
+    select "resolved", from: "State"
     click_button "Apply filters"
     assert_selector ".krudmin-ai-empty-state"
 

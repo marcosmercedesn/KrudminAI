@@ -24,4 +24,4 @@ has_many :passengers,
   # existing authorize and tenant_record declarations
 ```
 
-The current engine has no export capability. When export selection is introduced, it must use `resource.readable_fields` for both selectable columns and serialized values; it must not read raw resource metadata directly.
+The current CSV export service supports explicit profiles and field masks, but it does not yet use a first-class field-adapter serialization contract. Export selection and serialization must use `resource.readable_fields` plus the relevant field adapter; they must not read raw resource metadata directly. This is a required part of the field-adapter and durable import/export work in [replacement_implementation_prompt_pack.md](replacement_implementation_prompt_pack.md).

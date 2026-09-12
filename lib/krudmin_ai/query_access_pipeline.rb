@@ -69,10 +69,13 @@ module KrudminAI
 
     def apply_filters(relation)
       filter_params.reduce(relation) do |scoped_relation, (name, value)|
-        handler = resource.filters[name.to_sym]
-        next scoped_relation unless handler
+        definition = resource.filter_definitions[name.to_sym]
+        next scoped_relation unless definition
 
-        handler.call(scoped_relation, value, context)
+        filter_value, operator = normalized_filter_value(value, definition)
+        next scoped_relation unless filter_value
+
+        definition.handler.arity == 4 ? definition.handler.call(scoped_relation, filter_value, context, operator) : definition.handler.call(scoped_relation, filter_value, context)
       end
     end
 
@@ -90,6 +93,24 @@ module KrudminAI
 
     def filter_params
       params.fetch(:filters, params.fetch("filters", {})) || {}
+    end
+
+    def normalized_filter_value(value, definition)
+      return [value, nil] unless value.respond_to?(:to_h)
+
+      values = value.to_h
+      if definition.type == :date_range
+        range = { from: values[:from] || values["from"], to: values[:to] || values["to"] }.compact
+        return [nil, nil] if range.values.all? { |item| item.to_s.empty? }
+
+        return [range, :between]
+      end
+
+      operator = values[:operator] || values["operator"] || definition.operators.first
+      filter_value = values[:value] || values["value"]
+      return [nil, nil] if filter_value.to_s.empty? || !definition.operator?(operator)
+
+      [filter_value, operator.to_sym]
     end
 
     def requested_sort
