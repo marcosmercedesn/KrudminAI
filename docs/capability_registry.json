@@ -43,6 +43,16 @@
         "documentation-only sync mode",
         "authenticated and deny-by-default resource scaffolds"
       ]
+    },
+    {
+      "name": "policy_aware_dashboard_widgets",
+      "status": "implemented",
+      "widgets": ["count", "table", "summary"],
+      "guarantees": [
+        "tenant scope before policy scope",
+        "no precomputed aggregate input",
+        "table widgets use sorting and bounded pagination"
+      ]
     }
   ],
   "providers": {},

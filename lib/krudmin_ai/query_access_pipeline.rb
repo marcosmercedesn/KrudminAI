@@ -9,14 +9,16 @@ module KrudminAI
     end
 
     def call(relation)
+      paginate(apply_sort(authorized_relation(relation)))
+    end
+
+    def authorized_relation(relation)
       context.validate!
       resource.validate_query_contract!
 
       tenant_scoped = apply_scope(resource.tenant_scope_handler, relation, ScopeViolation, "Tenant scope")
       policy_scoped = apply_scope(resource.policy_scope_handler, tenant_scoped, AuthorizationDenied, "Policy scope")
-      filtered = apply_filters(policy_scoped)
-      sorted = apply_sort(filtered)
-      paginate(sorted)
+      apply_filters(policy_scoped)
     end
 
     private

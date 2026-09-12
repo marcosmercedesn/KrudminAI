@@ -11,3 +11,5 @@ AI context comes only from policy-authorized, tenant-scoped data with approved f
 The UI foundation is Hotwire-first: engine-owned CSS tokens, light/dark/system theme selection, and Stimulus controllers support accessible resource tables, filters, and form shells. See [ui_foundations.md](ui_foundations.md).
 
 Install and resource generators use idempotent file contracts. Generated resources preserve authentication, tenant checks, policy scope, deny-by-default action predicates, and matching request-test scaffolds. The docs-only generator mode is restricted to generated documentation and AI instruction artifacts; see [generators.md](generators.md).
+
+Dashboard widgets use the query access pipeline before aggregation or rendering. Count and summary widgets use the authorized relation; table widgets use the complete sorted and paginated path. See [dashboards.md](dashboards.md).
