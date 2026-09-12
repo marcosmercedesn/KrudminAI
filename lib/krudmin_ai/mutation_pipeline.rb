@@ -30,9 +30,9 @@ module KrudminAI
       validate_relationships!(record, attributes) if %i[create update].include?(operation)
       @submitted_child_references = submitted_child_references(attributes) if %i[create update].include?(operation)
 
-      return failure(operation, :invalid, record_errors(record)) unless persist(operation, record, attributes)
+      persisted, event = persist_and_audit(operation, record, attributes)
+      return failure(operation, :invalid, record_errors(record)) unless persisted
 
-      event = audit(operation, record)
       MutationResult.new(operation, :success, record, [], event)
     rescue AuthenticationRequired
       failure(operation, :unauthenticated, [error(:unauthenticated, "An authenticated actor is required")])
@@ -92,14 +92,28 @@ module KrudminAI
         assign_nested_tenants(record)
         record.save
       end
-      return save_record.call unless record.class.respond_to?(:transaction)
+      save_record.call
+    end
 
-      record.class.transaction do
-        saved = save_record.call
+    def persist_and_audit(operation, record, attributes)
+      return persist_and_audit_without_transaction(operation, record, attributes) unless record.class.respond_to?(:transaction)
+
+      event = nil
+      persisted = record.class.transaction do
+        saved = persist(operation, record, attributes)
         raise ActiveRecord::Rollback unless saved
 
-        saved
+        event = audit(operation, record)
+        true
       end
+      [persisted, event]
+    end
+
+    def persist_and_audit_without_transaction(operation, record, attributes)
+      persisted = persist(operation, record, attributes)
+      return [false, nil] unless persisted
+
+      [true, audit(operation, record)]
     end
 
     def audit(operation, record)

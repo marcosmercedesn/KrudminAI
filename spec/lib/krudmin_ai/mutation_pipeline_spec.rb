@@ -1,5 +1,6 @@
 require "spec_helper"
 require "krudmin_ai/access_context"
+require "krudmin_ai/providers"
 require "krudmin_ai/resources/base"
 require "krudmin_ai/mutation_pipeline"
 require "krudmin_ai/mutation_response"

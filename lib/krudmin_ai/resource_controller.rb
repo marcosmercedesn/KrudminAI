@@ -160,17 +160,36 @@ module KrudminAI
         authorization_provider: authorization_provider
       )
         .call(operation:, record: model, attributes: permitted_attributes)
+      response = MutationResponseAdapter.for(result, format: request.format.symbol)
 
-      if result.success?
+      return render json: response.payload, status: response.status if response.format == :json
+      return render_turbo_mutation(response, result, operation) if response.format == :turbo_stream
+
+      render_html_mutation(response, result, operation)
+    end
+
+    def render_html_mutation(response, result, operation)
+      if response.payload[:redirect]
         destination = operation == :destroy ? collection_path : resource_path(model)
-        return redirect_to(destination, status: :see_other, notice: "#{resource_label} #{operation}d and audited.")
+        return redirect_to(destination, status: response.status, notice: "#{resource_label} #{operation}d and audited.")
       end
 
       flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")
       render_resource_template(
-        operation == :create ? :new : :edit,
-        status: result.outcome == :invalid ? :unprocessable_entity : :forbidden
+        response.payload[:template],
+        status: response.status
       )
+    end
+
+    def render_turbo_mutation(response, result, operation)
+      if response.payload[:outcome] == :success
+        self.response.set_header("Turbo-Location", operation == :destroy ? collection_path : resource_path(model))
+        flash.now[:notice] = "#{resource_label} #{operation}d and audited."
+      else
+        flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")
+      end
+
+      render template: response.payload[:template], formats: [:turbo_stream], status: response.status
     end
 
     def query_pipeline

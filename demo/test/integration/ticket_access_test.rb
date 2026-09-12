@@ -73,6 +73,75 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_equal "create", DemoAuditEvent.order(:created_at).last.operation
   end
 
+  test "JSON mutation responses use the normalized success and error envelope" do
+    sign_in(@north_agent)
+
+    post tickets_path, params: { demo_ticket: ticket_attributes }, as: :json
+
+    assert_response :created
+    assert_equal "success", JSON.parse(response.body).fetch("outcome")
+    assert_equal "Nested Northwind ticket", JSON.parse(response.body).fetch("data").fetch("title")
+
+    post tickets_path, params: { demo_ticket: ticket_attributes.merge(title: "") }, as: :json
+
+    assert_response :unprocessable_entity
+    error_response = JSON.parse(response.body)
+    assert_nil error_response.fetch("data")
+    assert_equal "invalid", error_response.fetch("outcome")
+    assert_equal "invalid", error_response.fetch("errors").first.fetch("code")
+
+    patch ticket_path(@south_ticket), params: { demo_ticket: { title: "Leaked" } }, as: :json
+
+    assert_response :not_found
+    assert_not_includes response.body, @south_ticket.title
+  end
+
+  test "Turbo Stream mutation responses use success and validation templates" do
+    sign_in(@north_agent)
+
+    post tickets_path, params: { demo_ticket: ticket_attributes }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_equal ticket_path(DemoTicket.order(:created_at).last), response.headers.fetch("Turbo-Location")
+    assert_includes response.body, "krudmin-ai-flash"
+
+    post tickets_path, params: { demo_ticket: ticket_attributes.merge(title: "") }, as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "krudmin-ai-resource-form"
+    assert_includes response.body, "Title can&#39;t be blank"
+  end
+
+  test "audit failure rolls back a mutation before returning an error" do
+    sign_in(@north_agent)
+    original_audit_provider = KrudminAI.config.audit_provider
+    KrudminAI.config.audit_provider = Class.new do
+      def record(event)
+        raise "audit unavailable"
+      end
+    end.new
+
+    assert_no_difference -> { DemoTicket.count } do
+      assert_no_difference -> { DemoAuditEvent.count } do
+        post tickets_path, params: { demo_ticket: ticket_attributes }
+      end
+    end
+
+    assert_response :internal_server_error
+  ensure
+    KrudminAI.config.audit_provider = original_audit_provider
+
+    if original_audit_provider
+      assert_difference -> { DemoTicket.count }, 1 do
+        assert_difference -> { DemoAuditEvent.count }, 1 do
+          post tickets_path, params: { demo_ticket: ticket_attributes }
+        end
+      end
+    end
+  end
+
   test "support agents create a ticket with authorized passengers in one submission" do
     sign_in(@north_agent)
 

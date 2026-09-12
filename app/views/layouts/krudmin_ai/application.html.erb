@@ -14,8 +14,10 @@
         <%= render "krudmin_ai/ui/navigation", items: navigation_items %>
       </aside>
       <main class="krudmin-ai-admin">
-        <% if flash[:notice] %><p class="krudmin-ai-notice" role="status"><%= flash[:notice] %></p><% end %>
-        <% if flash[:alert] %><p class="krudmin-ai-alert" role="alert"><%= flash[:alert] %></p><% end %>
+        <div id="krudmin-ai-flash">
+          <% if flash[:notice] %><p class="krudmin-ai-notice" role="status"><%= flash[:notice] %></p><% end %>
+          <% if flash[:alert] %><p class="krudmin-ai-alert" role="alert"><%= flash[:alert] %></p><% end %>
+        </div>
         <%= yield %>
       </main>
     </div>

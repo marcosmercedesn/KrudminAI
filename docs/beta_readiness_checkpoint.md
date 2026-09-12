@@ -39,8 +39,8 @@ The demo no longer owns ticket resource templates. Engine-owned defaults render 
 
 - `Resources::Base` supports resource model, tenant/policy scopes, record tenant access, mutation action authorization, direct `has_many` metadata, filters, sort/pagination, AI field allowlists, permitted attributes, tenant key, and route key.
 - `QueryAccessPipeline` applies tenant scope, policy scope, filters, sort, then pagination.
-- `MutationPipeline` supplies create/update/destroy authorization, record tenancy checks, result taxonomy, and audit hooks.
-- The response adapter models HTML, JSON, and Turbo Stream results, but the generic resource controller currently delivers only its HTML-oriented branch.
+- `MutationPipeline` supplies create/update/destroy authorization, record tenancy checks, result taxonomy, and transaction-aware audit hooks.
+- `ResourceController` delivers normalized HTML, JSON, and Turbo Stream mutation responses through the response adapter; the demo request suite covers create success, validation failure, and scoped denial behavior.
 - Hotwire/CSS primitives, dashboard widgets, showcase contracts, and read-only AI contracts exist.
 - Install, resource, docs-sync, and showcase generator contracts exist. Resource generator output now targets the thin generic-controller pattern.
 
@@ -125,7 +125,7 @@ The original sequence in [krudminai_kickoff_prompt_pack.md](krudminai_kickoff_pr
 
 1. **Generated-host CRUD proof is incomplete.** Engine-owned generic rendering is proven in the companion, but generated-host boot, routes, and request/system evidence are still absent.
 2. **Providers are informal.** Callable configuration can silently misbehave and lacks boot-time validation or contract tests.
-3. **Audit durability is insufficient.** A mutation can persist before audit recording fails; no transaction/outbox reconciliation exists.
+3. **Generated-host audit evidence is incomplete.** The companion proves transactional audit rollback and retry behavior; an independently generated Rails host must prove the same contract.
 4. **Full format delivery is unproven.** HTML is covered in the generic controller; JSON and Turbo response adapters are not wired through it in request tests.
 5. **Security baseline is undocumented.** The absence of defined session, CSRF, header, cookie, and data-masking policy blocks beta claims.
 6. **Generated applications are not the test target.** Generator unit tests are not proof that generated code boots, routes, renders, and authorizes correctly.

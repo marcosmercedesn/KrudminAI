@@ -69,6 +69,23 @@
       "evidence_gap": "An independently generated Rails host must still prove boot-time configuration failure before serving protected resources."
     },
     {
+      "name": "mutation_response_and_transactional_audit",
+      "status": "companion_evidence",
+      "formats": [
+        "html",
+        "json",
+        "turbo_stream"
+      ],
+      "guarantees": [
+        "controller mutations use one normalized response adapter",
+        "JSON responses use data, errors, and outcome keys with mapped statuses",
+        "Turbo Stream responses select operation-specific success and error templates",
+        "Active Record audit failures roll back the parent mutation",
+        "a successful retry after audit recovery produces one effective event"
+      ],
+      "evidence_gap": "An independently generated Rails host must exercise each mutation outcome in every response format."
+    },
+    {
       "name": "hotwire_ui_foundations",
       "status": "implemented",
       "guarantees": [

@@ -1,6 +1,6 @@
 # Mutation Pipeline
 
-`KrudminAI::MutationPipeline` accepts only `create`, `update`, and `destroy`. Each command validates the authenticated actor and tenant, checks record tenancy, evaluates the explicit action policy, persists the record, and emits an audit event. Missing authorization, tenant ownership, or audit configuration stops the command before persistence.
+`KrudminAI::MutationPipeline` accepts only `create`, `update`, and `destroy`. Each command validates the authenticated actor and tenant, checks record tenancy, evaluates the explicit action policy, persists the record, and emits an audit event. For Active Record records, persistence and audit recording share one database transaction: an audit exception rolls back the mutation. Missing authorization, tenant ownership, or audit configuration stops the command before persistence.
 
 ```ruby
 class OrdersResource < KrudminAI::Resources::Base
@@ -18,4 +18,8 @@ response = KrudminAI::MutationResponseAdapter.for(result, format: request.format
 
 For declared direct `has_many` relationships, the pipeline validates every existing child ID through the parent association and evaluates the relationship's child tenant and action predicates before assigning nested attributes. New child rows receive the parent tenant before validation. Active Record saves parent and children atomically; invalid children retain nested errors on the parent form. Audit events include affected child IDs. See [nested_relationships.md](nested_relationships.md).
 
-The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. HTML success returns a `303` redirect, JSON create returns `201`, and Turbo Stream selects an operation-specific success or error template. Controller integration and transaction-aware audit persistence are deferred to a later Rails integration slice.
+The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. `ResourceController` sends every mutation through `MutationResponseAdapter`: HTML success returns a `303` redirect; JSON returns `{ data, errors, outcome }` with `201` for creates and mapped error statuses; Turbo Stream renders an operation-specific success or error stream and uses `Turbo-Location` after success.
+
+## Audit Recovery And Retention
+
+An audit provider failure aborts the transaction and returns the `audit_failed` outcome with no durable record mutation or effective audit event. Retrying the request after the provider recovers performs one normal mutation and emits one event. Providers must treat `AuditEvent` as immutable, persist actor, tenant, roles, operation, record identifier, and affected child references, and retain events under the host's compliance policy. Audit readers must be separately authorized and metadata must be redacted before persistence; do not store secrets, session identifiers, credentials, raw export data, or unallowlisted AI content.
