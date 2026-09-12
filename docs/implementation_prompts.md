@@ -1,483 +1,412 @@
 # KrudminAI Implementation Prompts
 
-This file is the task index for the repo. You do not need to copy/paste the whole prompt body. You can simply reference the relevant task by number, stage name, or short alias, and then tell the agent: “do 1”, “do next”, “start”, or “continue”.
+This is the authoritative execution backlog for KrudminAI. It is derived from the replacement inventory, beta readiness checkpoint, capability registry, architecture, product scope, and current repository evidence.
 
-## Quick task map
+The previous index omitted a legacy-core requirement: nested forms and association editors. This index gives every pending commitment an explicit task, names the evidence required to close it, and distinguishes implemented engine contracts from companion-demo and generated-host proof.
 
-- 1 — Generic Resource Delivery and Generated-Host Conformance
-- 2 — Provider Contracts and Security Baseline
-- 3 — Format Delivery and Durable Audit
-- 4 — Documentation and Capability Registry Maintenance
-- 5 — Next-Slice Planner for the Product Roadmap
-- 6 — Focused Regression Check Before Any New Feature Work
-- 7 — UI Foundation Consolidation
-- 8 — Responsive Navigation and Sidebar Validation
-- 9 — Engine-Owned Admin Shell and Resource Navigation
-- 10 — Resource Screens and Operational UI States
-- 11 — Visual Regression Coverage
-- 12 — UI Documentation and Release Checkpoint
+## Evidence States
 
-## Short aliases
+- **Implemented contract**: engine code and focused tests exist.
+- **Companion evidence**: the local demo proves behavior, but an independent generated host does not.
+- **Pending**: complete implementation and executable evidence do not exist.
+- **Deferred**: deliberate post-beta or post-1.0 work. Deferred work remains visible and assigned.
 
-- “start” = run task 1
-- “do 1” = run task 1
-- “next” = run the next uncompleted task in sequence
-- “continue” = run the next task in sequence
-- “do 2” / “do 3” / etc. = specific task
-- “baseline” = run task 6
-- “plan next” = run task 5
-- “docs” = run task 4
-- “ui foundation” = run task 7
-- “navigation” = run task 8
-- “admin shell” = run task 9
-- “resource ui” = run task 10
-- “visual checks” = run task 11
-- “finish ui” = run task 12
+The query and mutation pipelines, dashboard widget primitives, UI foundations, generator contracts, and read-only AI primitives have implemented-contract evidence. The companion demonstrates portions of CRUD, dashboards, navigation, visual presentation, audit events, and AI. The beta checkpoint remains authoritative: generic host rendering, association editing, formal provider contracts, controller-level JSON/Turbo delivery, durable audit, generated-host execution, and repeatable browser confidence are incomplete.
 
-## How to use this file
+## Rules For Every Task
 
-When you want the agent to proceed, use one of these patterns:
+- Read and honor [AGENTS.md](../AGENTS.md) before changing behavior.
+- Read [architecture.md](architecture.md), [beta_readiness_checkpoint.md](beta_readiness_checkpoint.md), [rails8_replacement_inventory.md](rails8_replacement_inventory.md), and all capability documents touched by the slice.
+- Preserve authentication by default; tenant scope, then policy scope, then filters, sort, and pagination; deny-by-default authorization; and read-only AI unless an explicit approval policy permits a traced mutation.
+- Update focused tests, affected documentation, and [capability_registry.json](capability_registry.json) in the same change. Do not upgrade a registry status without the evidence the task requires.
+- Preserve host override points. Do not import Krudmin's jQuery-era architecture; use Rails 8, Turbo, Stimulus, and module-based assets.
+- Start each task with its narrow baseline. Run `git diff --check` after every task and parse the capability registry whenever it changes.
 
-- “Do 1.”
-- “Start with task 2.”
-- “Do next.”
-- “Continue with the next slice.”
-- “Run the baseline check.”
-- “Plan the next slice.”
-- “Do docs update for the current implementation.”
+## Quick Task Map
 
-The agent should resolve the task by reading this file, locating the matching numbered section below, and executing only that section’s scope.
+### Beta foundation
 
-Important ground rules for all prompts:
-- Read and honor [AGENTS.md](../AGENTS.md) first.
-- Read the relevant docs before changing behavior: [docs/architecture.md](architecture.md), [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md), and the capability docs touched by the slice.
-- Preserve the core invariant: authentication required by default, tenant scope before policy scope before filtering, sorting and pagination, deny-by-default authorization, and read-only AI unless explicit approval.
-- Update tests, docs, and [docs/capability_registry.json](capability_registry.json) when capability behavior changes.
-- Do not drift into unrelated improvements or speculative architecture changes.
+- 0 - Evidence Baseline and Backlog Reconciliation
+- 1 - Generic Resource Delivery and Generated-Host Conformance
+- 2 - Nested Relationships and Association Editors
+- 3 - Provider Contracts and Security Baseline
+- 4 - Response Formats and Durable Audit
+- 5 - Resource Query and Lifecycle Completion
+- 6 - Field-Level Authorization and Denial Presentation
+- 7 - Resource Actions and State Transitions
+- 8 - Dashboard Lifecycle and Secure Drill-Downs
+- 9 - Generator Execution, Host Contracts, and Documentation Sync
+- 10 - Showcase Installation and Scenario Conformance
+- 11 - UI Component Contract and Generated Resource States
+- 12 - Navigation, Admin Shell, and Theme Conformance
+- 13 - Browser, Accessibility, and Visual Regression Policy
+- 14 - Compatibility Matrix and Release Automation
+- 15 - Observability, Governance, and Operational Readiness
+- 16 - Beta Evidence Reconciliation and Release Decision
+
+### Product delivery after beta
+
+- 17 - Import, Export, and Large Data Operations
+- 18 - Production AI Providers, Routing, and Trace Operations
+- 19 - AI V1.1: Extraction, Cross-Record Analysis, Narratives, and Templates
+- 20 - AI V2: Guided Workflows, Approved Automation, and Multi-Source Analysis
+- 21 - Migration Tooling and 1.0 Release Guarantees
+
+## Aliases And Ordering
+
+- `baseline` / `do 0` - Task 0
+- `start` / `do 1` - Task 1
+- `nested forms` / `associations` / `do 2` - Task 2
+- `security` / `providers` / `do 3` - Task 3
+- `formats` / `audit` / `do 4` - Task 4
+- `query lifecycle` / `do 5` - Task 5
+- `field authorization` / `do 6` - Task 6
+- `actions` / `transitions` / `do 7` - Task 7
+- `dashboards` / `do 8` - Task 8
+- `generators` / `do 9` - Task 9
+- `showcase` / `do 10` - Task 10
+- `resource ui` / `do 11` - Task 11
+- `navigation` / `admin shell` / `do 12` - Task 12
+- `visual checks` / `do 13` - Task 13
+- `compatibility` / `ci` / `do 14` - Task 14
+- `operations` / `governance` / `do 15` - Task 15
+- `beta decision` / `do 16` - Task 16
+- `next` / `continue` - Run the first unfinished task in numerical order. Do not enter Tasks 17-21 until Task 16 records an explicit beta decision.
+
+---
+
+## Task 0: Evidence Baseline and Backlog Reconciliation
+
+**State:** Pending. Run before each implementation slice.
+
+**Goal:** Establish passing evidence, distinguish engine capability from companion-only evidence, and identify the affected files before behavior changes.
+
+**Scope:** Run focused engine specs, relevant companion tests, and the generated-host proof where it exists. Reconcile the registry, checkpoint, and docs with executable evidence. Record discrepancies; do not relabel a capability merely because code exists.
+
+**Acceptance criteria:** A report lists passing commands, failures, infrastructure limitations, and the next entry point; it labels each relevant capability as contract, companion, or generated-host evidence; and it identifies no unassigned requirement in the next task's source documents.
+
+**Validation:** Narrow engine spec, relevant demo request/system test, JSON parsing, and `git diff --check`.
 
 ---
 
 ## Task 1: Generic Resource Delivery and Generated-Host Conformance
 
-You are working in the KrudminAI Rails engine repository. Your task is to implement the first beta-blocking slice called out in [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md): generic resource delivery and generated-host conformance.
+**State:** Pending beta blocker.
 
-Context:
-- The project is currently on a beta hold because the engine has strong contracts but still does not provide generic secured CRUD behavior end to end without resource-specific host controller or view logic.
-- The repo already includes the foundational resource contract, query access pipeline, mutation pipeline, and a runnable demo app, but the generic render surface is not fully implemented.
-- The intended product boundary is: a host declares a resource and routes it conventionally, while KrudminAI provides secure CRUD behavior and default rendering.
-- This slice must not become a dashboard, AI, or provider redesign project.
+**Goal:** A host declares a resource and conventional Rails route, then receives secured default index, new, edit, show, create, update, and destroy delivery without resource-specific controller plumbing or templates.
 
-Goal:
-- Extend the resource contract with minimal presentational metadata needed for default list, form, and show rendering.
-- Add engine-owned generic templates or components for index, form, and show pages using generic `model`, `models`, and route helpers.
-- Make generated resources use those defaults while preserving host override capability.
-- Reduce or remove the need for demo resource-specific templates unless they are intentionally overriding defaults.
-- Add a disposable/generated Rails-host integration proof that confirms security, tenant scoping, denied cross-tenant access, CRUD behavior, and default rendering.
+**Scope:**
+- Extend `Resources::Base` with labels and explicit list, form, and show field metadata.
+- Add engine-owned generic rendering using `model`, `models`, `collection_path`, `resource_path`, `new_resource_path`, and `edit_resource_path`.
+- Retain intentional host template and layout overrides.
+- Remove demo ticket templates unless they demonstrate a documented override.
+- Add a disposable generated Rails host with `OrdersResource`, thin controller, conventional routes, two tenants, and two roles.
 
-Primary files to inspect first:
-- [lib/krudmin_ai/resource_controller.rb](../lib/krudmin_ai/resource_controller.rb)
-- [lib/krudmin_ai/resources/base.rb](../lib/krudmin_ai/resources/base.rb)
-- [lib/krudmin_ai/generators/resource_contract.rb](../lib/krudmin_ai/generators/resource_contract.rb)
-- [demo/app/resources/tickets_resource.rb](../demo/app/resources/tickets_resource.rb)
-- [demo/app/views/tickets](../demo/app/views/tickets)
-- [demo/test/integration/ticket_access_test.rb](../demo/test/integration/ticket_access_test.rb)
-- [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md)
-- [docs/architecture.md](architecture.md)
+**Non-goals:** Association editing, providers, response-format expansion, dashboards, AI, and broad field-type redesign. Task 2 owns association editing.
 
-Scope:
-- Add the minimal resource metadata needed for generic rendering (at least labels and fields for list/form/show contexts).
-- Implement generic CRUD view delivery in the engine without introducing a broad field-type framework unless strictly necessary.
-- Ensure the default controller path uses generic route helpers such as `collection_path`, `resource_path`, `new_resource_path`, and `edit_resource_path`.
-- Keep the host override path explicit and optional, not required.
-- Add generated-host request tests proving constrained behavior across at least two tenants and two roles.
+**Acceptance criteria:** A generated host boots with `resources :orders`; default engine index/new/edit/show render without host resource templates; forms derive permitted scalar inputs and generic helpers; layout and asset contracts render; generated-host requests prove anonymous denial, tenant-scoped lists, cross-tenant `404`, role-gated CRUD, and audit emission; and a stable system test proves list -> edit -> submit.
 
-Non-goals:
-- No dashboard work.
-- No provider redesign.
-- No new AI capabilities.
-- No broad custom action system.
-- No large field framework redesign unless absolutely required for the first generic renderer.
-
-Acceptance criteria:
-1. A generated `OrdersResource` and thin `OrdersController` boots in a Rails host with conventional `resources :orders` routing.
-2. Default engine views render index/new/edit/show without host-specific resource templates.
-3. The default form uses the resource permit list and generic route helpers.
-4. Layout and engine/host stylesheet contract are present in the HTTP response.
-5. Request tests prove security and CRUD behavior across at least two tenants and two roles.
-6. A focused browser/system test covers list -> edit -> submit using the selected stable driver.
-
-Required validation:
-- Run the generator contract spec.
-- Run the current companion request suite for ticket access.
-- Ensure JSON parsing remains valid for capability registry changes.
-- Run `git diff --check` at the end.
-
-Deliverables:
-- Code changes implementing generic CRUD rendering and generated-host conformance.
-- Tests proving tenant/role and CRUD security behavior.
-- Updated docs and capability registry if the capability changes.
+**Validation:** Generator contract, generated-host request/system tests, companion ticket suite, registry JSON parse, `git diff --check`.
 
 ---
 
-## Task 2: Provider Contracts and Security Baseline
+## Task 2: Nested Relationships and Association Editors
 
-You are implementing the second beta-blocking slice from [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md): provider contracts and the security baseline.
+**State:** Pending beta blocker and required legacy parity.
 
-Context:
-- The project already contains provider configuration hooks and access-context patterns, but they are not yet formalized enough to count as a robust security baseline.
-- The risk is that provider misconfiguration can silently broaden access or fail in unsafe ways.
-- The beta checkpoint explicitly calls for executable authentication, authorization, tenant, audit, and notification adapter interfaces with clear failure behavior and documentation.
+**Goal:** Let a secure parent form create, edit, validate, and remove authorized child records in one submission, beginning with `has_many` and covering `has_one` and nested `belongs_to` where the contract supports them.
 
-Goal:
-- Define concrete provider contracts that the engine can validate at boot.
-- Add or harden adapter interfaces for authentication, authorization, tenant resolution, audit logging, and notifications.
-- Make failures fail closed with clear configuration errors.
-- Document the security model for sessions, cookies, CSRF, headers, and sensitive-data handling.
+**Scope:**
+- Define relationship metadata, permitted nested attributes, labels, child fields, ordering, and maximum row limits.
+- Support Rails `accepts_nested_attributes_for` without requiring host-specific form templates.
+- Implement Turbo/Stimulus add/remove behavior with deterministic client identifiers, keyboard access, and no jQuery.
+- Enforce parent and child tenant boundaries, action and field decisions, and policy checks before persistence. Reject crafted child identifiers outside the authorized association.
+- Make parent and nested mutations atomic, return nested validation errors in the correct rows, and audit the parent operation with affected child references.
+- Add generated-host `Car`/`Passenger` coverage for create, edit, validation failure, add, remove, and cross-tenant attacks.
 
-Primary files and docs to inspect:
-- [lib/krudmin_ai/resource_controller.rb](../lib/krudmin_ai/resource_controller.rb)
-- [lib/krudmin_ai/resources/base.rb](../lib/krudmin_ai/resources/base.rb)
-- [docs/architecture.md](architecture.md)
-- [docs/compatibility_policy.md](compatibility_policy.md)
-- [docs/product_scope.md](product_scope.md)
-- [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md)
+**Non-goals:** Remote association search, polymorphic editing, arbitrary-depth nesting, bulk import, and a legacy-field API clone.
 
-Scope:
-- Define provider interfaces and validation semantics.
-- Add tests for invalid or missing provider configs.
-- Use fail-closed behavior and explicit configuration errors rather than silent fallback.
-- Document the security baseline in a way that is concrete enough for generated apps.
+**Acceptance criteria:** Resource metadata describes a `has_many` editor without custom views; child rows can be added/removed accessibly; invalid nested data retains all rows with row-level errors; unauthorized or cross-tenant child IDs fail closed with no partial mutation; generated-host request/system tests cover two tenants and two roles; and docs name supported associations, Rails prerequisites, limits, and overrides.
 
-Non-goals:
-- No new dashboard features.
-- No generic CRUD rendering work in this prompt unless needed to validate provider contracts.
-- No experimental AI provider deepening.
-- No large UI redesign.
-
-Acceptance criteria:
-1. Providers have a clear interface contract and boot-time validation behavior.
-2. Missing or invalid config fails safely and predictably.
-3. Security baseline documentation covers CSRF, sessions, cookies, headers, and sensitive-data handling.
-4. Tests cover at least one success path and one fail-closed path for each core provider contract.
-
-Validation:
-- Run the relevant unit tests for provider/config behavior.
-- Confirm the engine remains bootable in the demo host.
-- Update docs and capability registry entries if provider behavior changes.
+**Validation:** Relationship pipeline specs, generated-host requests/system tests, companion regression suite, registry JSON parse, `git diff --check`.
 
 ---
 
-## Task 3: Format Delivery and Durable Audit
+## Task 3: Provider Contracts and Security Baseline
 
-You are implementing the third beta-blocking slice from [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md): format delivery and durable audit.
+**State:** Pending beta blocker.
 
-Context:
-- The mutation pipeline exists, but the full response contract is not proven end to end.
-- HTML is partially covered in the generic controller, but JSON and Turbo Stream delivery are not yet wired and validated through request-level evidence.
-- The audit system exists in the demo but has not yet been hardened to guarantee durable semantics and recovery handling.
+**Goal:** Formalize authentication, authorization, tenant resolution, audit, and notification providers with boot-time validation and fail-closed behavior.
 
-Goal:
-- Wire the response adapter through the controller and resource flow for HTML, JSON, and Turbo Stream responses.
-- Verify that mutation results and errors are normalized consistently across formats.
-- Add a transaction-aware audit or outbox-style persistence contract with failure/recovery tests.
-- Keep the change scoped to format delivery and durable audit semantics, not unrelated platform features.
+**Scope:** Define executable provider interfaces, inputs/outputs, lifecycle hooks, errors, and test adapters; validate providers at boot; specify sessions, idle timeout and recovery readiness, CSRF, cookie attributes, headers, sensitive data in UI/logs/exports, tenant request resolution, and super-admin constraints; make missing, malformed, nil, false, and exception-producing provider results deny access or stop safely.
 
-Primary files and docs to inspect:
-- [docs/mutation_pipeline.md](mutation_pipeline.md)
-- [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md)
-- [lib/krudmin_ai/resource_controller.rb](../lib/krudmin_ai/resource_controller.rb)
-- the mutation pipeline implementation under [lib/krudmin_ai](../lib/krudmin_ai)
-- demo test coverage for ticket access and mutation flows
+**Acceptance criteria:** Every provider has success and fail-closed conformance tests; misconfigured generated hosts fail predictably before serving protected resources; the demo remains bootable with explicit local adapters; and security documentation is actionable for generated hosts.
 
-Scope:
-- Add or improve response adapters for created/updated/destroyed records.
-- Validate the controller-level integration for all required formats.
-- Introduce durable audit semantics in a way consistent with the engine’s architecture.
-- Include failure behavior and recovery tests.
-
-Non-goals:
-- No showcase expansion.
-- No new AI capabilities.
-- No dashboard work.
-- No broad UI rewrite.
-
-Acceptance criteria:
-1. HTML, JSON, and Turbo Stream response behavior is exercised through request tests.
-2. Mutation failures and authorization denials return consistent structured results.
-3. Audit persistence is durable enough to satisfy the operation’s contract and recover correctly when audit writing fails or is retried.
-4. The engine documentation reflects the format and audit guarantees.
-
-Validation:
-- Run the relevant request and mutation pipeline tests.
-- Confirm no regressions in the demo app request suite.
-- Update docs and the capability registry if response or audit capability semantics change.
+**Validation:** Provider/config specs, demo boot and requests, generated-host configuration-failure tests, registry JSON parse, `git diff --check`.
 
 ---
 
-## Task 4: Documentation and Capability Registry Maintenance for the Current Slice
+## Task 4: Response Formats and Durable Audit
 
-You are updating the KrudminAI docs and capability registry to match the implementation work completed in the current slice.
+**State:** Pending beta blocker.
 
-Context:
-- The project explicitly requires docs and capability metadata to be updated with each capability change.
-- The beta checkpoint is a living product gate and must reflect actual Rails-host evidence, not just unit-contract confidence.
-- Documentation drift is a project risk; keep the docs faithful to implementation reality.
+**Goal:** Deliver normalized HTML, JSON, and Turbo Stream mutation responses through the controller and make audit recording durable, recoverable, and traceable.
 
-Goal:
-- Update the relevant docs for the slice you just implemented.
-- Ensure the capability registry reflects the real operational state of the engine.
-- Keep the beta checkpoint accurate to the actual implementation status.
+**Scope:** Wire the response adapter through mutation success/error branches; define response envelopes and status mappings; use transaction-aware audit persistence or an outbox with retry/recovery semantics that cannot leave an unaccounted persisted mutation; document retention, redaction, access control, and recovery.
 
-Files to update as relevant:
-- [docs/architecture.md](architecture.md)
-- [docs/generators.md](generators.md)
-- [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md)
-- [docs/capability_registry.json](capability_registry.json)
-- any other docs directly impacted by the slice
+**Acceptance criteria:** Request tests exercise every mutation outcome in all three formats; authorization and validation errors cannot leak unscoped data; audit failure prevents the mutation or creates an exactly-defined durable recovery obligation; and recovery/idempotency tests prove no duplicated effective event.
 
-Scope:
-- Update architectural, generator, and capability docs to describe implemented behavior accurately.
-- Do not mark a capability as fully implemented without Rails-host evidence.
-- Reconcile the docs with actual runtime behavior and test coverage.
-
-Non-goals:
-- No new product scope or speculative features.
-- No unrelated cleanup.
-- No marketing copy or roadmap expansion.
-
-Acceptance criteria:
-1. The docs reflect implemented behavior precisely.
-2. The registry matches the code and test evidence.
-3. The beta checkpoint is not overstating product readiness.
-
-Validation:
-- Parse the JSON registry after changes.
-- Run `git diff --check`.
-- Review the docs for mismatches with the implementation and the checkpoint.
+**Validation:** Mutation/response/audit specs, generated-host requests, companion suite, registry JSON parse, `git diff --check`.
 
 ---
 
-## Task 5: Next-Slice Planner for the Product Roadmap
+## Task 5: Resource Query and Lifecycle Completion
 
-You are planning the next slice after the generic CRUD / generated-host conformance work is complete.
+**State:** Pending Gate 1 completion.
 
-Context:
-- The project has a valid roadmap sequence: generic CRUD first, then provider/security baseline, then format delivery and durable audit, and only then broader UI/dashboard/AI expansion.
-- The repo contains a strong product and architecture vision, and the beta checkpoint defines deferred work after those foundational slices.
+**Goal:** Complete the data contract with eager loading, archival/soft deletion, N+1 safeguards, and public query parameter behavior.
 
-Goal:
-- Produce a concise, execution-ready plan for the next slice after the current one.
-- Keep the plan grounded in the checkpoint, not in speculative feature expansion.
+**Scope:** Add explicit resource metadata for includes/preloads, archive visibility/mutation rules, and supported query parameters/errors. Preserve tenant -> policy -> filters -> sort -> pagination in every path. Add instrumentation or tests detecting avoidable association query regressions in list, show, and relationship views.
 
-Use the following as authority:
-- [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md)
-- [docs/architecture.md](architecture.md)
-- [docs/rails8_replacement_inventory.md](rails8_replacement_inventory.md)
-- [AGENTS.md](../AGENTS.md)
+**Acceptance criteria:** Archived records have explicit default visibility and authorized restore/destroy semantics; render paths define and test eager loading; and invalid filters, sort, pagination, and archive parameters return documented safe results.
 
-Scope:
-- Propose the next slice in the same priority order and with the same constraints as the checkpoint.
-- Include objective, scope, non-goals, acceptance criteria, likely files, and a validation checklist.
-
-Non-goals:
-- Do not skip ahead to dashboards, import/export, observability, or AI heavy features before the foundational slices are proven.
-
-Deliverable:
-- A short plan in the same format as the beta checkpoint’s “Slice 1 / Slice 2 / Slice 3” structure.
+**Validation:** Query specs, generated-host archive requests, N+1-focused tests, docs/registry checks, `git diff --check`.
 
 ---
 
-## Task 6: Focused Regression Check Before Any New Feature Work
+## Task 6: Field-Level Authorization and Denial Presentation
 
-You are preparing the repo for the next feature slice and must perform a focused regression check before continuing.
+**State:** Pending Gate 1 completion.
 
-Context:
-- A new slice should not start without verifying the current engine and demo host are in a known-good state.
-- This repository has a demo app and generator contract suite; use those as the current evidence baseline.
+**Goal:** Ensure field visibility and mutability use the same deny-by-default policy decisions as endpoints and cannot be bypassed by crafted parameters.
 
-Goal:
-- Confirm the current baseline and identify any regression risks before implementation.
-- Keep the run narrow and relevant to the current slice rather than executing broad suites unnecessarily.
+**Scope:** Add field read/write policy contracts and deterministic hidden/disabled/explained behavior. Apply them to presentation, permitted attributes, JSON, nested fields, AI context, dashboard outputs, and export selection. Define accessible HTML, Turbo, and JSON denials.
 
-Files and commands to use as needed:
-- [docs/beta_readiness_checkpoint.md](beta_readiness_checkpoint.md)
-- [AGENTS.md](../AGENTS.md)
-- relevant generator specs and demo integration tests
+**Acceptance criteria:** Unauthorized fields are safely absent or represented and cannot persist through crafted requests; policy applies consistently to relationships, AI, dashboards, and exports; tenant/role tests cover read and write decisions.
 
-Scope:
-- Check the current contract and demo test baseline.
-- Confirm expected behavior before introducing changes.
-- Identify the exact files most likely to be touched by the current slice.
-
-Non-goals:
-- No unrelated cleanup.
-- No speculative changes.
-
-Deliverable:
-- A brief regression summary with: current passing evidence, notable gaps, and recommended next slice entry point.
+**Validation:** Field-policy unit/request tests, generated-host role tests, accessibility checks, registry JSON parse, `git diff --check`.
 
 ---
 
-## Recommended order to use these tasks
+## Task 7: Resource Actions and State Transitions
 
-1. Task 6: baseline regression check (alias: baseline)
-2. Task 1: generic resource delivery and generated-host conformance (alias: start / do 1)
-3. Task 2: provider contracts and security baseline (alias: do 2)
-4. Task 3: format delivery and durable audit (alias: do 3)
-5. Task 4: docs and capability registry update (alias: docs)
-6. Task 5: plan the next slice after the current base is green (alias: plan next)
+**State:** Pending required legacy parity.
 
-This is the ordered execution sequence. Use “start”, “do 1”, “do next”, or “continue” to move through it without copy/pasting the full prompt text.
+**Goal:** Restore secure status transitions and declared custom actions as resource-owned, policy-aware workflows.
+
+**Scope:** Define action/transition metadata, routes, labels, authorization predicates, audit events, Turbo/HTML/JSON results, and generator support. Keep state-machine implementation host-selectable. Reuse mutation, audit, and field-policy contracts.
+
+**Acceptance criteria:** Unpermitted actions are unavailable in UI and denied at endpoints; successful actions are tenant-safe, audited, and consistently delivered; generated-host tests cover permitted, forbidden, invalid-state, and cross-tenant cases.
+
+**Validation:** Action/transition specs, generator contract, generated-host requests, companion regression, registry JSON parse, `git diff --check`.
 
 ---
 
-## UI and Templating Workstream
+## Task 8: Dashboard Lifecycle and Secure Drill-Downs
 
-Run these tasks after the relevant beta foundation is stable. They are intentionally ordered so visual refinement does not keep masking structural layout defects.
+**State:** Pending Gate 1 completion.
 
-### Task 7: UI Foundation Consolidation
+**Goal:** Turn widget primitives into a host-configurable dashboard lifecycle with secure visibility, rendering, refresh, and drill-down behavior.
 
-Goal:
-- Consolidate the demo and engine CSS into one deliberate cascade per surface: tokens, base elements, application shell, shared controls, resource screens, dashboards, and responsive rules.
+**Scope:** Define widget registration, authorized visibility, empty/error/loading states, resource-aware drill-downs, and field-level output rules. Retain canonical scope/filter constraints for all aggregate, table, and drill-down data. Add generator support only after the runtime contract is stable.
 
-Scope:
-- Remove superseded rules and duplicate token blocks without changing established UI behavior.
-- Ensure every responsive breakpoint has one authoritative definition for the shell and navigation.
-- Preserve semantic color tokens for light and dark themes.
+**Acceptance criteria:** Inaccessible widgets and drill-downs are hidden or denied consistently; no widget leaks cross-tenant or field-denied information; generated-host tests cover visible/hidden widgets, filtered drill-downs, states, and table pagination.
 
-Acceptance criteria:
-1. No legacy rule silently overrides a newer layout rule.
-2. Page content has no arbitrary desktop max-width cap unless a component specifically needs one.
-3. Sidebar, page shell, forms, tables, and dashboard CSS each have an identifiable ownership block.
+**Validation:** Widget specs, generated-host/dashboard requests, companion dashboard suite, registry JSON parse, `git diff --check`.
 
-Validation:
-- Run the demo ticket integration test.
-- Inspect the computed styles of the page shell and sidebar at each supported viewport.
-- Run `git diff --check`.
+---
 
-Alias: `ui foundation`
+## Task 9: Generator Execution, Host Contracts, and Documentation Sync
 
-### Task 8: Responsive Navigation and Sidebar Validation
+**State:** Pending Gate 1 completion.
 
-Goal:
-- Deliver a navigation model that works for large resource menus and behaves correctly at actual desktop, tablet, and mobile viewport widths.
+**Goal:** Prove install, resource, action, dashboard, and docs-sync generator output boots and remains safe when re-run in real Rails hosts.
 
-Scope:
-- Keep a persisted desktop sidebar collapse preference under `krudmin-ai-sidebar-collapsed`.
-- Keep mobile navigation as a closed-by-default drawer that closes on navigation, backdrop selection, and Escape.
-- Support long menus with scrolling inside the navigation region, never horizontal link strips or content overlap.
+**Scope:** Execute generators in disposable hosts; cover namespaces, inflection, route insertion, collisions, idempotency, host-authored content preservation, and managed markers. Complete per-host capability registry bindings, enabled modules, provider bindings, flags, and release metadata without secrets. Add agent-safe resource/action/dashboard recipes and conformance expectations.
 
-Acceptance criteria:
-1. A desktop rail expands and collapses without moving content into a zero-width or orphaned grid column.
-2. Collapse state survives a full navigation to list, new, edit, and show routes.
-3. A menu with at least ten items is usable at desktop, tablet, and mobile widths.
-4. All toggle controls expose correct `aria-expanded` and accessible names.
+**Acceptance criteria:** Generated hosts boot, migrate, route, authorize, render, and execute generated tests; re-runs do not duplicate or overwrite host content; docs-only sync changes only documented artifacts; generated metadata accurately reports enabled host features.
 
-Validation:
-- Browser-check `1440px`, `768px`, and `390px` widths using an authenticated session.
-- Capture expanded and collapsed desktop screenshots plus open and closed mobile-drawer screenshots.
-- Run the demo ticket integration test.
+**Validation:** Generator contracts plus disposable-host suite, docs-sync idempotency tests, registry JSON parse, `git diff --check`.
 
-Alias: `navigation`
+---
 
-### Task 9: Engine-Owned Admin Shell and Resource Navigation
+## Task 10: Showcase Installation and Scenario Conformance
 
-Goal:
-- Move reusable shell and navigation behavior out of the companion demo into a host-configurable KrudminAI presentation contract.
+**State:** Pending Gate 1/Gate 2 completion.
 
-Scope:
-- Define a navigation item contract with label, route, icon, visibility/authorization, and active-state support.
-- Use each resource's `icon` setting in generated navigation where applicable.
-- Allow a host to provide its own layout and navigation while retaining engine defaults.
+**Goal:** Make the showcase an installable, version-locked, executable proof of documented workflows rather than a companion-only demonstration.
 
-Non-goals:
-- Do not reintroduce the legacy Krudmin navigation architecture.
-- Do not couple the engine to demo-only route names or session models.
+**Scope:** Define lightweight demo/full showcase modes. Run seeded two-tenant, multi-role walkthroughs in CI for CRUD, associations, actions, dashboards, audit, navigation, filters, and AI boundaries. Tie scenarios to the capability registry and versioned docs.
 
-Acceptance criteria:
-1. A generated host can render an engine default admin shell without copying demo layout code.
-2. Resource icons use `krudmin_ai_icon` and have a deterministic fallback.
-3. Authorization and visibility rules control navigation affordances as well as endpoint access.
+**Acceptance criteria:** A clean host installs and boots the selected mode; scenario tests fail on declared-core regressions; docs distinguish engine guarantees from fixture/presentation choices.
 
-Validation:
-- Add engine request/view coverage for default shell rendering.
-- Add a generated-host integration proof with at least two resource navigation entries.
-- Run generator and demo integration suites.
+**Validation:** Clean-host install test, scenario suite, generator suite, registry JSON parse, `git diff --check`.
 
-Alias: `admin shell`
+---
 
-### Task 10: Resource Screens and Operational UI States
+## Task 11: UI Component Contract and Generated Resource States
 
-Goal:
-- Make the generated list, form, show, filter, and dashboard surfaces feel like a complete operational admin interface.
+**State:** Pending Gate 2 completion.
 
-Scope:
-- Apply the established design system to headers, action toolbars, tables, filter panels, forms, empty states, pagination, and status badges.
-- Add consistent loading, success, validation-error, authorization-denied, disabled, and empty-state treatments.
-- Use Lucide icons and semantic tones for standard actions and dashboard metrics.
+**Goal:** Establish reusable accessible component APIs for generated resource screens instead of relying on companion-only partials.
 
-Acceptance criteria:
-1. Generated resource index, new, edit, and show screens work in both light and dark themes.
-2. Tables remain readable and usable without layout breakage on small screens.
-3. Icon-only controls have labels or tooltips; primary actions retain clear text labels.
-4. No UI state relies on color alone to convey its meaning.
+**Scope:** Define component inputs/events for list, form, show, filter, pagination, validation, authorization denial, loading, empty, success, disabled, and error states. Integrate responsive tables, status badges, filter persistence, association editors, and standard actions into engine rendering. Publish design tokens and enforce light/dark/system behavior.
 
-Validation:
-- Add focused component/request coverage for error and empty states.
-- Browser-check list, new, edit, show, and dashboard screens in both themes.
-- Run the relevant demo integration suite.
+**Acceptance criteria:** Generated index/new/edit/show work in all themes and operational states; tables/forms remain usable at mobile widths; non-text controls have accessible names/state and status is never color-only.
 
-Alias: `resource ui`
+**Validation:** Component/view specs, generated-host system tests across themes, accessibility assertions, registry JSON parse, `git diff --check`.
 
-### Task 11: Visual Regression Coverage
+---
 
-Goal:
-- Establish repeatable visual evidence for the admin presentation before further feature work changes it.
+## Task 12: Navigation, Admin Shell, and Theme Conformance
 
-Scope:
-- Add deterministic browser screenshot coverage for authenticated demo screens.
-- Cover the intended desktop, tablet, and mobile breakpoints in light and dark modes.
-- Make fixture data and browser setup stable enough for screenshots to be meaningful.
+**State:** Pending generated-host proof; companion behavior exists.
 
-Acceptance criteria:
-1. Screenshots cover dashboard, resource list, new form, edit form, and show view.
-2. Coverage includes expanded/collapsed desktop navigation and the mobile drawer.
-3. The checks fail on meaningful layout overflow, missing primary content, or missing icons.
+**Goal:** Prove the engine-owned shell and resource navigation work for real hosts and large menus while retaining host layout replacement.
 
-Validation:
-- Run the new screenshot suite locally.
-- Run existing request/integration coverage.
-- Document how to update approved snapshots.
+**Scope:** Finalize navigation item label, route, icon, active state, access-context visibility, and fallback contracts. Verify persisted desktop collapse and closed-by-default mobile drawer behavior across routes. Support menus of at least ten resources without overlap or horizontal strips.
 
-Alias: `visual checks`
+**Acceptance criteria:** A generated host renders the default shell with multiple authorized resources; desktop persistence and mobile close-on-navigation/backdrop/Escape behavior pass at 1440px, 768px, and 390px; toggle names and `aria-expanded` state are correct.
 
-### Task 12: UI Documentation and Release Checkpoint
+**Validation:** Generated-host browser tests/screenshots, companion navigation regression, registry JSON parse, `git diff --check`.
 
-Goal:
-- Reconcile documentation and capability metadata with verified UI behavior before closing the styling and templating session.
+---
 
-Scope:
-- Update UI, architecture, generator, and capability registry documentation for the implementation actually delivered.
-- Record supported navigation behavior, icon configuration, host override points, theme behavior, and visual test evidence.
-- Identify remaining design or browser-coverage gaps honestly.
+## Task 13: Browser, Accessibility, and Visual Regression Policy
 
-Acceptance criteria:
-1. Documentation distinguishes engine capabilities from companion-demo presentation choices.
-2. The capability registry is valid JSON and does not overstate browser or generated-host evidence.
-3. A release checkpoint lists completed UI tasks, test evidence, and explicitly deferred work.
+**State:** Pending Gate 2 completion.
 
-Validation:
-- Parse `docs/capability_registry.json`.
-- Run `git diff --check`.
-- Run the focused engine, generator, demo integration, and visual regression suites.
+**Goal:** Adopt a stable browser driver and repeatable visual/accessibility evidence with an explicit flake budget.
 
-Alias: `finish ui`
+**Scope:** Select/document the system driver; add deterministic fixtures and screenshots for dashboard, list, new, edit, show, nested forms, navigation states, and mobile drawer in light/dark modes; add keyboard, focus, reduced-motion, touch-target, overflow, missing-icon, and primary-content checks.
 
-### UI Workstream Order
+**Acceptance criteria:** CI runs the browser suite within its documented flake budget; screenshots fail on meaningful layout/content/icon/overflow regressions; accessibility is verified for CRUD, filtering, navigation, associations, actions, and errors.
 
-1. Task 7: UI Foundation Consolidation
-2. Task 8: Responsive Navigation and Sidebar Validation
-3. Task 9: Engine-Owned Admin Shell and Resource Navigation
-4. Task 10: Resource Screens and Operational UI States
-5. Task 11: Visual Regression Coverage
-6. Task 12: UI Documentation and Release Checkpoint
+**Validation:** Browser/screenshot suite locally and CI, companion requests, snapshot process docs, `git diff --check`.
+
+---
+
+## Task 14: Compatibility Matrix and Release Automation
+
+**State:** Pending Gate 2 completion.
+
+**Goal:** Convert stated Rails/Ruby support into executable compatibility evidence.
+
+**Scope:** Implement CI lanes for minimum, stable, latest, and preview Rails/Ruby combinations, including Rails 8.1.3 and Ruby 4. Test ERB/JSON constraints, installation, generated hosts, browser coverage where feasible, and documented bounds. Define support-window review, deprecation checks, and compatibility-failure handling.
+
+**Acceptance criteria:** Every supported lane runs engine and generated-host suites; preview results follow the non-blocking policy; compatibility docs and gem constraints match CI evidence.
+
+**Validation:** CI matrix evidence, dependency-resolution tests, docs/registry update, `git diff --check`.
+
+---
+
+## Task 15: Observability, Governance, and Operational Readiness
+
+**State:** Pending Gate 1/Gate 2 completion.
+
+**Goal:** Define the production-operational contracts for a security-sensitive admin engine.
+
+**Scope:** Add correlation IDs, structured logs, metrics, tracing boundaries, alerts, and incident/runbook requirements. Define ADR templates, ownership, review/escalation, release approval, hotfix, rollback, retention, and compliance-export governance. Require tenant, field, audit, and AI redaction across logs and telemetry.
+
+**Acceptance criteria:** Request/mutation/audit/AI traces correlate without sensitive leaks; required failures have alert/recovery paths; governance templates and release gates are executable repository artifacts.
+
+**Validation:** Instrumentation/redaction tests, runbook/ADR review, registry JSON parse, `git diff --check`.
+
+---
+
+## Task 16: Beta Evidence Reconciliation and Release Decision
+
+**State:** Pending gate, not a feature.
+
+**Goal:** Make an honest beta decision from Rails-host evidence after Tasks 1-15 complete or are explicitly deferred with approved rationale.
+
+**Scope:** Reconcile every Gate 1/Gate 2 row, each must-keep inventory item, registry claim, generated-host proof, and CI/browser result. Record open risks, accepted deferrals, owner, target release, and why a deferral does not invalidate the beta claim.
+
+**Acceptance criteria:** No beta-blocking requirement is unassigned; registry/checkpoint/architecture/generator/security/UI/showcase docs agree; the outcome is explicit: hold, limited beta with exclusions, or approved beta.
+
+**Validation:** Full required suite, generated-host suite, browser suite, compatibility evidence, registry JSON parse, docs review, `git diff --check`.
+
+---
+
+## Task 17: Import, Export, and Large Data Operations
+
+**State:** Deferred until beta foundation completes.
+
+**Goal:** Deliver tenant- and policy-safe import/export with preview, validation, masked fields, jobs, retries, and auditability.
+
+**Acceptance criteria:** Mapping preview and row-level errors; role/field-masked export profiles; tenant-safe jobs; retry/idempotency; audit and browser/request proof.
+
+---
+
+## Task 18: Production AI Providers, Routing, and Trace Operations
+
+**State:** Deferred until provider, audit, observability, and field-policy foundations complete.
+
+**Goal:** Productionize the V1 read-only AI tasks with provider failures, redaction, asynchronous progress, uncertainty/fallback UX, searchable retained traces, and safe tool routing.
+
+**Acceptance criteria:** Provider failures do not leak/broaden access; async lifecycle is visible and accessible; trace retention/redaction/search/export work; role/tenant/prompt-injection tests enforce safety; no mutation occurs without explicit approval policy.
+
+---
+
+## Task 19: AI V1.1
+
+**State:** Deferred product work.
+
+**Goal:** Add reviewable structured extraction, cross-record analysis, dashboard narratives, and reusable prompt templates.
+
+**Acceptance criteria:** Results use authorized tenant-scoped data, expose rationale/evidence where applicable, persist only after review/confirmation, and are fully traced/audited.
+
+---
+
+## Task 20: AI V2
+
+**State:** Deferred product work.
+
+**Goal:** Add guided workflow copilots, policy-approved automation, and multi-source reasoning.
+
+**Acceptance criteria:** Each tool call has actor/role/context traceability; approval/escalation gates prevent unapproved mutations; multi-source context preserves field allowlists and tenant isolation; recovery and incident tests exist.
+
+---
+
+## Task 21: Migration Tooling and 1.0 Release Guarantees
+
+**State:** Deferred until beta outcomes establish the stable public API.
+
+**Goal:** Let legacy Krudmin users migrate safely and establish 1.0 upgrade, deprecation, and release guarantees.
+
+**Scope:** Publish a legacy-constant-to-new-API mapping including associations, actions, transitions, fields, and presentation. Build codemods/lints, migration warnings, justified shims, and an automated host checklist. Define migration guides, removal timelines, release governance, and showcase compatibility checks.
+
+**Acceptance criteria:** A representative legacy resource, including `Car`/`Passenger` nested forms, migrates in under 30 minutes with automated verification; deprecations are actionable; release protocol and CI evidence meet the 1.0 gate.
+
+---
+
+## Coverage Ledger
+
+| Source requirement | Owning task(s) |
+| --- | --- |
+| Generic secured CRUD and generated-host proof | 1, 9, 10 |
+| Nested forms and association editors | 2 |
+| Authentication, authorization, tenant, audit, notification providers | 3 |
+| CSRF, sessions, cookies, headers, sensitive data, threat model | 3 |
+| HTML, JSON, Turbo responses and durable audit | 4 |
+| Eager loading, soft delete/archive, N+1 and query contract | 5 |
+| Field-level decisions and consistent denial UI | 6 |
+| Status transitions and custom actions | 7 |
+| Dashboard lifecycle, visibility, and drill-down | 8 |
+| Install/resource/action/dashboard/docs-sync generators and host registry | 9 |
+| Generated showcase and scenario CI evidence | 10 |
+| Component APIs, state treatments, themes, tables, forms | 11 |
+| Admin shell, resource navigation, responsive sidebar | 12 |
+| Stable browser driver, accessibility, screenshots, flake budget | 13 |
+| Rails/Ruby support matrix and release automation | 14 |
+| Logging, metrics, tracing, governance, runbooks, releases | 15 |
+| Honest beta gate | 16 |
+| Import/export | 17 |
+| Production AI routing and trace operations | 18 |
+| AI V1.1 capabilities | 19 |
+| AI V2 automation capabilities | 20 |
+| Legacy migration and 1.0 guarantees | 21 |
+
+## Completion Rule
+
+A task is complete only when its acceptance criteria, focused tests, documentation, registry status, and listed validation all pass. A task cannot be marked complete from implementation intent, a unit-only contract, or a companion-only demonstration when it requires generated-host or browser evidence.
