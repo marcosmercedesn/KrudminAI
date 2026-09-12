@@ -1,0 +1,197 @@
+# KrudminAI Market Research and Opportunity Map
+
+Date: 2026-09-11
+
+## Goal
+
+Identify ideas, features, and strategic differentiators that can make KrudminAI more successful as an AI-first admin platform.
+
+## Comparable Projects Reviewed
+
+1. ActiveAdmin
+- Positioning: Rails admin engine with strong conventions.
+- Signals: authentication hooks, scopes, customizable index views, exports.
+- Takeaway: keep Rails-native override path simple and explicit.
+
+2. Administrate
+- Positioning: Rails-first admin dashboards with minimal framework lock-in.
+- Signals: standard Rails customization, field partial customization, guides-heavy approach.
+- Takeaway: deep customization via familiar Rails primitives is a strength.
+
+3. Avo
+- Positioning: modern Rails business app/admin framework.
+- Signals: Hotwire-first, Pundit authorization, actions/filters, dashboards, multi-tenancy readiness, ActiveStorage ergonomics.
+- Takeaway: opinionated modern UX + smooth upgrades is a winning Rails-specific formula.
+
+4. Refine
+- Positioning: framework for CRUD-heavy internal apps with auth/access control, providers, i18n, theming, and strong docs.
+- Signals: provider architecture (auth, data, access control, notifications), migration guides, multiple UI integrations.
+- Takeaway: provider-based contracts and rich examples reduce integration friction.
+
+5. React-Admin
+- Positioning: mature B2B/admin framework with large ecosystem.
+- Signals: adapters, RBAC, soft delete, realtime, import/export, scheduling, versioning, many demos and templates.
+- Takeaway: breadth of production features and robust examples drives adoption.
+
+6. ToolJet and Appsmith
+- Positioning: internal tool builders with governance and AI-assisted building.
+- Signals: SSO, RBAC, audit logs, multi-env release workflows, agent/plugin workflows, strong connector stories.
+- Takeaway: governance + delivery controls are now table stakes for enterprise trust.
+
+7. Forest
+- Positioning: ops control plane for regulated environments and agent/human co-work.
+- Signals: role-scoped agents, record-level audits, compliance and observability framing.
+- Takeaway: AI governance and traceability can be a major strategic differentiator.
+
+## Strategic Opportunity for KrudminAI
+
+KrudminAI can win by combining:
+
+1. Rails-native developer ergonomics
+2. Strong admin defaults (auth, authz, tenancy)
+3. AI-agent-ready scaffolding and docs
+4. Governance and auditability designed for human-plus-agent operations
+
+This places KrudminAI between classic Rails admin engines and low-code internal tool builders.
+
+## High-Value Features to Evaluate
+
+### Tier 1: Must-Have for Strong Adoption
+
+1. Provider-style extension contracts
+- Auth provider contract
+- Authorization provider contract
+- Tenant resolver contract
+- Audit provider contract
+- Notification provider contract
+
+2. Enterprise-grade access and governance baseline
+- SSO hooks (OIDC/SAML) as first-class extension points
+- RBAC plus optional ABAC policy hooks
+- Immutable audit events for sensitive operations
+- Environment-aware release workflow for generated apps
+
+3. First-party import/export system
+- CSV import with mapping preview and validation report
+- Export profiles with role-based field masking
+- Background processing for large jobs
+
+4. Admin productivity primitives
+- Saved views and filter presets
+- Bulk actions with policy checks
+- Inline edit safety modes
+- Keyboard-first workflows
+
+5. Showcase app and scenario packs
+- A showcase app generator proving all capabilities
+- Domain recipes: CRM, inventory, support desk, membership, finance ops
+
+### Tier 2: Differentiators
+
+1. Agent operation trace model
+- For each AI-assisted action, store prompt context, tool calls, actor identity, decision outcome, and change set
+
+2. Explainable authorization diagnostics
+- Optional debug mode that explains why a user can or cannot perform an action
+
+3. Policy-safe AI code scaffolding checks
+- PR checks that detect missing policy scopes, missing tenant scoping, and unsafe query paths
+
+4. Workflow and approval primitives
+- Multi-step approvals for sensitive actions
+- Escalation and two-person review workflows
+
+5. Data contract and schema introspection assistant
+- Generate resource skeletons from schema with confidence labels and required manual confirmations
+
+### Tier 3: Advanced Roadmap
+
+1. Realtime collaboration indicators for records
+2. Built-in anomaly and SLA widgets for dashboards
+3. Temporal versioning for key resources
+4. Event-driven plugin bus for enterprise integrations
+
+## Product Enhancements Especially Useful for AI Coding Agents
+
+1. Deterministic generator outputs
+- Stable file names, stable structure, and explicit extension points.
+
+2. Machine-readable capability registry
+- A generated manifest listing enabled features, contracts, and conventions.
+
+3. Agent playbooks in-repo
+- Task-specific prompt templates: add resource, add policy, add dashboard, add tenant scope, add custom action.
+
+4. Contract tests generated by default
+- Every scaffold includes policy, tenancy, and response contract tests.
+
+5. Docs-sync as a release requirement
+- Host app docs update path must be part of every upgrade workflow.
+
+## What Systems KrudminAI Can Power Well
+
+1. Multi-team back-office suites
+- Centralized operations across support, finance, and compliance.
+
+2. CRM and revenue operations panels
+- Leads, accounts, lifecycle workflows, role-based visibility.
+
+3. E-commerce operations consoles
+- Catalog, inventory, orders, fulfillment exception handling.
+
+4. Membership and association management
+- Member lifecycle, payments, events, permissions by chapter/org.
+
+5. Regulated onboarding and compliance operations
+- KYC/KYB-like workflows, audit trails, supervised approvals.
+
+6. IT and internal platform operations
+- Asset tracking, request handling, provisioning workflows.
+
+7. Education and program administration
+- Enrollment, attendance, grants, approvals, reporting dashboards.
+
+8. Healthcare-adjacent administrative operations
+- Non-clinical workflows with strict access controls and auditing.
+
+9. Logistics and field operations administration
+- Route, dispatch, service cases, exception queues.
+
+10. Multi-tenant SaaS control planes
+- Tenant admin, support tooling, entitlement and lifecycle management.
+
+## Evaluation Matrix for Feature Adoption
+
+Use this to decide what enters v1:
+
+1. Security impact
+- Does it reduce auth/authz/tenancy risk?
+
+2. AI leverage
+- Does it make AI-generated code safer or more reliable?
+
+3. Adoption leverage
+- Is it repeatedly requested in admin-heavy projects?
+
+4. Implementation complexity
+- Can we deliver with high confidence in one slice?
+
+5. Maintenance burden
+- Can it be supported long-term with clear contracts?
+
+## Recommended Near-Term Additions to Planning
+
+1. Add "provider contracts" as a dedicated Gate 1 deliverable.
+2. Add "import/export with masking" to Gate 2.
+3. Add "agent action trace schema" to Gate 2 or Gate 3.
+4. Add "policy-safe PR conformance checks" to Gate 3.
+5. Add "showcase scenario packs" to the showcase requirements.
+
+## Summary
+
+KrudminAI should aim to be:
+
+- Rails-native and highly extensible like classic admin engines,
+- modern and Hotwire-first,
+- strict on governance and access controls,
+- and explicitly optimized for reliable AI-assisted development.
