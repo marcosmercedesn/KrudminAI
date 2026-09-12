@@ -17,8 +17,8 @@
     <% end %>
 
     <div class="krudmin-ai-form-actions">
-      <%= link_to "Cancel", model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-button" %>
-      <%= form.submit "Save #{resource_label}", class: "krudmin-ai-button krudmin-ai-button--primary" %>
+      <%= link_to model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:x, class: "krudmin-ai-button__icon") %><span>Cancel</span><% end %>
+      <%= form.button class: "krudmin-ai-button krudmin-ai-button--save" do %><%= krudmin_ai_icon(:save, class: "krudmin-ai-button__icon") %><span>Save <%= resource_label %></span><% end %>
     </div>
   <% end %>
 </section>

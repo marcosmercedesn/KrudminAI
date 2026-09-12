@@ -8,5 +8,7 @@
         = form.label :prompt, "Prompt"
         = form.text_area :prompt, class: "krudmin-ai-textarea", required: true
     .krudmin-ai-form-actions
-      = form.submit "Ask", class: "krudmin-ai-button krudmin-ai-button--primary"
+      = form.button class: "krudmin-ai-button krudmin-ai-button--primary" do
+        = krudmin_ai_icon(:sparkles, class: "krudmin-ai-button__icon")
+        %span Ask
   = turbo_frame_tag local_assigns.fetch(:frame_id, "krudmin-ai-assistant-response")

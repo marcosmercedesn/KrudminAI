@@ -8,6 +8,10 @@
   --krudmin-ai-border: #dce2eb;
   --krudmin-ai-accent: #1b5fd1;
   --krudmin-ai-accent-strong: #124ba8;
+  --krudmin-ai-edit: #087b78;
+  --krudmin-ai-edit-strong: #056462;
+  --krudmin-ai-success: #287a45;
+  --krudmin-ai-success-strong: #1d6136;
   --krudmin-ai-focus: #d66b19;
   --krudmin-ai-danger: #a32d2d;
   --krudmin-ai-radius: 6px;
@@ -29,6 +33,10 @@
   --krudmin-ai-border: #364154;
   --krudmin-ai-accent: #5b9cff;
   --krudmin-ai-accent-strong: #87b8ff;
+  --krudmin-ai-edit: #55c7c1;
+  --krudmin-ai-edit-strong: #8be0da;
+  --krudmin-ai-success: #75d69a;
+  --krudmin-ai-success-strong: #a1edbb;
   --krudmin-ai-focus: #f0a660;
   --krudmin-ai-danger: #ff9d9d;
   --krudmin-ai-shadow: 0 1px 2px rgb(0 0 0 / 24%);
@@ -44,6 +52,10 @@
     --krudmin-ai-border: #364154;
     --krudmin-ai-accent: #5b9cff;
     --krudmin-ai-accent-strong: #87b8ff;
+    --krudmin-ai-edit: #55c7c1;
+    --krudmin-ai-edit-strong: #8be0da;
+    --krudmin-ai-success: #75d69a;
+    --krudmin-ai-success-strong: #a1edbb;
     --krudmin-ai-focus: #f0a660;
     --krudmin-ai-danger: #ff9d9d;
     --krudmin-ai-shadow: 0 1px 2px rgb(0 0 0 / 24%);
@@ -207,6 +219,11 @@
 .krudmin-ai-button:hover {
   background: var(--krudmin-ai-surface-raised);
 }
+.krudmin-ai-button__icon {
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
 .krudmin-ai-button--primary {
   background: var(--krudmin-ai-accent);
   border-color: var(--krudmin-ai-accent);
@@ -214,9 +231,29 @@
 }
 .krudmin-ai-button--primary:hover {
   background: var(--krudmin-ai-accent-strong);
-  color: #10231a;
+  color: #ffffff;
+}
+.krudmin-ai-button--edit {
+  background: var(--krudmin-ai-edit);
+  border-color: var(--krudmin-ai-edit);
+  color: #ffffff;
+}
+.krudmin-ai-button--edit:hover {
+  background: var(--krudmin-ai-edit-strong);
+  color: #ffffff;
+}
+.krudmin-ai-button--save {
+  background: var(--krudmin-ai-success);
+  border-color: var(--krudmin-ai-success);
+  color: #ffffff;
+}
+.krudmin-ai-button--save:hover {
+  background: var(--krudmin-ai-success-strong);
+  color: #ffffff;
 }
 .krudmin-ai-button--danger {
+  background: color-mix(in srgb, var(--krudmin-ai-danger) 10%, var(--krudmin-ai-surface));
+  border-color: color-mix(in srgb, var(--krudmin-ai-danger) 35%, var(--krudmin-ai-border));
   color: var(--krudmin-ai-danger);
 }
 .krudmin-ai-button[aria-disabled="true"],

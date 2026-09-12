@@ -38,7 +38,11 @@ The companion resource screens use semantic operational states for empty results
 
 ## Tokens And Themes
 
-`krudmin_ai/application.css` publishes semantic canvas, surface, raised-surface, text, muted-text, border, accent, focus, danger, radius, spacing, shadow, and transition tokens. Light values are the default; `data-theme="dark"` supplies dark values; system mode uses `prefers-color-scheme` unless `data-theme-mode` is explicitly light or dark. Components use these semantic tokens rather than literal component-specific colors.
+`krudmin_ai/application.css` publishes semantic canvas, surface, raised-surface, text, muted-text, border, accent, edit, success, focus, danger, radius, spacing, shadow, and transition tokens. Light values are the default; `data-theme="dark"` supplies dark values; system mode uses `prefers-color-scheme` unless `data-theme-mode` is explicitly light or dark. Components use these semantic tokens rather than literal component-specific colors.
+
+Buttons use a semantic action contract: the neutral default is for cancellation, filtering, pagination, and non-mutating controls; `--primary` is for creating a resource; `--edit` is for editing; `--save` is for persisting form changes; and `--danger` is for destructive actions. Color supports the written label and never carries the action meaning by itself.
+
+Engine-owned default actions pair their labels with decorative Lucide icons: plus for create/add, pencil for edit, save for persistence, x for cancel, filter controls for filtering, directional arrows for pagination, and trash for deletion. Icon-only destructive controls retain an accessible name through their `aria-label` and `title`.
 
 ## Visual Regression Evidence
 

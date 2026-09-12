@@ -7,5 +7,5 @@
       </div>
     <% end %>
   </div>
-  <div class="krudmin-ai-form-actions"><%= form.submit "Apply filters", class: "krudmin-ai-button" %></div>
+  <div class="krudmin-ai-form-actions"><%= form.button class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:filter, class: "krudmin-ai-button__icon") %><span>Apply filters</span><% end %></div>
 <% end %>

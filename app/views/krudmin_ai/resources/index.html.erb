@@ -2,7 +2,7 @@
   <div class="krudmin-ai-resource-heading">
     <h1><%= resources_label %></h1>
     <% if authorized_action?(:create, resource.model_class.new) %>
-      <%= link_to "New #{resource_label}", new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary" %>
+      <%= link_to new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary" do %><%= krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon") %><span>New <%= resource_label %></span><% end %>
     <% end %>
   </div>
 
@@ -15,7 +15,7 @@
     <%= render "krudmin_ai/ui/list_table", resource: resource, records: models, fields: list_fields %>
     <%= render "krudmin_ai/ui/pagination", page: @query_result.page, per_page: @query_result.per_page, records_count: models.length %>
   <% else %>
-    <% create_action = authorized_action?(:create, resource.model_class.new) ? link_to("Create #{resource_label}", new_resource_path, class: "krudmin-ai-button") : nil %>
+    <% create_action = authorized_action?(:create, resource.model_class.new) ? link_to(new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary") { safe_join([krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon"), content_tag(:span, "Create #{resource_label}")]) } : nil %>
     <%= render "krudmin_ai/ui/empty_state", id: "empty-resource-title", title: "No #{resources_label.downcase} found", action: create_action %>
   <% end %>
 </section>

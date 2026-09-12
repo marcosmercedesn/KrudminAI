@@ -8,6 +8,10 @@
   --border: #dce2eb;
   --accent: #1b5fd1;
   --accent-dark: #124ba8;
+  --edit: #087b78;
+  --edit-dark: #056462;
+  --success: #287a45;
+  --success-dark: #1d6136;
   --sidebar: linear-gradient(180deg, #2d63d8 0%, #1f4db5 52%, #173a8d 100%);
   --sidebar-muted: #c5d5f2;
   --warning: #b76a08;
@@ -26,6 +30,10 @@
   --border: #374255;
   --accent: #6aa3ff;
   --accent-dark: #91bdff;
+  --edit: #55c7c1;
+  --edit-dark: #8be0da;
+  --success: #75d69a;
+  --success-dark: #a1edbb;
   --sidebar: linear-gradient(180deg, #1f4ba7 0%, #173a85 52%, #10275e 100%);
   --sidebar-muted: #c1d1eb;
   --warning: #ffcf72;
@@ -314,10 +322,9 @@ h2 {
 .quiet-button,
 .krudmin-ai-button {
   align-items: center;
-  background: var(--accent);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: #ffffff;
+  color: var(--ink);
   cursor: pointer;
   display: inline-flex;
   font-size: 0.875rem;
@@ -327,9 +334,34 @@ h2 {
   padding: 0.62rem 0.9rem;
   text-decoration: none;
 }
+.button,
+.krudmin-ai-button--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
 .button:hover,
-.krudmin-ai-button:hover {
+.krudmin-ai-button--primary:hover {
   background: var(--accent-dark);
+  color: #ffffff;
+}
+.krudmin-ai-button--edit {
+  background: var(--edit);
+  border-color: var(--edit);
+  color: #ffffff;
+}
+.krudmin-ai-button--edit:hover {
+  background: var(--edit-dark);
+  color: #ffffff;
+}
+.krudmin-ai-button--save {
+  background: var(--success);
+  border-color: var(--success);
+  color: #ffffff;
+}
+.krudmin-ai-button--save:hover {
+  background: var(--success-dark);
+  color: #ffffff;
 }
 .krudmin-ai-button--danger {
   background: transparent;
@@ -352,6 +384,7 @@ h2 {
 .quiet-button {
   background: transparent;
   border-color: rgb(255 255 255 / 32%);
+  color: #ffffff;
 }
 .table-wrap,
 .krudmin-ai-table-wrap {

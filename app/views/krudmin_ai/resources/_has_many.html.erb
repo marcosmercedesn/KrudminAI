@@ -7,5 +7,5 @@
   </div>
 
   <template data-krudmin-ai-nested-fields-target="template"><%= form.fields_for relationship.name, model.public_send(relationship.name).build, child_index: "NEW_RECORD" do |child_form| %><%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship %><% end %></template>
-  <button class="krudmin-ai-button" type="button" data-krudmin-ai-nested-fields-target="addButton" data-action="krudmin-ai-nested-fields#add">Add <%= relationship.label.singularize %></button>
+  <button class="krudmin-ai-button" type="button" data-krudmin-ai-nested-fields-target="addButton" data-action="krudmin-ai-nested-fields#add"><%= krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon") %><span>Add <%= relationship.label.singularize %></span></button>
 </fieldset>

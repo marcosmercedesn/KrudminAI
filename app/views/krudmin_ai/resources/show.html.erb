@@ -7,7 +7,7 @@
       <h1><%= title %></h1>
     </div>
     <div class="krudmin-ai-resource-actions">
-      <% if authorized_action?(:update) %><%= link_to "Edit", edit_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary" %><% end %>
+      <% if authorized_action?(:update) %><%= link_to edit_resource_path, class: "krudmin-ai-button krudmin-ai-button--edit" do %><%= krudmin_ai_icon(:pencil, class: "krudmin-ai-button__icon") %><span>Edit</span><% end %><% end %>
       <% resource_actions.each do |action| %><%= button_to action.label, resource_action_path(model, action.name), method: :post, class: "krudmin-ai-button" %><% end %>
       <% if authorized_action?(:destroy) %><%= button_to resource_path, method: :delete, class: "krudmin-ai-button krudmin-ai-button--danger krudmin-ai-icon-button", aria: { label: "Delete #{resource_label}" }, title: "Delete #{resource_label}" do %><%= krudmin_ai_icon(:trash_2) %><% end %><% end %>
     </div>
