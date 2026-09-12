@@ -9,6 +9,8 @@ class TicketsResource < KrudminAI::Resources::Base
   list :title, :state, :priority, :assignee
   form :title, :description, :state, :priority, :assignee
   show :title, :description, :state, :priority, :assignee
+  preload :passengers
+  archive :archived_at
   has_many :passengers,
     fields: %i[name position],
     label: "Passengers",
@@ -33,6 +35,8 @@ class TicketsResource < KrudminAI::Resources::Base
   authorize(:create) { |record, context| DemoTicketPolicy.new(context.actor, record).create? }
   authorize(:update) { |record, context| DemoTicketPolicy.new(context.actor, record).update? }
   authorize(:destroy) { |record, context| DemoTicketPolicy.new(context.actor, record).destroy? }
+  authorize(:archive) { |record, context| DemoTicketPolicy.new(context.actor, record).destroy? }
+  authorize(:restore) { |record, context| DemoTicketPolicy.new(context.actor, record).restore? }
 
   ai_field :title
   ai_field :state

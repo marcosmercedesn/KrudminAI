@@ -86,6 +86,17 @@
       "evidence_gap": "An independently generated Rails host must exercise each mutation outcome in every response format."
     },
     {
+      "name": "resource_query_lifecycle",
+      "status": "companion_evidence",
+      "guarantees": [
+        "resource metadata declares includes and preloads after tenant and policy scoping",
+        "archive-aware resources default to active records and safely accept active, archived, and all states",
+        "configured DELETE requests create audited archive mutations while restore requires an explicit policy",
+        "the companion relationship editor verifies one passenger query for multiple rendered rows"
+      ],
+      "evidence_gap": "An independently generated Rails host must prove archive, restore, eager loading, and invalid query behavior."
+    },
+    {
       "name": "hotwire_ui_foundations",
       "status": "implemented",
       "guarantees": [

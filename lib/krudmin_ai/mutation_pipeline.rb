@@ -11,7 +11,7 @@ module KrudminAI
   end
 
   class MutationPipeline
-    OPERATIONS = %i[create update destroy].freeze
+    OPERATIONS = %i[create update destroy archive restore].freeze
 
     def initialize(resource:, context:, auditor:, authorization_provider: nil)
       @resource = resource
@@ -86,6 +86,11 @@ module KrudminAI
 
     def persist(operation, record, attributes)
       return record.destroy if operation == :destroy
+
+      if %i[archive restore].include?(operation)
+        record.public_send("#{resource.archive_attribute}=", operation == :archive ? Time.now : nil)
+        return record.save
+      end
 
       save_record = -> do
         record.assign_attributes(attributes)

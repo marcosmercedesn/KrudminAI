@@ -9,7 +9,7 @@ module KrudminAI
           :signed_in?, :navigation_items, :authorized_action?
 
     before_action :authenticate_resource_request
-    before_action :load_model, only: %i[show edit update destroy]
+    before_action :load_model, only: %i[show edit update destroy restore]
 
     class << self
       def resource(value = nil)
@@ -48,7 +48,11 @@ module KrudminAI
     end
 
     def destroy
-      persist(:destroy)
+      persist(resource.archivable? ? :archive : :destroy)
+    end
+
+    def restore
+      persist(:restore)
     end
 
     def model
@@ -149,7 +153,9 @@ module KrudminAI
     end
 
     def load_model
-      @model = query_pipeline.authorized_relation(resource.model_class.all).find(params[:id])
+      @model = query_pipeline(archive: action_name == "restore" ? "archived" : nil)
+        .authorized_relation(resource.model_class.all)
+        .find(params[:id])
     end
 
     def persist(operation)
@@ -170,7 +176,7 @@ module KrudminAI
 
     def render_html_mutation(response, result, operation)
       if response.payload[:redirect]
-        destination = operation == :destroy ? collection_path : resource_path(model)
+        destination = %i[destroy archive].include?(operation) ? collection_path : resource_path(model)
         return redirect_to(destination, status: response.status, notice: "#{resource_label} #{operation}d and audited.")
       end
 
@@ -183,7 +189,7 @@ module KrudminAI
 
     def render_turbo_mutation(response, result, operation)
       if response.payload[:outcome] == :success
-        self.response.set_header("Turbo-Location", operation == :destroy ? collection_path : resource_path(model))
+        self.response.set_header("Turbo-Location", %i[destroy archive].include?(operation) ? collection_path : resource_path(model))
         flash.now[:notice] = "#{resource_label} #{operation}d and audited."
       else
         flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")
@@ -192,11 +198,11 @@ module KrudminAI
       render template: response.payload[:template], formats: [:turbo_stream], status: response.status
     end
 
-    def query_pipeline
+    def query_pipeline(archive: nil)
       QueryAccessPipeline.new(
         resource:,
         context: access_context,
-        params: query_params,
+        params: archive ? query_params.merge(archive:) : query_params,
         authorization_provider: authorization_provider
       )
     end
@@ -206,7 +212,7 @@ module KrudminAI
     end
 
     def query_params
-      params.permit(:page, :per_page, :sort, filters: resource.filters.keys).to_h
+      params.permit(:page, :per_page, :sort, :archive, filters: resource.filters.keys).to_h
     end
 
     def permitted_attributes

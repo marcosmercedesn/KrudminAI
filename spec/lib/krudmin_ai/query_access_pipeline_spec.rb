@@ -1,10 +1,17 @@
 require "spec_helper"
 require "krudmin_ai/access_context"
+require "krudmin_ai/providers"
 require "krudmin_ai/resources/base"
 require "krudmin_ai/query_access_pipeline"
 
 RSpec.describe KrudminAI::QueryAccessPipeline do
   FakeRelation = Data.define(:operations) do
+    WhereChain = Data.define(:relation) do
+      def not(value)
+        relation.send(:with, :where_not, value)
+      end
+    end
+
     def tenant(tenant)
       with(:tenant, tenant)
     end
@@ -27,6 +34,20 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
 
     def offset(value)
       with(:offset, value)
+    end
+
+    def includes(*associations)
+      with(:includes, associations)
+    end
+
+    def preload(*associations)
+      with(:preload, associations)
+    end
+
+    def where(value = nil)
+      return WhereChain.new(self) if value.nil?
+
+      with(:where, value)
     end
 
     private
@@ -135,5 +156,31 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
 
     expect(result).to have_attributes(page: 3, per_page: 50)
     expect(result.records.operations.last(2)).to eq([[:limit, 50], [:offset, 100]])
+  end
+
+  it "applies declared eager loading before filters, sort, and pagination" do
+    resource.includes :owner
+    resource.preload :comments
+
+    result = described_class.new(resource:, context:, params: { filters: { status: "active" } }).call(relation)
+
+    expect(result.records.operations).to eq([
+      [:tenant, tenant], [:policy, actor, %i[operator manager]], [:includes, [:owner]], [:preload, [:comments]],
+      [:filter, :status, "active"], [:order, { created_at: :desc }], [:limit, 20], [:offset, 0]
+    ])
+  end
+
+  it "defaults archive-aware resources to active records and safely handles archive values" do
+    resource.archive :archived_at
+
+    active = described_class.new(resource:, context:).call(relation)
+    archived = described_class.new(resource:, context:, params: { archive: "archived" }).call(relation)
+    all = described_class.new(resource:, context:, params: { archive: "all" }).call(relation)
+    invalid = described_class.new(resource:, context:, params: { archive: "outside" }).call(relation)
+
+    expect(active.records.operations).to include([:where, { archived_at: nil }])
+    expect(archived.records.operations).to include([:where_not, { archived_at: nil }])
+    expect(all.records.operations).not_to include([:where, { archived_at: nil }], [:where_not, { archived_at: nil }])
+    expect(invalid.records.operations).to include([:where, { archived_at: nil }])
   end
 end

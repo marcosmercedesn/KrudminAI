@@ -8,7 +8,8 @@ module KrudminAI
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
                     :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute,
                     :route_key, :icon_name, :resource_label, :resources_label, :list_fields,
-                    :form_fields, :show_fields, :relationships
+                    :form_fields, :show_fields, :relationships, :included_associations,
+                    :preloaded_associations, :archive_attribute
 
         def inherited(subclass)
           super
@@ -29,6 +30,9 @@ module KrudminAI
           subclass.instance_variable_set(:@form_fields, form_fields.dup)
           subclass.instance_variable_set(:@show_fields, show_fields.dup)
           subclass.instance_variable_set(:@relationships, relationships.dup)
+          subclass.instance_variable_set(:@included_associations, included_associations.dup)
+          subclass.instance_variable_set(:@preloaded_associations, preloaded_associations.dup)
+          subclass.instance_variable_set(:@archive_attribute, archive_attribute)
         end
 
         def model(value = nil)
@@ -92,6 +96,26 @@ module KrudminAI
           return show_fields.empty? ? permitted_attributes : show_fields unless attributes.any?
 
           @show_fields = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def includes(*associations)
+          return included_associations if associations.empty?
+
+          @included_associations = associations.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def preload(*associations)
+          return preloaded_associations if associations.empty?
+
+          @preloaded_associations = associations.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def archive(attribute = :archived_at)
+          @archive_attribute = attribute.to_sym
+        end
+
+        def archivable?
+          !archive_attribute.nil?
         end
 
         def has_many(name, fields:, label: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil)
@@ -170,6 +194,7 @@ module KrudminAI
         def validate_mutation_contract!(operation)
           raise ConfigurationError, "Resource model is required" unless model_class
           raise ConfigurationError, "Tenant record check is required" unless tenant_record_handler
+          raise ConfigurationError, "Archive metadata is required" if %i[archive restore].include?(operation.to_sym) && !archivable?
           raise AuthorizationDenied, "No authorization policy for #{operation}" unless action_authorizers[operation.to_sym]
         end
 
@@ -205,6 +230,9 @@ module KrudminAI
       @form_fields = [].freeze
       @show_fields = [].freeze
       @relationships = {}.freeze
+      @included_associations = [].freeze
+      @preloaded_associations = [].freeze
+      @archive_attribute = nil
     end
   end
 end

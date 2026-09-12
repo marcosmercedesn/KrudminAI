@@ -93,7 +93,7 @@ The original sequence in [krudminai_kickoff_prompt_pack.md](krudminai_kickoff_pr
 | Authorization | Partial | Query/mutation policies deny by default; field-level decisions and standardized UI denial behavior are absent. |
 | Provider contracts | Partial | Configuration has callables, but signatures, lifecycle, errors, boot validation, and adapter conformance tests are absent. |
 | Multi-tenancy | Partial | Row-level tenant behavior works in the demo; supported models, super-admin rules, and request-resolution policy are absent. |
-| Query/data access | Partial | Canonical order is implemented; eager loading, archival/soft delete, and N+1 rules are absent. |
+| Query/data access | Partial | Canonical order, eager-load metadata, archive lifecycle, and a companion relationship query-count guard exist; generated-host and broader render-path evidence remain absent. |
 | Dashboards | Partial | Core widgets scope data; lifecycle, widget visibility, and secure generic drill-down links are incomplete. |
 | Showcase | Partial | Blueprint and verifier exist; generated showcase boot and end-to-end scenarios are not proven. |
 | UI/theming | Partial | Tokens/theme module/primitives exist; generic CRUD integration, component states, token dictionary, dark-mode proof, and interaction targets are incomplete. |

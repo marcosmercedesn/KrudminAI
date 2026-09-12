@@ -35,4 +35,18 @@ RSpec.describe KrudminAI::Resources::Base do
     expect(default_resource.form).to eq([:name, :status])
     expect(default_resource.show).to eq([:name, :status])
   end
+
+  it "inherits eager-loading and archive lifecycle metadata" do
+    parent_resource = Class.new(described_class) do
+      includes :owner
+      preload :comments
+      archive :archived_at
+    end
+    child_resource = Class.new(parent_resource)
+
+    expect(child_resource.included_associations).to eq([:owner])
+    expect(child_resource.preloaded_associations).to eq([:comments])
+    expect(child_resource).to be_archivable
+    expect(child_resource.archive_attribute).to eq(:archived_at)
+  end
 end

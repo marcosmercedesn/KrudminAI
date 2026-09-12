@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_12_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_12_120000) do
   create_table "demo_audit_events", force: :cascade do |t|
     t.string "actor_name"
     t.datetime "created_at", null: false
@@ -36,6 +36,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_110000) do
   end
 
   create_table "demo_tickets", force: :cascade do |t|
+    t.datetime "archived_at"
     t.string "assignee"
     t.datetime "created_at", null: false
     t.text "description"
@@ -44,6 +45,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_110000) do
     t.string "tenant", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index ["tenant", "archived_at"], name: "index_demo_tickets_on_tenant_and_archived_at"
     t.index ["tenant", "state"], name: "index_demo_tickets_on_tenant_and_state"
   end
 

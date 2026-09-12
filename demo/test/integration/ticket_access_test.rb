@@ -37,6 +37,26 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, @south_ticket.title
   end
 
+  test "archive filters default to active records and reject invalid values safely" do
+    @north_ticket.update!(archived_at: Time.current)
+    sign_in(@north_agent)
+
+    get tickets_path
+
+    assert_response :success
+    assert_not_includes response.body, @north_ticket.title
+
+    get tickets_path, params: { archive: "archived" }
+
+    assert_response :success
+    assert_includes response.body, @north_ticket.title
+
+    get tickets_path, params: { archive: "invalid" }
+
+    assert_response :success
+    assert_not_includes response.body, @north_ticket.title
+  end
+
   test "cross tenant tickets are not reachable" do
     sign_in(@north_agent)
 
@@ -201,6 +221,23 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_includes DemoAuditEvent.order(:created_at).last.metadata[:affected_child_references][:passengers], existing.id.to_s
   end
 
+  test "the relationship editor uses the declared passenger preload" do
+    @north_ticket.passengers.create!(tenant: "northwind", name: "First", position: 1)
+    @north_ticket.passengers.create!(tenant: "northwind", name: "Second", position: 2)
+    sign_in(@north_agent)
+    passenger_queries = 0
+
+    callback = lambda do |_name, _started, _finished, _identifier, payload|
+      passenger_queries += 1 if payload[:sql].include?('FROM "demo_passengers"')
+    end
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      get edit_ticket_path(@north_ticket)
+    end
+
+    assert_response :success
+    assert_equal 1, passenger_queries
+  end
+
   test "crafted cross-tenant passenger identifiers fail closed without mutation" do
     foreign_passenger = @south_ticket.passengers.create!(tenant: "southwind", name: "Outside tenant", position: 1)
     sign_in(@north_agent)
@@ -283,17 +320,24 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_equal "northwind", DemoAuditEvent.order(:created_at).last.tenant
   end
 
-  test "managers can delete a tenant ticket and record the mutation" do
+  test "managers archive a tenant ticket and can restore it" do
     sign_in(@north_manager)
 
-    assert_difference -> { DemoTicket.count }, -1 do
+    assert_no_difference -> { DemoTicket.count } do
       assert_difference -> { DemoAuditEvent.count }, 1 do
         delete ticket_path(@north_ticket)
       end
     end
 
     assert_redirected_to tickets_path
-    assert_equal "destroy", DemoAuditEvent.order(:created_at).last.operation
+    assert @north_ticket.reload.archived_at
+    assert_equal "archive", DemoAuditEvent.order(:created_at).last.operation
+
+    patch restore_ticket_path(@north_ticket)
+
+    assert_redirected_to ticket_path(@north_ticket)
+    assert_nil @north_ticket.reload.archived_at
+    assert_equal "restore", DemoAuditEvent.order(:created_at).last.operation
   end
 
   private

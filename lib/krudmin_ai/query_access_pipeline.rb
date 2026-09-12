@@ -20,7 +20,7 @@ module KrudminAI
       tenant_scoped = apply_scope(resource.tenant_scope_handler, relation, ScopeViolation, "Tenant scope")
       policy_scoped = apply_scope(resource.policy_scope_handler, tenant_scoped, AuthorizationDenied, "Policy scope")
       policy_scoped = apply_provider_scope(policy_scoped)
-      apply_filters(policy_scoped)
+      apply_filters(apply_eager_loading(apply_archive_visibility(policy_scoped)))
     end
 
     private
@@ -38,6 +38,29 @@ module KrudminAI
         raise(AuthorizationDenied, "Authorization provider denied access")
     rescue StandardError
       raise AuthorizationDenied, "Authorization provider denied access"
+    end
+
+    def apply_eager_loading(relation)
+      relation = relation.includes(*resource.included_associations) if resource.included_associations.any?
+      relation = relation.preload(*resource.preloaded_associations) if resource.preloaded_associations.any?
+      relation
+    end
+
+    def apply_archive_visibility(relation)
+      return relation unless resource.archivable?
+
+      case requested_archive_state
+      when :active then relation.where(resource.archive_attribute => nil)
+      when :archived then relation.where.not(resource.archive_attribute => nil)
+      else relation
+      end
+    end
+
+    def requested_archive_state
+      value = params[:archive] || params["archive"]
+      return :active if value.nil?
+
+      %w[active archived all].include?(value) ? value.to_sym : :active
     end
 
     def apply_filters(relation)
