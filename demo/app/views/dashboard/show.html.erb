@@ -1,4 +1,52 @@
-<p class="eyebrow">Policy-aware dashboard</p><h1>Workspace overview</h1><p class="lede">Counts and recent records are derived from the same tenant- and policy-scoped relation as the resource list.</p>
-<div class="grid"><div class="metric"><span>Visible tickets</span><strong><%= @tickets.count %></strong></div><div class="metric"><span>Open</span><strong><%= @open_count %></strong></div><div class="metric"><span>Assigned</span><strong><%= @assigned_count %></strong></div></div>
-<section class="panel"><h2>Recent tickets</h2><ul><% @recent_tickets.each do |ticket| %><li><%= link_to ticket.title, ticket_path(ticket) %> <span class="badge state-<%= ticket.state %>"><%= ticket.state %></span></li><% end %></ul></section>
-<section class="panel"><h2>Recent audit activity</h2><ul><% @audit_events.each do |event| %><li><strong><%= event.operation.presence || event.event_type %></strong> by <%= event.actor_name %> at <%= event.created_at.strftime("%H:%M") %></li><% end %><% if @audit_events.empty? %><li>No activity has been recorded for this tenant.</li><% end %></ul></section>
+<div class="page-heading">
+	<div>
+		<p class="eyebrow">Workspace overview</p>
+		<h1>Operations dashboard</h1>
+		<p class="lede">Live ticket visibility for the current tenant and your current policy scope.</p>
+	</div>
+	<%= link_to "New ticket", new_ticket_path, class: "button" %>
+</div>
+
+<div class="metric-grid">
+	<section class="metric-card">
+		<p>Visible tickets</p>
+		<strong><%= @tickets.count %></strong>
+		<span class="metric-note">In your current workspace</span>
+	</section>
+	<section class="metric-card">
+		<p>Open queue</p>
+		<strong><%= @open_count %></strong>
+		<span class="metric-note metric-note--positive">Needs attention</span>
+	</section>
+	<section class="metric-card">
+		<p>Assigned</p>
+		<strong><%= @assigned_count %></strong>
+		<span class="metric-note">Work in progress</span>
+	</section>
+</div>
+
+<div class="dashboard-grid">
+	<section class="panel panel--flush">
+		<header class="panel-header">
+			<div><h2>Recent tickets</h2><p>Latest work visible to your role</p></div>
+			<%= link_to "View all", tickets_path, class: "text-action" %>
+		</header>
+		<ul class="activity-list">
+			<% @recent_tickets.each do |ticket| %>
+				<li>
+					<div><%= link_to ticket.title, ticket_path(ticket) %><span><%= ticket.assignee.presence || "Unassigned" %></span></div>
+					<span class="badge state-<%= ticket.state %>"><%= ticket.state %></span>
+				</li>
+			<% end %>
+		</ul>
+	</section>
+	<section class="panel panel--flush">
+		<header class="panel-header"><div><h2>Audit activity</h2><p>Recent changes in this workspace</p></div></header>
+		<ul class="activity-list activity-list--audit">
+			<% @audit_events.each do |event| %>
+				<li><div><strong><%= event.operation.presence || event.event_type %></strong><span><%= event.actor_name %></span></div><time><%= event.created_at.strftime("%H:%M") %></time></li>
+			<% end %>
+			<% if @audit_events.empty? %><li><div><span>No activity has been recorded for this tenant.</span></div></li><% end %>
+		</ul>
+	</section>
+</div>

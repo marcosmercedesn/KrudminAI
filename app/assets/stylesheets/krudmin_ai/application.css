@@ -1,13 +1,13 @@
 :root {
   color-scheme: light dark;
-  --krudmin-ai-canvas: #f5f7f6;
+  --krudmin-ai-canvas: #f3f5f8;
   --krudmin-ai-surface: #ffffff;
-  --krudmin-ai-surface-raised: #edf3f1;
-  --krudmin-ai-text: #17211d;
-  --krudmin-ai-text-muted: #52605a;
-  --krudmin-ai-border: #cbd7d1;
-  --krudmin-ai-accent: #0c6c53;
-  --krudmin-ai-accent-strong: #075440;
+  --krudmin-ai-surface-raised: #f7f9fb;
+  --krudmin-ai-text: #172033;
+  --krudmin-ai-text-muted: #647188;
+  --krudmin-ai-border: #dce2eb;
+  --krudmin-ai-accent: #1b5fd1;
+  --krudmin-ai-accent-strong: #124ba8;
   --krudmin-ai-focus: #d66b19;
   --krudmin-ai-danger: #a32d2d;
   --krudmin-ai-radius: 6px;
@@ -16,19 +16,19 @@
   --krudmin-ai-space-3: 0.75rem;
   --krudmin-ai-space-4: 1rem;
   --krudmin-ai-space-6: 1.5rem;
-  --krudmin-ai-shadow: 0 1px 2px rgb(23 33 29 / 8%);
+  --krudmin-ai-shadow: 0 8px 20px rgb(23 32 51 / 6%);
   --krudmin-ai-transition: 160ms ease;
 }
 
 :root[data-theme="dark"] {
-  --krudmin-ai-canvas: #141a17;
-  --krudmin-ai-surface: #1d2621;
-  --krudmin-ai-surface-raised: #28342d;
-  --krudmin-ai-text: #edf5ef;
-  --krudmin-ai-text-muted: #b5c3ba;
-  --krudmin-ai-border: #46554c;
-  --krudmin-ai-accent: #51c69a;
-  --krudmin-ai-accent-strong: #83e1bd;
+  --krudmin-ai-canvas: #151a24;
+  --krudmin-ai-surface: #202735;
+  --krudmin-ai-surface-raised: #293244;
+  --krudmin-ai-text: #f2f5fa;
+  --krudmin-ai-text-muted: #aab6c8;
+  --krudmin-ai-border: #364154;
+  --krudmin-ai-accent: #5b9cff;
+  --krudmin-ai-accent-strong: #87b8ff;
   --krudmin-ai-focus: #f0a660;
   --krudmin-ai-danger: #ff9d9d;
   --krudmin-ai-shadow: 0 1px 2px rgb(0 0 0 / 24%);
@@ -52,8 +52,8 @@
 .krudmin-ai-admin {
   background: var(--krudmin-ai-canvas);
   color: var(--krudmin-ai-text);
-  min-height: 100%;
-  padding: var(--krudmin-ai-space-6);
+  min-height: 100vh;
+  padding: clamp(1.25rem, 3vw, 2.5rem);
 }
 
 .krudmin-ai-toolbar,
@@ -78,8 +78,10 @@
   background: var(--krudmin-ai-surface);
   color: var(--krudmin-ai-text);
   cursor: pointer;
-  min-height: 2.5rem;
-  padding: var(--krudmin-ai-space-2) var(--krudmin-ai-space-3);
+  font-size: 0.875rem;
+  font-weight: 650;
+  min-height: 2.625rem;
+  padding: 0.55rem 0.875rem;
   transition:
     background-color var(--krudmin-ai-transition),
     border-color var(--krudmin-ai-transition),
@@ -115,9 +117,10 @@
 .krudmin-ai-form-shell {
   background: var(--krudmin-ai-surface);
   border: 1px solid var(--krudmin-ai-border);
+  border-radius: var(--krudmin-ai-radius);
   box-shadow: var(--krudmin-ai-shadow);
-  margin-block: var(--krudmin-ai-space-4);
-  padding: var(--krudmin-ai-space-4);
+  margin-block: var(--krudmin-ai-space-6);
+  padding: clamp(1rem, 2vw, 1.5rem);
 }
 
 .krudmin-ai-filter-grid,
@@ -132,6 +135,8 @@
   gap: var(--krudmin-ai-space-1);
 }
 .krudmin-ai-field label {
+  color: var(--krudmin-ai-text-muted);
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .krudmin-ai-input,
@@ -144,6 +149,10 @@
 }
 
 .krudmin-ai-table-wrap {
+  background: var(--krudmin-ai-surface);
+  border: 1px solid var(--krudmin-ai-border);
+  border-radius: var(--krudmin-ai-radius);
+  box-shadow: var(--krudmin-ai-shadow);
   overflow-x: auto;
 }
 .krudmin-ai-table {
@@ -154,17 +163,23 @@
 .krudmin-ai-table th,
 .krudmin-ai-table td {
   border-bottom: 1px solid var(--krudmin-ai-border);
-  padding: var(--krudmin-ai-space-3);
+  padding: 0.875rem 1rem;
   text-align: start;
   vertical-align: middle;
 }
 .krudmin-ai-table th {
+  background: var(--krudmin-ai-surface-raised);
   color: var(--krudmin-ai-text-muted);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .krudmin-ai-table tbody tr:hover {
   background: var(--krudmin-ai-surface-raised);
+}
+.krudmin-ai-table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 @media (max-width: 40rem) {

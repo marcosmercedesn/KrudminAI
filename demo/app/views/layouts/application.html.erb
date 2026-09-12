@@ -13,22 +13,57 @@
   </head>
 
   <body>
-    <header class="site-header">
-      <%= link_to "KrudminAI", root_path, class: "brand" %>
-      <% if signed_in? %>
-        <nav aria-label="Main navigation">
-          <%= link_to "Tickets", tickets_path %>
-          <%= link_to "Dashboard", dashboard_path %>
-          <%= link_to "Companion", companion_path %>
-        </nav>
-        <div class="identity"><strong><%= current_user.name %></strong><span><%= current_tenant %> / <%= current_user.roles.join(", ") %></span></div>
-        <%= button_to "Sign out", session_path, method: :delete, class: "quiet-button" %>
-      <% end %>
-    </header>
-    <main class="page-shell">
-      <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
-      <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
-      <%= yield %>
-    </main>
+    <div class="app-shell">
+      <header class="site-header">
+        <%= link_to root_path, class: "brand", aria: { label: "KrudminAI home" } do %>
+          <span class="brand-mark">K</span><span>Krudmin<span class="brand-accent">AI</span></span>
+        <% end %>
+        <% if signed_in? %>
+          <nav aria-label="Main navigation">
+            <%= link_to tickets_path, class: (current_page?(tickets_path) ? "is-active" : nil) do %><span class="nav-glyph">T</span>Tickets<% end %>
+            <%= link_to dashboard_path, class: (current_page?(dashboard_path) ? "is-active" : nil) do %><span class="nav-glyph">D</span>Dashboard<% end %>
+            <%= link_to companion_path, class: (current_page?(companion_path) ? "is-active" : nil) do %><span class="nav-glyph">A</span>Companion<% end %>
+          </nav>
+          <div class="sidebar-footer">
+            <div class="identity"><strong><%= current_user.name %></strong><span><%= current_tenant %> / <%= current_user.roles.join(", ") %></span></div>
+            <%= button_to "Sign out", session_path, method: :delete, class: "quiet-button" %>
+          </div>
+        <% end %>
+      </header>
+      <main class="page-shell">
+        <% if signed_in? %>
+          <div class="workspace-bar">
+            <p><span class="workspace-indicator"></span><%= current_tenant %> workspace</p>
+            <label class="theme-picker">
+              <span>Appearance</span>
+              <select aria-label="Appearance" data-theme-select>
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+          </div>
+        <% end %>
+        <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
+        <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
+        <%= yield %>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const select = document.querySelector("[data-theme-select]");
+        if (!select) return;
+        const key = "krudmin-ai-theme";
+        const apply = (mode) => {
+          const theme = mode === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.dataset.themeMode = mode;
+        };
+        select.value = localStorage.getItem(key) || "system";
+        apply(select.value);
+        select.addEventListener("change", () => { localStorage.setItem(key, select.value); apply(select.value); });
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (select.value === "system") apply("system"); });
+      })();
+    </script>
   </body>
 </html>
