@@ -53,6 +53,15 @@
         "no precomputed aggregate input",
         "table widgets use sorting and bounded pagination"
       ]
+    },
+    {
+      "name": "showcase_admin_panel",
+      "status": "implemented",
+      "guarantees": [
+        "tenant-separated support operations demo data",
+        "evaluator and agent walkthroughs",
+        "CI conformance against capability registry"
+      ]
     }
   ],
   "providers": {},

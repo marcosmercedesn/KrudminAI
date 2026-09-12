@@ -1,0 +1,23 @@
+{
+  "name": "support_operations",
+  "required_capabilities": [
+    "resource_query_pipeline",
+    "crud_mutation_pipeline",
+    "hotwire_ui_foundations",
+    "policy_aware_dashboard_widgets"
+  ],
+  "demonstrations": {
+    "crud": "ShowcaseTicketsResource and authenticated controller",
+    "search_and_filtering": "state and assignee filters",
+    "tenant_and_role_access": "ticket tenant scope and role predicates",
+    "custom_actions": "assign_to_me endpoint and policy predicate",
+    "state_transitions": "resolve endpoint and Ticket#resolve!",
+    "dashboard_summaries": "Count, Table, and Summary widgets over ShowcaseTicketsResource",
+    "audit_trail_hooks": "MutationPipeline audit sink for ticket mutations",
+    "themes": "light, dark, and system theme controller"
+  },
+  "required_documents": [
+    "docs/showcase_evaluator_walkthrough.md",
+    "docs/showcase_agent_playbook.md"
+  ]
+}

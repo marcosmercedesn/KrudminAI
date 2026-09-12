@@ -21,3 +21,13 @@ rails generate krudmin_ai:resource Order
 Generated policy methods return `false` and scope resolution returns `scope.none` until the host application supplies explicit authorization rules. Update the resource's tenant scopes, policy scope, tenant record check, and action predicates together.
 
 The generated initializer exposes host-provider placeholders through `KrudminAI.configure`. Authentication, authorization, tenant, and audit providers must be configured before generated resources are enabled.
+
+## Showcase Generator
+
+Install the tenant-separated support-operations blueprint with:
+
+```sh
+rails generate krudmin_ai:showcase
+```
+
+It creates a ticket model blueprint, secured resource and policy examples, authenticated workflow endpoints, two-tenant seed data, request-spec scaffold, and evaluator/agent walkthroughs. See [showcase_evaluator_walkthrough.md](showcase_evaluator_walkthrough.md) and [showcase_agent_playbook.md](showcase_agent_playbook.md).

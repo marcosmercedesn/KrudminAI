@@ -13,6 +13,7 @@ require "krudmin_ai/mutation_response"
 require "krudmin_ai/generators/file_writer"
 require "krudmin_ai/generators/install_contract"
 require "krudmin_ai/generators/resource_contract"
+require "krudmin_ai/generators/showcase_contract"
 
 module KrudminAI
 	class << self

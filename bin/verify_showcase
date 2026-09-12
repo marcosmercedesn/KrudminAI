@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+require "json"
+
+root = File.expand_path("..", __dir__)
+manifest = JSON.parse(File.read(File.join(root, "templates/showcase/manifest.json")))
+registry = JSON.parse(File.read(File.join(root, "docs/capability_registry.json")))
+available_capabilities = registry.fetch("capabilities").map { |capability| capability.fetch("name") }
+missing_capabilities = manifest.fetch("required_capabilities") - available_capabilities
+abort "Showcase requires unregistered capabilities: #{missing_capabilities.join(', ')}" if missing_capabilities.any?
+
+missing_documents = manifest.fetch("required_documents").reject { |path| File.file?(File.join(root, path)) }
+abort "Showcase documentation is missing: #{missing_documents.join(', ')}" if missing_documents.any?
+
+required_demonstrations = %w[crud search_and_filtering tenant_and_role_access custom_actions state_transitions dashboard_summaries audit_trail_hooks themes]
+missing_demonstrations = required_demonstrations - manifest.fetch("demonstrations").keys
+abort "Showcase demonstrations are missing: #{missing_demonstrations.join(', ')}" if missing_demonstrations.any?
+
+puts "Showcase conformance OK"

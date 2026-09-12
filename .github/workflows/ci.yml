@@ -37,3 +37,4 @@ jobs:
       - run: bundle update rails erb --conservative
       - run: bundle exec rspec
       - run: bundle exec rubocop
+      - run: ruby bin/verify_showcase
