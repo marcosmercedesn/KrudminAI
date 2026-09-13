@@ -184,6 +184,81 @@
   border-color: var(--krudmin-ai-danger);
 }
 
+.krudmin-ai-resource-show {
+  margin-block: var(--krudmin-ai-space-6);
+}
+.krudmin-ai-resource-heading {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--krudmin-ai-space-4);
+  justify-content: space-between;
+  margin-block-end: var(--krudmin-ai-space-6);
+}
+.krudmin-ai-resource-heading h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0;
+}
+.krudmin-ai-resource-eyebrow {
+  color: var(--krudmin-ai-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--krudmin-ai-space-1);
+  text-transform: uppercase;
+}
+.krudmin-ai-resource-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--krudmin-ai-space-2);
+}
+.krudmin-ai-resource-actions form {
+  margin: 0;
+}
+.krudmin-ai-record-details {
+  background: var(--krudmin-ai-surface);
+  border: 1px solid var(--krudmin-ai-border);
+  border-radius: var(--krudmin-ai-radius);
+  box-shadow: var(--krudmin-ai-shadow);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  max-inline-size: 58rem;
+  overflow: hidden;
+}
+.krudmin-ai-record-detail {
+  border-block-end: 1px solid var(--krudmin-ai-border);
+  display: grid;
+  gap: var(--krudmin-ai-space-2);
+  min-block-size: 6.5rem;
+  padding: var(--krudmin-ai-space-4) var(--krudmin-ai-space-6);
+}
+.krudmin-ai-record-detail:nth-child(odd) {
+  border-inline-end: 1px solid var(--krudmin-ai-border);
+}
+.krudmin-ai-record-detail:nth-last-child(-n + 2) {
+  border-block-end: 0;
+}
+.krudmin-ai-record-detail dt {
+  color: var(--krudmin-ai-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.krudmin-ai-record-detail dd {
+  font-size: 1rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.krudmin-ai-record-image {
+  block-size: auto;
+  border-radius: var(--krudmin-ai-radius);
+  max-inline-size: min(100%, 24rem);
+}
+
 .krudmin-ai-toolbar,
 .krudmin-ai-form-actions {
   align-items: center;
@@ -636,6 +711,34 @@
   .krudmin-ai-filter-value,
   .krudmin-ai-filter-range {
     grid-template-columns: 1fr;
+  }
+  .krudmin-ai-resource-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .krudmin-ai-resource-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .krudmin-ai-resource-actions form,
+  .krudmin-ai-resource-actions .krudmin-ai-button {
+    inline-size: 100%;
+  }
+  .krudmin-ai-record-details {
+    grid-template-columns: 1fr;
+  }
+  .krudmin-ai-record-detail,
+  .krudmin-ai-record-detail:nth-child(odd),
+  .krudmin-ai-record-detail:nth-last-child(-n + 2) {
+    border-block-end: 1px solid var(--krudmin-ai-border);
+    border-inline-end: 0;
+  }
+  .krudmin-ai-record-detail:last-child {
+    border-block-end: 0;
+  }
+  .krudmin-ai-record-detail {
+    min-block-size: 4.75rem;
+    padding: var(--krudmin-ai-space-3) var(--krudmin-ai-space-4);
   }
 }
 
