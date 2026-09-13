@@ -5,13 +5,23 @@ export default class extends Controller {
 
   connect() {
     this.sync(this.panelTarget.hidden)
+    this.panelTarget.classList.toggle("is-open", !this.panelTarget.hidden)
   }
 
   toggle() {
-    this.panelTarget.hidden = !this.panelTarget.hidden
-    this.sync(this.panelTarget.hidden)
+    if (this.panelTarget.hidden) {
+      this.panelTarget.hidden = false
+      requestAnimationFrame(() => this.panelTarget.classList.add("is-open"))
+      this.sync(false)
+      this.panelTarget.querySelector("input, select, textarea, button")?.focus()
+      return
+    }
 
-    if (!this.panelTarget.hidden) this.panelTarget.querySelector("input, select, textarea, button")?.focus()
+    this.panelTarget.classList.remove("is-open")
+    this.sync(true)
+    this.panelTarget.addEventListener("transitionend", () => {
+      if (!this.panelTarget.classList.contains("is-open")) this.panelTarget.hidden = true
+    }, { once: true })
   }
 
   sync(hidden) {

@@ -107,6 +107,7 @@
         "filter_field derives only resource-owned adapter metadata and bound predicates",
         "text, constrained select, numeric, date, datetime, and protected association filters preserve canonical query order",
         "declared sort headers, bounded pagination, and reset controls do not widen tenant or policy visibility",
+        "filter controls collapse on clean lists and reopen for active declared filter values without persisting search state",
         "saved views are not persisted until an owner/tenant privacy and audit model exists"
       ],
       "evidence_gap": "P13 owns browser/accessibility consolidation for discovery controls."

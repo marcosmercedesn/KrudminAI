@@ -1,30 +1,36 @@
-<%= form_with url: collection_path, method: :get, class: "krudmin-ai-filter-form" do |form| %>
-  <div class="krudmin-ai-filter-grid">
-    <% resource.filter_definitions.each_value do |definition| %>
-      <div class="krudmin-ai-field">
-        <%= form.label "filters[#{definition.name}][value]", definition.label %>
-        <% if definition.type == :select %>
-          <%= form.select "filters[#{definition.name}][value]", options_for_select(filter_options(definition), filter_current_value(definition)), { include_blank: t("krudmin_ai.any") }, class: "krudmin-ai-select" %>
-        <% elsif %i[number_range date_range datetime_range].include?(definition.type) %>
-          <div class="krudmin-ai-filter-range">
-            <% input_type = if definition.type == :number_range
-                              :number_field
-                            elsif definition.type == :datetime_range
-                              :datetime_local_field
-                            else
-                              :date_field
-                            end %>
-            <%= form.public_send(input_type, "filters[#{definition.name}][from]", value: filter_current_value(definition, :from), class: "krudmin-ai-input", aria: { label: "#{definition.label} #{t("krudmin_ai.from")}" }) %>
-            <%= form.public_send(input_type, "filters[#{definition.name}][to]", value: filter_current_value(definition, :to), class: "krudmin-ai-input", aria: { label: "#{definition.label} #{t("krudmin_ai.to")}" }) %>
-          </div>
-        <% else %>
-          <div class="krudmin-ai-filter-value">
-            <%= form.select "filters[#{definition.name}][operator]", options_for_select(definition.operators.map { |operator| [operator.to_s.humanize, operator] }, filter_current_value(definition, :operator) || definition.operators.first), {}, class: "krudmin-ai-select", aria: { label: "#{definition.label} operator" } %>
-            <%= form.text_field "filters[#{definition.name}][value]", value: filter_current_value(definition), class: "krudmin-ai-input" %>
+<% filters_active = resource.filter_definitions.each_value.any? { |definition| %i[number_range date_range datetime_range].include?(definition.type) ? filter_current_value(definition, :from).present? || filter_current_value(definition, :to).present? : filter_current_value(definition).present? } %>
+<div class="krudmin-ai-filter-toggle" data-controller="krudmin-ai-filter-panel">
+  <%= button_tag type: "button", class: "krudmin-ai-button", aria: { controls: "krudmin-ai-filters", expanded: filters_active }, data: { krudmin_ai_filter_panel_target: "trigger", action: "krudmin-ai-filter-panel#toggle" } do %><%= krudmin_ai_icon(:sliders_horizontal, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.filters") %></span><% end %>
+  <section id="krudmin-ai-filters" class="krudmin-ai-filter-panel<%= " is-open" if filters_active %>" aria-label="<%= t("krudmin_ai.filters") %>" data-krudmin-ai-filter-panel-target="panel" <%= "hidden" unless filters_active %>>
+    <%= form_with url: collection_path, method: :get, class: "krudmin-ai-filter-form" do |form| %>
+      <div class="krudmin-ai-filter-grid">
+        <% resource.filter_definitions.each_value do |definition| %>
+          <div class="krudmin-ai-field">
+            <%= form.label "filters[#{definition.name}][value]", definition.label %>
+            <% if definition.type == :select %>
+              <%= form.select "filters[#{definition.name}][value]", options_for_select(filter_options(definition), filter_current_value(definition)), { include_blank: t("krudmin_ai.any") }, class: "krudmin-ai-select" %>
+            <% elsif %i[number_range date_range datetime_range].include?(definition.type) %>
+              <div class="krudmin-ai-filter-range">
+                <% input_type = if definition.type == :number_range
+                                :number_field
+                              elsif definition.type == :datetime_range
+                                :datetime_local_field
+                              else
+                                :date_field
+                              end %>
+                <%= form.public_send(input_type, "filters[#{definition.name}][from]", value: filter_current_value(definition, :from), class: "krudmin-ai-input", aria: { label: "#{definition.label} #{t("krudmin_ai.from")}" }) %>
+                <%= form.public_send(input_type, "filters[#{definition.name}][to]", value: filter_current_value(definition, :to), class: "krudmin-ai-input", aria: { label: "#{definition.label} #{t("krudmin_ai.to")}" }) %>
+              </div>
+            <% else %>
+              <div class="krudmin-ai-filter-value">
+                <%= form.select "filters[#{definition.name}][operator]", options_for_select(definition.operators.map { |operator| [operator.to_s.humanize, operator] }, filter_current_value(definition, :operator) || definition.operators.first), {}, class: "krudmin-ai-select", aria: { label: "#{definition.label} operator" } %>
+                <%= form.text_field "filters[#{definition.name}][value]", value: filter_current_value(definition), class: "krudmin-ai-input" %>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>
+      <div class="krudmin-ai-form-actions"><%= form.button class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:filter, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.apply_filters") %></span><% end %><%= link_to reset_filters_path, class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:rotate_ccw, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.reset") %></span><% end %></div>
     <% end %>
-  </div>
-  <div class="krudmin-ai-form-actions"><%= form.button class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:filter, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.apply_filters") %></span><% end %><%= link_to reset_filters_path, class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:rotate_ccw, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.reset") %></span><% end %></div>
-<% end %>
+  </section>
+</div>

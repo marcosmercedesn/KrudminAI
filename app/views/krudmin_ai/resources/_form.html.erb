@@ -8,7 +8,7 @@
     <% end %>
 
     <% sections = resource.form_sections.values %>
-    <% sections = [{ fields: resource.form }] if sections.empty? %>
+    <% sections = [{ label: resource_label.capitalize, fields: resource.form }] if sections.empty? %>
     <% assigned_fields = sections.flat_map { |section| section.fetch(:fields) } %>
     <% remaining_fields = resource.form - assigned_fields %>
     <% sections << { label: t("krudmin_ai.additional_details"), fields: remaining_fields, columns: :one } if remaining_fields.any? %>
