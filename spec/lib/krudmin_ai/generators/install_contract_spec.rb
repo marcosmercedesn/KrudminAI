@@ -21,6 +21,9 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File.read(File.join(destination_root, "AGENTS.md"))).to include("KRUDMIN_AI_GENERATED_INSTRUCTIONS")
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/architecture.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/provider_contracts.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/coding_agent_workflow.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_blueprint.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_tasks.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/capability_registry.json"))
   end
 
@@ -34,6 +37,7 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File.read(application_file)).to eq("class Order < ApplicationRecord; end\n")
     expect(File).not_to exist(File.join(destination_root, "config/initializers/krudmin_ai.rb"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/README.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_tasks.md"))
   end
 
   it "preserves host registry metadata while recording generated installation metadata" do

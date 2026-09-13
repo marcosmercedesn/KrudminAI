@@ -354,7 +354,9 @@
   padding: 0;
 }
 @media (min-width: 48rem) {
-  .krudmin-ai-form-section--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .krudmin-ai-form-section--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .krudmin-ai-filter-value,
 .krudmin-ai-filter-range {
@@ -515,11 +517,22 @@
   display: flex;
   gap: var(--krudmin-ai-space-2);
 }
-.krudmin-ai-inline-edit .krudmin-ai-field { min-inline-size: 10rem; }
-.krudmin-ai-inline-edit .krudmin-ai-button { flex: 0 0 auto; }
-.krudmin-ai-bulk-actions { display: flex; flex-wrap: wrap; gap: var(--krudmin-ai-space-2); margin-block-end: var(--krudmin-ai-space-3); }
+.krudmin-ai-inline-edit .krudmin-ai-field {
+  min-inline-size: 10rem;
+}
+.krudmin-ai-inline-edit .krudmin-ai-button {
+  flex: 0 0 auto;
+}
+.krudmin-ai-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--krudmin-ai-space-2);
+  margin-block-end: var(--krudmin-ai-space-3);
+}
 @media (max-width: 48rem) {
-  .krudmin-ai-table .krudmin-ai-priority--secondary { display: none; }
+  .krudmin-ai-table .krudmin-ai-priority--secondary {
+    display: none;
+  }
 }
 .krudmin-ai-status-badge {
   background: var(--krudmin-ai-surface-raised);
