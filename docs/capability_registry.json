@@ -167,7 +167,8 @@
         "engine-owned index, new, edit, and show templates render when a host resource template is absent",
         "singular and plural resource labels are configurable",
         "list, form, and show fields default to permitted scalar attributes and can be explicitly configured",
-        "host resource templates remain intentional action-level overrides"
+        "host resource templates remain intentional action-level overrides",
+        "the companion operations showcase exercises sectioned asset forms, protected lookups, nested relationships, rich text, and uploads against real Rails models"
       ],
       "evidence_gap": "A disposable generated Rails host has not yet proved boot, request, and system behavior."
     },

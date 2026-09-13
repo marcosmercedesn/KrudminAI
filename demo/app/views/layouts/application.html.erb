@@ -10,8 +10,9 @@
     <%= csp_meta_tag %>
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "trix", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "krudmin_ai/application", "data-turbo-track": "reload" %>
-    <%= javascript_importmap_tags "krudmin_ai" %>
+    <%= javascript_importmap_tags "demo" %>
   </head>
 
   <body>
@@ -23,6 +24,9 @@
         <% if signed_in? %>
           <nav id="primary-navigation" aria-label="Main navigation">
             <%= link_to tickets_path, class: (current_page?(tickets_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(TicketsResource.icon, class: "nav-icon") %>Tickets<% end %>
+            <%= link_to assets_path, class: (current_page?(assets_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(AssetsResource.icon, class: "nav-icon") %>Assets<% end %>
+            <%= link_to locations_path, class: (current_page?(locations_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(LocationsResource.icon, class: "nav-icon") %>Locations<% end %>
+            <%= link_to vendors_path, class: (current_page?(vendors_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(VendorsResource.icon, class: "nav-icon") %>Vendors<% end %>
             <%= link_to dashboard_path, class: (current_page?(dashboard_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(:layout_dashboard, class: "nav-icon") %>Dashboard<% end %>
             <%= link_to companion_path, class: (current_page?(companion_path) ? "is-active" : nil) do %><%= krudmin_ai_icon(:sparkles, class: "nav-icon") %>Companion<% end %>
           </nav>

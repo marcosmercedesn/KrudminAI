@@ -190,7 +190,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--krudmin-ai-space-2);
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .krudmin-ai-button,
@@ -434,6 +434,47 @@
   color: var(--krudmin-ai-text);
   padding: var(--krudmin-ai-space-2);
   width: 100%;
+}
+.krudmin-ai-field trix-toolbar {
+  border: 1px solid var(--krudmin-ai-border);
+  border-bottom: 0;
+  border-radius: var(--krudmin-ai-radius) var(--krudmin-ai-radius) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--krudmin-ai-space-2);
+  padding: var(--krudmin-ai-space-2);
+}
+.krudmin-ai-field trix-toolbar .trix-button-group {
+  border-color: var(--krudmin-ai-border);
+  margin: 0;
+}
+.krudmin-ai-field trix-toolbar .trix-button {
+  background-color: var(--krudmin-ai-surface);
+  border-color: var(--krudmin-ai-border);
+}
+.krudmin-ai-field trix-toolbar .trix-button.trix-active {
+  background-color: var(--krudmin-ai-surface-raised);
+}
+:root[data-theme="dark"] .krudmin-ai-field trix-toolbar .trix-button--icon::before {
+  filter: invert(1);
+}
+.krudmin-ai-field trix-editor {
+  background: var(--krudmin-ai-surface);
+  border: 1px solid var(--krudmin-ai-border);
+  border-radius: 0 0 var(--krudmin-ai-radius) var(--krudmin-ai-radius);
+  color: var(--krudmin-ai-text);
+  font: inherit;
+  line-height: 1.5;
+  min-height: 10rem;
+  padding: 0.75rem;
+}
+.krudmin-ai-field trix-editor:focus {
+  border-color: var(--krudmin-ai-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--krudmin-ai-focus) 35%, transparent);
+  outline: 0;
+}
+.krudmin-ai-field trix-editor a {
+  color: var(--krudmin-ai-accent);
 }
 
 .krudmin-ai-table-wrap {

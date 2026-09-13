@@ -7,6 +7,11 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     DemoAuditEvent.delete_all
     DemoPassenger.delete_all
     DemoTicket.delete_all
+    DemoMaintenanceTask.delete_all
+    DemoAssetProfile.delete_all
+    DemoAsset.delete_all
+    DemoLocation.delete_all
+    DemoVendor.delete_all
     DemoUser.delete_all
 
     @agent = DemoUser.create!(name: "Morgan Lee", tenant: "northwind", roles: [ "support_agent" ])
@@ -91,6 +96,48 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     click_button "Save ticket"
     assert_selector "[role='alert']", text: "Ticket could not be saved"
     assert_selector "input[aria-invalid='true']"
+  end
+
+  test "renders the operations showcase fields and nested editors" do
+    location = DemoLocation.create!(tenant: "northwind", name: "Harbor operations", region: "East", timezone: "America/New_York", active: true)
+    vendor = DemoVendor.create!(tenant: "northwind", name: "Atlas Industrial Systems", service_tier: "enterprise", support_email: "support@atlas.example", preferred: true)
+    asset = DemoAsset.create!(
+      tenant: "northwind",
+      name: "Dock conveyor controller",
+      asset_tag: "42",
+      lifecycle: "operational",
+      demo_location: location,
+      demo_vendor: vendor
+    )
+    asset.create_profile!(tenant: "northwind", network_address: "10.42.7.18", rack_position: "Dock B / cabinet 3", power_source: "UPS-2")
+    asset.maintenance_tasks.create!(tenant: "northwind", title: "Inspect enclosure seal", status: "planned", due_on: Date.current + 21, estimated_minutes: 45)
+
+    sign_in
+    visit edit_asset_path(asset)
+
+    assert_selector "fieldset", text: "Asset identity"
+    assert_field "Name"
+    assert_field "Contact email", type: "email"
+    assert_field "Access code", type: "password"
+    assert_field "Purchase price"
+    assert_field "Uptime target"
+    assert_field "Installed on", type: "date"
+    assert_field "Maintenance window", type: "time"
+    assert_field "Commissioned at", type: "datetime-local"
+    assert_field "Configuration"
+    assert_field "Photo", type: "file"
+    assert_field "Manual", type: "file"
+    assert_selector "trix-editor"
+    assert_select "Demo location"
+    assert_selector "[data-controller='krudmin-ai-remote-belongs-to']"
+    assert_text "Deployment profile"
+    assert_text "Maintenance tasks"
+
+    click_button "Save asset"
+    assert_current_path asset_path(asset)
+
+    assert_text "[REDACTED]"
+    assert_no_text "NWC-98-4471"
   end
 
   test "exposes named controls, keyboard focus, and sized touch targets" do

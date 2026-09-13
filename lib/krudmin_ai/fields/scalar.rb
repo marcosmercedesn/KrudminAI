@@ -209,6 +209,16 @@ module KrudminAI
     end
 
     class Json < Text
+      def form_control(form, writable:, errors:, access_note_id:)
+        json = value(form.object)
+        form.text_area(
+          attribute,
+          value: json.nil? ? nil : JSON.generate(json),
+          disabled: !writable,
+          aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id }
+        )
+      end
+
       def parameter(value)
         return nil if blank?(value)
 

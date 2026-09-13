@@ -115,6 +115,12 @@ RSpec.describe KrudminAI::Fields::Registry do
     expect(resource.field_adapter(:metadata).parameter('{"source":"import"}')).to eq("source" => "import")
     expect { resource.field_adapter(:metadata).parameter("nope") }.to raise_error(ArgumentError)
     expect(resource.field_adapter(:metadata).show_value(record)).to eq('{"source":"import"}')
+    form = instance_double("Form", object: record)
+    expect(form).to receive(:text_area).with(
+      :metadata,
+      hash_including(value: '{"source":"import"}', disabled: false)
+    )
+    resource.field_adapter(:metadata).form_control(form, writable: true, errors: [], access_note_id: "metadata-note")
     expect(resource.field_adapter(:state).filter_definition).to eq(type: :select, options: [ [ "Draft", "draft" ], [ "Published", "published" ] ])
     expect(resource.field_adapter(:state).parameter("draft")).to eq("draft")
     expect(resource.field_adapter(:state).parameter("")).to be_nil
