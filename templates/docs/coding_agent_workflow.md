@@ -20,6 +20,24 @@ This document is the operating contract for agents changing this host applicatio
 - Keep AI read-only. Provider output is untrusted proposal data, not authority. A write needs a reviewed proposal, explicit approval policy, canonical record lookup, normal field authorization, mutation pipeline execution, and audit trace.
 - Do not put secrets, production exports, session data, personal data, raw AI output, or access tokens in source, tests, fixtures, generated documentation, logs, or the capability registry.
 
+## Admin Navigation
+
+Register sidebar links through `KrudminAI.configure`; do not build a parallel host sidebar for engine resources. Use a top-level `navigation_item` for an independent destination. Use `navigation_group` when related destinations belong beneath one labeled parent. Groups support one parent-to-child level, matching the engine's default sidebar.
+
+```ruby
+KrudminAI.configure do |config|
+	config.navigation_group(label: "Configuration", icon: :settings) do |group|
+		group.navigation_item(label: "Countries", route: :countries_path)
+		group.navigation_item(label: "Regions", route: :regions_path)
+	end
+end
+```
+
+- Apply the same policy decision to every child that protects its destination. A group is rendered only when its own `visible:` predicate returns exactly `true` and at least one child is visible.
+- `visible:` receives the request `AccessContext`; `nil`, non-true values, and exceptions hide the item or group. Do not use visibility as a substitute for endpoint authorization.
+- The default disclosure is keyboard-accessible, opens automatically for an active child, and closes the mobile drawer after a destination is selected. Do not recreate those behaviors with host JavaScript.
+- Do not place a group inside another group. For deeper information architecture, use a resource index, dashboard, or explicitly designed host interface.
+
 ## Delivery Loop
 
 1. State the smallest behavior change and the owning resource.
@@ -38,6 +56,7 @@ This document is the operating contract for agents changing this host applicatio
 | Relationship or lookup | Target tenant/policy scope, forged-ID rejection, label-read behavior, child validation retention |
 | File or rich text | Contract enabled, denied read/write behavior, permitted upload/render, parameter filtering |
 | Role or membership | Least-privilege policy matrix, UI/server decision parity, audit trail |
+| Navigation | Visible and hidden child decisions, active child keeps its parent group open, desktop and mobile navigation behavior |
 | AI feature | AI field allowlist, scoped context, trace redaction, provider failure, no write without reviewed approval |
 
 ## Useful Commands

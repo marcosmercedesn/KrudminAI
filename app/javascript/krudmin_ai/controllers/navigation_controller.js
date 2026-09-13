@@ -20,7 +20,7 @@ export default class extends Controller {
     if (this.mobile()) {
       document.documentElement.dataset.sidebarOpen = String(!this.expanded())
     } else {
-      const collapsed = !this.expanded()
+      const collapsed = this.expanded()
       document.documentElement.dataset.sidebarCollapsed = String(collapsed)
       window.localStorage.setItem(COLLAPSED_STORAGE_KEY, String(collapsed))
     }

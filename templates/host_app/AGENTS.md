@@ -7,3 +7,5 @@ Generated resource changes preserve authentication, tenant scope, policy scope, 
 When generating a resource, action, or dashboard, retain generated managed markers. Implement action and dashboard behavior only through resource authorization, field policy, query pipeline, and audit contracts. Never place provider credentials in `docs/krudmin_ai/capability_registry.json`.
 
 Before changing an admin workflow, read `docs/krudmin_ai/coding_agent_workflow.md` and the relevant domain blueprint. For a member-management application, use `member_administration_blueprint.md` and complete `member_administration_tasks.md` in order. Treat source application behavior as a product-discovery input, never as a reason to copy its code, credentials, private data, or authorization rules.
+
+Configure admin sidebar destinations through `KrudminAI.configure`. Use `navigation_group` for one-level related destinations and policy-gate every child with the same `AccessContext` decision that protects its endpoint. Do not implement a parallel host sidebar or nested groups.

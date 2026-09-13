@@ -10,7 +10,8 @@ module KrudminAI
           :readable_fields, :readable_relationship_fields, :relationship_field_writable?, :resource_actions,
             :resource_action_path, :pagination_path, :filter_current_value, :filter_options, :relationship_records,
             :readable_relationship_display_fields, :krudmin_ai_access_context, :krudmin_ai_authorization_provider,
-            :remote_lookup_field_path, :reset_filters_path, :sort_path, :sort_direction, :sort_active?, :bulk_action_path
+              :remote_lookup_field_path, :reset_filters_path, :sort_path, :sort_direction, :sort_active?, :bulk_action_path,
+              :page_title
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy restore perform_action]
@@ -174,6 +175,21 @@ module KrudminAI
 
     def resources_label
       resource.plural_label || resource.model_class.model_name.human(count: 2)
+    end
+
+    def page_title
+      resource_title = case action_name
+      when "new", "create"
+        t("krudmin_ai.new", resource: resource_label)
+      when "edit", "update"
+        t("krudmin_ai.edit", resource: resource_label)
+      when "show"
+        resource_label
+      else
+        resources_label
+      end
+
+      t("krudmin_ai.page_title", resource: resource_title)
     end
 
     def authorized_action?(action, record = model)

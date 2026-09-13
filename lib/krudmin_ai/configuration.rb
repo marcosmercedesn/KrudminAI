@@ -1,4 +1,5 @@
 require "krudmin_ai/navigation_item"
+require "krudmin_ai/navigation_group"
 
 module KrudminAI
   class Configuration
@@ -12,6 +13,12 @@ module KrudminAI
 
     def navigation_item(label: nil, route:, icon: nil, resource: nil, visible: nil, active: nil)
       navigation_items << NavigationItem.new(label:, route:, icon:, resource:, visible:, active:)
+    end
+
+    def navigation_group(label:, icon: :folder, visible: nil, active: nil)
+      group = NavigationGroup.new(label:, icon:, visible:, active:)
+      yield group if block_given?
+      navigation_items << group
     end
 
     def navigation_items

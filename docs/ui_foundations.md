@@ -19,7 +19,7 @@ Engine-owned resource pages compose partial components instead of requiring host
 | `ui/field` | `form`, `field`, `writable`, `access_note_id`, `errors` | Transitional generic scalar control that renders labels, invalid state, disabled/explained authorization denial, and field errors. It is not a type-specific field adapter. |
 | `ui/filter_form` | implicit resource-controller context | Renders only declared filters and preserves normal GET query behavior. |
 | `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges. |
-| `ui/pagination` | `page`, `per_page`, `records_count` | Uses `pagination_path`, which carries only the resource controller's allowlisted query parameters. |
+| `ui/pagination` | `page`, `per_page`, `total_count` | Renders First/Previous, a bounded numbered-page window, ellipses, Next/Last, and direct page entry. `pagination_path` carries only the resource controller's allowlisted query parameters. |
 | `ui/record_details` | `resource`, `record`, `fields` | Renders only readable show fields and represents blank values as text. |
 
 The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials remain available for host-composed interfaces. Engine-owned default index, form, and show templates consume a resource's `list`, `form`, and `show` metadata and normal Rails controls for permitted scalar fields. This is not yet type-aware: the generic form currently renders a text control and details render raw values. The field adapter foundation must replace that behavior before KrudminAI can claim field parity. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, disabled control treatment, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
@@ -65,7 +65,9 @@ The current release decision remains [hold](beta_release_decision.md) until that
 
 `KrudminAI::ResourceController` uses the engine-owned `krudmin_ai/application` layout by default. The layout loads engine CSS and the `krudmin_ai` import-map entrypoint, renders only navigation items registered by the host, and provides a persistent desktop rail, a mobile drawer, and the light/dark/system selector. A host that needs a bespoke presentation can retain the resource controller and declare its own Rails `layout` in the host controller.
 
-Register navigation through `KrudminAI.configure`. Each item has a host route helper or route callable, an optional label and icon, an optional resource, a visibility predicate, and an optional active-state predicate. Resource-backed items use the resource's plural model label and its `icon`; all other items fall back to `:file_text`. The visibility predicate receives the same `AccessContext` constructed for the request, so the host can apply the same policy decision to the affordance and endpoint. Visibility and custom active predicates must return exactly `true`; nil, other values, and exceptions fail closed (hidden or inactive).
+The engine layout derives a document title from the resource controller: collection actions use the plural resource label, `new`/`create` use the localized new-resource label, `edit`/`update` use the localized edit-resource label, and `show` uses the singular label. Every default title is suffixed with `KrudminAI`. A host view can intentionally override the title with `content_for(:title)`.
+
+Register navigation through `KrudminAI.configure`. Each item has a host route helper or route callable, an optional label and icon, an optional resource, a visibility predicate, and an optional active-state predicate. Resource-backed items use the resource's plural model label and its `icon`; all other items fall back to `:file_text`. A `navigation_group` contains navigation items and renders as an accessible disclosure control. A group is hidden unless its own visibility predicate returns exactly `true` and at least one child is visible. Active children open their group. The visibility predicate receives the same `AccessContext` constructed for the request, so the host can apply the same policy decision to the affordance and endpoint. Visibility and custom active predicates must return exactly `true`; nil, other values, and exceptions fail closed (hidden or inactive).
 
 ```ruby
 KrudminAI.configure do |config|
@@ -80,6 +82,10 @@ KrudminAI.configure do |config|
     icon: :chart_no_axes_combined,
     visible: ->(context) { context.roles.include?(:manager) }
   )
+  config.navigation_group(label: "Configuration", icon: :settings) do |group|
+    group.navigation_item(label: "Countries", route: :countries_path)
+    group.navigation_item(label: "Regions", route: :regions_path)
+  end
 end
 ```
 

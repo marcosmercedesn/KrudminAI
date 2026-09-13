@@ -1,5 +1,5 @@
 module KrudminAI
-  QueryResult = Data.define(:records, :page, :per_page)
+  QueryResult = Data.define(:records, :page, :per_page, :total_count)
 
   class QueryAccessPipeline
     def initialize(resource:, context:, params: {}, authorization_provider: nil)
@@ -88,7 +88,8 @@ module KrudminAI
       options = resource.pagination_options
       page = positive_integer(params[:page], fallback: 1)
       per_page = [ positive_integer(params[:per_page], fallback: options[:per_page]), options[:max_per_page] ].min
-      QueryResult.new(relation.limit(per_page).offset((page - 1) * per_page), page, per_page)
+
+      QueryResult.new(relation.limit(per_page).offset((page - 1) * per_page), page, per_page, relation.count)
     end
 
     def filter_params

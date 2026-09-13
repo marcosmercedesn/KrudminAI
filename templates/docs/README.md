@@ -7,5 +7,6 @@ This documentation package is managed by KrudminAI generators. Refresh it with `
 1. Read `provider_contracts.md` and configure the required host providers before enabling a resource.
 2. Follow `coding_agent_workflow.md` for the implementation and validation rules agents must preserve.
 3. For a new member-management application, use `member_administration_blueprint.md` as the domain boundary and work through `member_administration_tasks.md` in order.
+4. Read the **Admin Navigation** section in `coding_agent_workflow.md` before registering sidebar items or groups.
 
 The generator overwrites only these managed documents. Add host-specific decisions, operational runbooks, diagrams, and records of approval outside this package or in clearly marked host-owned sections.

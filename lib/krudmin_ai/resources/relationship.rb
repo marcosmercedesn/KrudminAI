@@ -1,9 +1,9 @@
 module KrudminAI
   module Resources
     class Relationship
-      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers, :cardinality, :belongs_to_fields
+      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers, :cardinality, :belongs_to_fields, :field_definitions
 
-      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:, cardinality: :many, belongs_to_fields: {})
+      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:, cardinality: :many, belongs_to_fields: {}, field_definitions: {})
         @name = name.to_sym
         @fields = fields.map(&:to_sym).freeze
         @label = label.to_s
@@ -18,6 +18,7 @@ module KrudminAI
           { read: decisions[:read], write: decisions[:write] }.freeze
         end.freeze
         @belongs_to_fields = belongs_to_fields.transform_keys(&:to_sym).freeze
+        @field_definitions = field_definitions.transform_keys(&:to_sym).freeze
         raise ArgumentError, "Nested belongs-to fields must be declared editable fields" unless @belongs_to_fields.keys.all? { |field| @fields.include?(field) }
       end
 
@@ -48,6 +49,17 @@ module KrudminAI
         return unless configuration
 
         Fields::BelongsTo.new(resource:, attribute:, options: configuration)
+      end
+
+      def field_adapter(attribute, resource)
+        return belongs_to_adapter(attribute, resource) if belongs_to_fields.key?(attribute.to_sym)
+
+        definition = field_definitions[attribute.to_sym]
+        return unless definition
+
+        type = definition.fetch(:type, :string)
+        adapter_class = Fields::Registry.send(:adapters).fetch(type.to_sym)
+        adapter_class.new(resource:, attribute:, options: definition.fetch(:options, {}))
       end
 
       private

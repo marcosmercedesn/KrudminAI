@@ -72,7 +72,12 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     get tickets_path, params: { filters: { state: "open" } }
 
     assert_response :success
-    assert_includes response.body, "Next page"
+    assert_select ".krudmin-ai-table tbody tr", 20
+    assert_select "a.krudmin-ai-pagination__control", text: "Next"
+    assert_select "a.krudmin-ai-pagination__page", text: "2"
+    assert_select "a.krudmin-ai-pagination__control", text: "Last"
+    assert_select "input.krudmin-ai-pagination__page-input[value='1']"
+    assert_select "form.krudmin-ai-pagination__jump[action*='filters%5Bstate%5D=open']"
     assert_includes response.body, "filters%5Bstate%5D=open"
     assert_includes response.body, "page=2"
     assert_not_includes response.body, @south_ticket.title
@@ -80,8 +85,9 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     get tickets_path, params: { filters: { state: "open" }, page: 2 }
 
     assert_response :success
-    assert_includes response.body, "Page 2"
+    assert_select ".krudmin-ai-pagination__current[aria-current='page']", text: "2"
     assert_select ".krudmin-ai-table tbody tr", 1
+    assert_select "span.krudmin-ai-pagination__control[aria-disabled='true']", text: "Next"
     assert_not_includes response.body, @south_ticket.title
   end
 

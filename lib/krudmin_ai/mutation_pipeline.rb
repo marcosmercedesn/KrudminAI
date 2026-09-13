@@ -190,7 +190,7 @@ module KrudminAI
             raise AuthorizationDenied, "Nested field write access rejected"
           end
           submitted_fields(row, relationship.fields).each do |field|
-            adapter = relationship.belongs_to_adapter(field, resource)
+            adapter = relationship.field_adapter(field, resource) || relationship.belongs_to_adapter(field, resource)
             adapter&.validate_submission(child, row[field] || row[field.to_s], context, authorization_provider:)
           end
         end

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "KrudminAI" %></title>
+    <title><%= content_for?(:title) ? yield(:title) : page_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -12,7 +12,7 @@
     <div class="krudmin-ai-shell" data-controller="krudmin-ai-navigation" data-action="keydown@document->krudmin-ai-navigation#closeOnEscape">
       <aside id="krudmin-ai-navigation" class="krudmin-ai-sidebar" data-krudmin-ai-navigation-target="panel">
         <%= link_to collection_path, class: "krudmin-ai-brand", aria: { label: "KrudminAI home" } do %><%= krudmin_ai_icon(:panel_left) %><span>KrudminAI</span><% end %>
-        <%= render "krudmin_ai/ui/navigation", items: navigation_items %>
+        <%= render "krudmin_ai/ui/navigation", items: navigation_items, access_context: krudmin_ai_access_context %>
       </aside>
       <button class="krudmin-ai-sidebar-backdrop" type="button" aria-label="Close navigation" data-krudmin-ai-navigation-target="backdrop" data-action="krudmin-ai-navigation#close"></button>
       <main class="krudmin-ai-admin">

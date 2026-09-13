@@ -33,7 +33,7 @@ module KrudminAI
     class File < Adapter
       def form_control(form, writable:, errors:, access_note_id:)
         require_attachment!
-        form.file_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.file_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def list_value(record) = filename(value(record))

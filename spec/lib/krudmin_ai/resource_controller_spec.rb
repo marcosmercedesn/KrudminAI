@@ -35,4 +35,31 @@ RSpec.describe KrudminAI::ResourceController do
     expect(controller.send(:namespaced_route_helper, "action_order_path")).to eq("action_admin_order_path")
     expect(controller.send(:namespaced_route_helper, "lookup_field_orders_path")).to eq("lookup_field_admin_orders_path")
   end
+
+  it "derives a localized document title from the resource and controller action" do
+    controller = described_class.allocate
+    resource = instance_double("Resource", label: "Order", plural_label: "Orders")
+    allow(controller).to receive(:resource).and_return(resource)
+    allow(controller).to receive(:t) do |key, **options|
+      case key
+      when "krudmin_ai.new"
+        "New #{options[:resource]}"
+      when "krudmin_ai.edit"
+        "Edit #{options[:resource]}"
+      when "krudmin_ai.page_title"
+        "#{options[:resource]} | KrudminAI"
+      end
+    end
+
+    {
+      "index" => "Orders | KrudminAI",
+      "new" => "New Order | KrudminAI",
+      "edit" => "Edit Order | KrudminAI",
+      "show" => "Order | KrudminAI"
+    }.each do |action, expected_title|
+      allow(controller).to receive(:action_name).and_return(action)
+
+      expect(controller.page_title).to eq(expected_title)
+    end
+  end
 end

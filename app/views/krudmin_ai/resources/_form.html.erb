@@ -7,22 +7,34 @@
       </section>
     <% end %>
 
+    <% rendered_relationships = [] %>
     <% sections = resource.form_sections.values %>
     <% sections = [{ label: resource_label.capitalize, fields: resource.form }] if sections.empty? %>
     <% assigned_fields = sections.flat_map { |section| section.fetch(:fields) } %>
     <% remaining_fields = resource.form - assigned_fields %>
     <% sections << { label: t("krudmin_ai.additional_details"), fields: remaining_fields, columns: :one } if remaining_fields.any? %>
     <% sections.each do |section| %>
-      <fieldset class="krudmin-ai-form-section krudmin-ai-form-section--<%= section.fetch(:columns, :one) %>">
-        <% if section[:label] %><legend><%= section[:label] %></legend><% end %>
-        <% readable_fields(section.fetch(:fields)).each do |field| %>
-          <% writable = field_writable?(field) %>
-          <%= render "krudmin_ai/ui/field", form: form, field: field, adapter: resource.field_adapter(field), writable: writable, access_note_id: "#{field}-access-note", errors: model.errors.full_messages_for(field) %>
-        <% end %>
-      </fieldset>
+      <% section_fields = section.fetch(:fields) %>
+      <% if section_fields.length == 1 && (rel = resource.relationships[section_fields.first.to_sym]) %>
+        <% rendered_relationships << rel.name %>
+        <%= render rel.singular? ? "krudmin_ai/resources/has_one" : "krudmin_ai/resources/has_many", form: form, relationship: rel %>
+      <% else %>
+        <fieldset class="krudmin-ai-form-section krudmin-ai-form-section--<%= section.fetch(:columns, :one) %>">
+          <% if section[:label] %><legend><%= section[:label] %></legend><% end %>
+          <% section_fields.each do |field| %>
+            <% if (rel = resource.relationships[field.to_sym]) %>
+              <% rendered_relationships << rel.name %>
+              <%= render rel.singular? ? "krudmin_ai/resources/has_one" : "krudmin_ai/resources/has_many", form: form, relationship: rel %>
+            <% elsif field_readable?(field) %>
+              <% writable = field_writable?(field) %>
+              <%= render "krudmin_ai/ui/field", form: form, field: field, adapter: resource.field_adapter(field), writable: writable, access_note_id: "#{field}-access-note", errors: model.errors.full_messages_for(field) %>
+            <% end %>
+          <% end %>
+        </fieldset>
+      <% end %>
     <% end %>
 
-    <% resource.relationships.each_value do |relationship| %>
+    <% (resource.relationships.values.reject { |r| rendered_relationships.include?(r.name) }).each do |relationship| %>
       <%= render relationship.singular? ? "krudmin_ai/resources/has_one" : "krudmin_ai/resources/has_many", form: form, relationship: relationship %>
     <% end %>
 

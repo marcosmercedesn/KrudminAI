@@ -22,6 +22,7 @@ module KrudminAI
         writer.create("app/policies/#{singular_file_name}_policy.rb", policy)
         writer.create("test/integration/#{namespace}/#{plural_file_name}_test.rb", request_test)
         writer.replace_managed_block("config/routes.rb", marker: "KRUDMIN_AI_#{plural_constant_name.upcase}_ROUTES", contents: routes, inside_routes: true)
+        writer.replace_managed_block("config/initializers/krudmin_ai_navigation.rb", marker: "KRUDMIN_AI_#{plural_constant_name.upcase}_NAVIGATION", contents: navigation)
         manifest.enable("resources")
       end
 
@@ -168,6 +169,25 @@ module KrudminAI
               post "actions/:action_name", on: :member, to: "#{plural_file_name}#perform_action", as: :action
               post "bulk_actions/:action_name", on: :collection, to: "#{plural_file_name}#perform_bulk_action", as: :bulk_action
             end
+          end
+        RUBY
+      end
+
+      def navigation
+        <<~RUBY.rstrip
+          KrudminAI.configure do |config|
+            config.navigation_item(
+              resource: #{plural_constant_name}Resource,
+              route: :#{namespace}_#{plural_file_name}_path,
+              visible: ->(context) do
+                config.authorization_provider.authorize?(
+                  action: :index,
+                  record: #{plural_constant_name}Resource.model_class,
+                  resource: #{plural_constant_name}Resource,
+                  context:
+                ) == true
+              end
+            )
           end
         RUBY
       end

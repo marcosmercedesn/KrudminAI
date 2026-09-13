@@ -10,19 +10,19 @@ module KrudminAI
       def filter_definition = { type: :text, operators: %i[contains equals starts_with ends_with] }
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.text_area(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.text_area(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-textarea"))
       end
     end
 
     class Email < String
       def form_control(form, writable:, errors:, access_note_id:)
-        form.email_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.email_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
     end
 
     class Password < String
       def form_control(form, writable:, errors:, access_note_id:)
-        form.password_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.password_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def list_value(_record) = "[FILTERED]"
@@ -50,7 +50,7 @@ module KrudminAI
       def filter_definition = { type: :number_range, operators: [ :between ] }
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.number_field(attribute, step: options.fetch(:step, 1), disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.number_field(attribute, step: options.fetch(:step, 1), **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -76,7 +76,7 @@ module KrudminAI
 
     class Decimal < Number
       def form_control(form, writable:, errors:, access_note_id:)
-        form.number_field(attribute, step: options.fetch(:step, "0.01"), disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.number_field(attribute, step: options.fetch(:step, "0.01"), **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -120,7 +120,7 @@ module KrudminAI
       def filter_definition = { type: :select, options: [ [ "Yes", "true" ], [ "No", "false" ] ] }
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.check_box(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.check_box(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-checkbox"))
       end
 
       def parameter(value)
@@ -137,7 +137,7 @@ module KrudminAI
       def filter_definition = { type: :date_range, operators: [ :between ] }
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.date_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.date_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -151,7 +151,7 @@ module KrudminAI
 
     class Time < Adapter
       def form_control(form, writable:, errors:, access_note_id:)
-        form.time_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.time_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -182,7 +182,7 @@ module KrudminAI
       def filter_definition = { type: :datetime_range, operators: [ :between ] }
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.datetime_local_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.datetime_local_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -214,8 +214,7 @@ module KrudminAI
         form.text_area(
           attribute,
           value: json.nil? ? nil : JSON.generate(json),
-          disabled: !writable,
-          aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id }
+          **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-textarea")
         )
       end
 
@@ -241,11 +240,15 @@ module KrudminAI
       def filter_definition = { type: :select, options: enum_options }
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.select(attribute, enum_options, {}, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        select_options = {}
+        include_blank_opt = options.fetch(:include_blank, true)
+        select_options[:include_blank] = include_blank_opt if include_blank_opt
+
+        form.select(attribute, enum_options, select_options, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-select"))
       end
 
       def parameter(value)
-        return nil if blank?(value) && options[:allow_blank]
+        return nil if blank?(value) && options.fetch(:allow_blank, true)
 
         candidate = value.to_s
         enum_values.include?(candidate) ? candidate : raise(ArgumentError, "#{attribute} is not an allowed option")

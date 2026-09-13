@@ -1,5 +1,7 @@
 en:
   krudmin_ai:
+    navigation_empty: "No admin sections are configured."
+    page_title: "%{resource} | KrudminAI"
     new: "New %{resource}"
     edit: "Edit %{resource}"
     save: "Save %{resource}"
@@ -21,6 +23,10 @@ en:
     previous_page: "Previous"
     next_page: "Next"
     page: "%{page}"
+    first_page: "First"
+    last_page: "Last"
+    go_to_page: "Go to page"
+    go: "Go"
     pagination: "Pagination"
     main_navigation: "Main navigation"
     not_provided: "Not provided"

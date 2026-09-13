@@ -1,8 +1,30 @@
 <nav class="krudmin-ai-navigation" aria-label="<%= t("krudmin_ai.main_navigation") %>">
-  <% items.each do |item| %>
-    <%= link_to item.path_for(self), class: ["krudmin-ai-navigation__item", ("is-active" if item.active?(self))].compact.join(" ") do %>
-      <%= krudmin_ai_icon(item.icon, class: "krudmin-ai-navigation__icon") %>
-      <span><%= item.display_label %></span>
+  <% if items.any? %>
+    <% items.each_with_index do |item, index| %>
+      <% if item.is_a?(KrudminAI::NavigationGroup) %>
+        <details class="krudmin-ai-navigation__group" <%= "open" if item.active?(self) %>>
+          <summary class="krudmin-ai-navigation__group-toggle">
+            <%= krudmin_ai_icon(item.icon, class: "krudmin-ai-navigation__icon") %>
+            <span><%= item.label %></span>
+            <%= krudmin_ai_icon(:chevron_down, class: "krudmin-ai-navigation__chevron") %>
+          </summary>
+          <div id="krudmin-ai-navigation-group-<%= index %>" class="krudmin-ai-navigation__children">
+            <% item.visible_items(access_context).each do |child| %>
+              <%= link_to child.path_for(self), class: ["krudmin-ai-navigation__item", "krudmin-ai-navigation__item--child", ("is-active" if child.active?(self))].compact.join(" "), data: { action: "krudmin-ai-navigation#close" } do %>
+                <%= krudmin_ai_icon(child.icon, class: "krudmin-ai-navigation__icon") %>
+                <span><%= child.display_label %></span>
+              <% end %>
+            <% end %>
+          </div>
+        </details>
+      <% else %>
+        <%= link_to item.path_for(self), class: ["krudmin-ai-navigation__item", ("is-active" if item.active?(self))].compact.join(" "), data: { action: "krudmin-ai-navigation#close" } do %>
+          <%= krudmin_ai_icon(item.icon, class: "krudmin-ai-navigation__icon") %>
+          <span><%= item.display_label %></span>
+        <% end %>
+      <% end %>
     <% end %>
+  <% else %>
+    <p class="krudmin-ai-navigation__empty"><%= t("krudmin_ai.navigation_empty") %></p>
   <% end %>
 </nav>

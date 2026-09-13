@@ -4,7 +4,7 @@ module KrudminAI
   module Fields
     class HasManyIds < BelongsTo
       def form_control(form, writable:, errors:, access_note_id:, context:, authorization_provider: nil)
-        form.collection_select(attribute, options_for(context, authorization_provider:), :last, :first, {}, multiple: true, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.collection_select(attribute, options_for(context, authorization_provider:), :last, :first, {}, multiple: true, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-select"))
       end
 
       def parameter(value)

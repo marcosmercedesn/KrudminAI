@@ -1,7 +1,19 @@
+<% total_pages = [(total_count.to_f / per_page).ceil, 1].max %>
 <% previous_page = page > 1 ? page - 1 : nil %>
-<% next_page = records_count == per_page ? page + 1 : nil %>
+<% next_page = page < total_pages ? page + 1 : nil %>
+<% page_numbers = ([1] + ((page - 2)..(page + 2)).to_a + [total_pages]).select { |number| number.between?(1, total_pages) }.uniq.sort %>
 <nav class="krudmin-ai-pagination" aria-label="<%= t("krudmin_ai.pagination") %>">
+  <% if previous_page %><%= link_to pagination_path(1), class: "krudmin-ai-button krudmin-ai-pagination__control", aria: { label: t("krudmin_ai.first_page") } do %><%= krudmin_ai_icon(:chevrons_left, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.first_page") %></span><% end %><% else %><span class="krudmin-ai-button krudmin-ai-pagination__control" aria-disabled="true"><%= krudmin_ai_icon(:chevrons_left, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.first_page") %></span></span><% end %>
   <% if previous_page %><%= link_to pagination_path(previous_page), class: "krudmin-ai-button krudmin-ai-pagination__control" do %><%= krudmin_ai_icon(:arrow_left, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.previous_page") %></span><% end %><% else %><span class="krudmin-ai-button krudmin-ai-pagination__control" aria-disabled="true"><%= krudmin_ai_icon(:arrow_left, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.previous_page") %></span></span><% end %>
-  <span class="krudmin-ai-pagination__current" aria-current="page"><%= t("krudmin_ai.page", page: page) %></span>
+  <% page_numbers.each_with_index do |number, index| %>
+    <% if index.positive? && number > page_numbers[index - 1] + 1 %><span class="krudmin-ai-pagination__ellipsis" aria-hidden="true">...</span><% end %>
+    <% if number == page %><span class="krudmin-ai-pagination__current" aria-current="page"><%= number %></span><% else %><%= link_to number, pagination_path(number), class: "krudmin-ai-pagination__page", aria: { label: t("krudmin_ai.page", page: number) } %><% end %>
+  <% end %>
+  <%= form_with url: pagination_path(page), method: :get, class: "krudmin-ai-pagination__jump" do |form| %>
+    <%= form.label :page, t("krudmin_ai.go_to_page"), class: "krudmin-ai-sr-only" %>
+    <%= form.number_field :page, value: page, min: 1, max: total_pages, inputmode: "numeric", class: "krudmin-ai-pagination__page-input" %>
+    <%= form.submit t("krudmin_ai.go"), class: "krudmin-ai-pagination__jump-submit" %>
+  <% end %>
   <% if next_page %><%= link_to pagination_path(next_page), class: "krudmin-ai-button krudmin-ai-pagination__control" do %><span><%= t("krudmin_ai.next_page") %></span><%= krudmin_ai_icon(:arrow_right, class: "krudmin-ai-button__icon") %><% end %><% else %><span class="krudmin-ai-button krudmin-ai-pagination__control" aria-disabled="true"><span><%= t("krudmin_ai.next_page") %></span><%= krudmin_ai_icon(:arrow_right, class: "krudmin-ai-button__icon") %></span><% end %>
+  <% if next_page %><%= link_to pagination_path(total_pages), class: "krudmin-ai-button krudmin-ai-pagination__control", aria: { label: t("krudmin_ai.last_page") } do %><span><%= t("krudmin_ai.last_page") %></span><%= krudmin_ai_icon(:chevrons_right, class: "krudmin-ai-button__icon") %><% end %><% else %><span class="krudmin-ai-button krudmin-ai-pagination__control" aria-disabled="true"><span><%= t("krudmin_ai.last_page") %></span><%= krudmin_ai_icon(:chevrons_right, class: "krudmin-ai-button__icon") %></span><% end %>
 </nav>

@@ -8,3 +8,4 @@ Read `docs/` before changing behavior. Preserve these invariants:
 - AI features are read-only unless an explicit approval policy authorizes a traced mutation.
 - Update tests, docs, and `docs/capability_registry.json` with each capability change.
 - Use local `../krudmin` only as a behavioral reference; do not copy its jQuery-era architecture.
+- Configure engine sidebar destinations through `KrudminAI.configure`. Use `navigation_group` for one-level related destinations, apply the endpoint's `AccessContext` visibility decision to every child, and do not create nested groups or a parallel host sidebar for engine resources.

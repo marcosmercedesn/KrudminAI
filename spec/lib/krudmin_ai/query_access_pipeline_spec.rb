@@ -36,6 +36,10 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
       with(:offset, value)
     end
 
+    def count
+      100
+    end
+
     def includes(*associations)
       with(:includes, associations)
     end
@@ -85,7 +89,7 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
       [ :tenant, tenant ], [ :policy, actor, %i[operator manager] ], [ :filter, :status, "active" ],
       [ :order, { name: :asc } ], [ :limit, 30 ], [ :offset, 30 ]
     ])
-    expect(result).to have_attributes(page: 2, per_page: 30)
+    expect(result).to have_attributes(page: 2, per_page: 30, total_count: 100)
   end
 
   it "requires an authenticated actor before querying" do
@@ -212,7 +216,7 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
   it "clamps per-page requests to the configured maximum" do
     result = described_class.new(resource:, context:, params: { page: "3", per_page: "1000" }).call(relation)
 
-    expect(result).to have_attributes(page: 3, per_page: 50)
+    expect(result).to have_attributes(page: 3, per_page: 50, total_count: 100)
     expect(result.records.operations.last(2)).to eq([ [ :limit, 50 ], [ :offset, 100 ] ])
   end
 

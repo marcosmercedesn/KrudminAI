@@ -1,5 +1,7 @@
 es:
   krudmin_ai:
+    navigation_empty: "No hay secciones administrativas configuradas."
+    page_title: "%{resource} | KrudminAI"
     new: "Nuevo %{resource}"
     edit: "Editar %{resource}"
     save: "Guardar %{resource}"
@@ -21,6 +23,10 @@ es:
     previous_page: "Anterior"
     next_page: "Siguiente"
     page: "%{page}"
+    first_page: "Primera"
+    last_page: "Última"
+    go_to_page: "Ir a la página"
+    go: "Ir"
     pagination: "Paginación"
     main_navigation: "Navegación principal"
     not_provided: "No proporcionado"

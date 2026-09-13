@@ -17,6 +17,19 @@ RSpec.describe KrudminAI::Configuration do
     expect(configuration.navigation_items.map(&:icon)).to eq([ :shopping_cart, :chart_no_axes_combined ])
   end
 
+  it "registers a nested navigation group" do
+    configuration = described_class.new
+
+    configuration.navigation_group(label: "Configuration", icon: :settings) do |group|
+      group.navigation_item(label: "Countries", route: :countries_path)
+    end
+
+    group = configuration.navigation_items.first
+    expect(group.label).to eq("Configuration")
+    expect(group.icon).to eq(:settings)
+    expect(group.items.map(&:display_label)).to eq([ "Countries" ])
+  end
+
   let(:authentication_provider) { KrudminAI::Providers::TestAdapters::Authentication.new(Object.new) }
   let(:authorization_provider) { KrudminAI::Providers::TestAdapters::Authorization.new }
   let(:tenant_provider) { KrudminAI::Providers::TestAdapters::Tenant.new(Object.new) }

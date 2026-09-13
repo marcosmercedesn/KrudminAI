@@ -26,6 +26,8 @@ module KrudminAI
           subclass.instance_variable_set(:@sortable_attributes, sortable_attributes.dup)
           subclass.instance_variable_set(:@default_sort, default_sort.dup)
           subclass.instance_variable_set(:@pagination_options, pagination_options.dup)
+          subclass.instance_variable_set(:@tenant_scope_handler, tenant_scope_handler)
+          subclass.instance_variable_set(:@policy_scope_handler, policy_scope_handler)
           subclass.instance_variable_set(:@action_authorizers, action_authorizers.dup)
           subclass.instance_variable_set(:@resource_actions, resource_actions.dup)
           subclass.instance_variable_set(:@field_authorizers, field_authorizers.dup)
@@ -275,7 +277,7 @@ module KrudminAI
           !archive_attribute.nil?
         end
 
-        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {})
+        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {}, field_definitions: {})
           raise ArgumentError, "Nested fields are required" if fields.empty?
           raise ArgumentError, "maximum must be positive" unless maximum.positive?
           raise ArgumentError, "A child authorization handler is required" unless authorize
@@ -292,11 +294,12 @@ module KrudminAI
             tenant_record_handler: tenant_record,
             field_authorizers:,
             cardinality: :many,
-            belongs_to_fields:
+            belongs_to_fields:,
+            field_definitions:
           )
         end
 
-        def has_one(name, fields:, label: nil, display: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {})
+        def has_one(name, fields:, label: nil, display: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {}, field_definitions: {})
           raise ArgumentError, "Nested fields are required" if fields.empty?
           raise ArgumentError, "A child authorization handler is required" unless authorize
           raise ArgumentError, "A child tenant record handler is required" unless tenant_record
@@ -312,7 +315,8 @@ module KrudminAI
             tenant_record_handler: tenant_record,
             field_authorizers:,
             cardinality: :one,
-            belongs_to_fields:
+            belongs_to_fields:,
+            field_definitions:
           )
         end
 

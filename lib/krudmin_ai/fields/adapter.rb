@@ -22,7 +22,7 @@ module KrudminAI
       end
 
       def form_control(form, writable:, errors:, access_note_id:)
-        form.text_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        form.text_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
       end
 
       def list_value(record)
@@ -62,6 +62,10 @@ module KrudminAI
 
       def blank?(value)
         value.respond_to?(:blank?) ? value.blank? : value.nil? || value == ""
+      end
+
+      def control_options(writable:, errors:, access_note_id:, class_name:)
+        { class: class_name, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id } }
       end
     end
   end

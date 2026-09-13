@@ -27,7 +27,7 @@ context = KrudminAI::AccessContext.new(actor: current_user, tenant: current_orga
 result = KrudminAI::QueryAccessPipeline.new(resource: OrdersResource, context:, params: request.query_parameters).call(Order.all)
 ```
 
-The pipeline always applies tenant scope, policy scope, provider scope, archive visibility, eager-load directives, whitelisted filters, whitelisted sort, then pagination. Unknown filters, malformed sort values, invalid page numbers, oversized page requests, and invalid archive values cannot alter the relation outside those rules.
+The pipeline always applies tenant scope, policy scope, provider scope, archive visibility, eager-load directives, whitelisted filters, whitelisted sort, then pagination. The default paginator runs its count only after that protected relation has been built, then fetches one bounded page. This supports First/Previous/numbered/Next/Last navigation without counting rows outside the active tenant, policy, archive, and filter boundary. Unknown filters, malformed sort values, invalid page numbers, oversized page requests, and invalid archive values cannot alter the relation outside those rules.
 
 ## Typed Filters
 
