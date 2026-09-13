@@ -33,8 +33,9 @@ RSpec.describe KrudminAI::Migration::LegacyResourceAudit do
       "EDITABLE_ATTRIBUTES" => "form",
       "LISTABLE_ATTRIBUTES" => "list"
     )
-    expect(report.warnings.join(" ")).to include("HasMany", "field-adapter", "action authorization", "pagination")
-    expect(report.blockers.join(" ")).to include("HasOne", "StateMachine", "INLINE_EDITABLE_ATTRIBUTES", "BULK_ACTIONS")
+    expect(report.warnings.join(" ")).to include("HasMany", "HasOne", "assisted", "pagination")
+    expect(report.blockers.join(" ")).to include("StateMachine")
+    expect(report.blockers.join(" ")).not_to include("HasOne", "INLINE_EDITABLE_ATTRIBUTES", "BULK_ACTIONS")
     expect(report).not_to be_success
   end
 
@@ -51,5 +52,32 @@ RSpec.describe KrudminAI::Migration::LegacyResourceAudit do
 
     expect(report).to be_success
     expect(report.warnings.join(" ")).to include("HasMany")
+  end
+
+  it "classifies a representative Classic Car, Passenger, and Insurance manager precisely" do
+    report = audit(<<~RUBY)
+      class CarsResourceManager < Krudmin::ResourceManagers::Base
+        MODEL_CLASSNAME = "Car"
+        ATTRIBUTE_TYPES = {
+          model: { type: :Text },
+          year: :Number,
+          passengers: :HasMany,
+          car_insurance: { type: :HasOne },
+          car_brand_id: { type: :BelongsTo, remote: true },
+          status: { type: :StateMachine },
+          car_owner: :BelongsToOne
+        }
+        INLINE_EDITABLE_ATTRIBUTES = [:year]
+        BULK_ACTIONS = [:destroy]
+      end
+    RUBY
+
+    expect(report.classifications).to include(
+      { source: "ATTRIBUTE_TYPES.model", target: "field :model, :text", classification: :automatic, reason: "Supported scalar adapter" },
+      { source: "ATTRIBUTE_TYPES.passengers", target: "has_many with child tenant, policy, field, and row-limit declarations", classification: :assisted, reason: "Requires protected relationship declarations" },
+      { source: "ATTRIBUTE_TYPES.car_insurance", target: "has_one with child tenant, policy, and field declarations", classification: :assisted, reason: "Requires protected relationship declarations" },
+      { source: "ATTRIBUTE_TYPES.status", target: "no automatic mapping", classification: :blocked, reason: "StateMachine requires explicit resource actions or transitions" }
+    )
+    expect(report.classifications).to include(a_hash_including(source: "ATTRIBUTE_TYPES.car_owner", classification: :blocked))
   end
 end

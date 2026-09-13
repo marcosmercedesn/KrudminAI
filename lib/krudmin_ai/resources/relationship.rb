@@ -1,20 +1,24 @@
 module KrudminAI
   module Resources
     class Relationship
-      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers
+      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers, :cardinality, :belongs_to_fields
 
-      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:)
+      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:, cardinality: :many, belongs_to_fields: {})
         @name = name.to_sym
         @fields = fields.map(&:to_sym).freeze
         @label = label.to_s
         @display_fields = display_fields.map(&:to_sym).freeze
         @maximum = maximum
+        @cardinality = cardinality.to_sym
+        raise ArgumentError, "Unsupported relationship cardinality" unless %i[one many].include?(@cardinality)
         @order = order
         @authorizer = authorizer
         @tenant_record_handler = tenant_record_handler
         @field_authorizers = field_authorizers.transform_keys(&:to_sym).transform_values do |decisions|
           { read: decisions[:read], write: decisions[:write] }.freeze
         end.freeze
+        @belongs_to_fields = belongs_to_fields.transform_keys(&:to_sym).freeze
+        raise ArgumentError, "Nested belongs-to fields must be declared editable fields" unless @belongs_to_fields.keys.all? { |field| @fields.include?(field) }
       end
 
       def field_readable?(attribute, record, context)
@@ -37,6 +41,15 @@ module KrudminAI
         { "#{name}_attributes": %i[id _destroy] + fields }
       end
 
+      def singular? = cardinality == :one
+
+      def belongs_to_adapter(attribute, resource)
+        configuration = belongs_to_fields[attribute.to_sym]
+        return unless configuration
+
+        Fields::BelongsTo.new(resource:, attribute:, options: configuration)
+      end
+
       private
 
       def authorize_field_decision(attribute, decision, record, context)
@@ -44,7 +57,6 @@ module KrudminAI
       rescue StandardError
         false
       end
-
     end
   end
 end

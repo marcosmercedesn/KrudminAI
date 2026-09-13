@@ -24,7 +24,7 @@ Exit status `0` means the source uses only concepts that have an identified manu
 | `ATTRIBUTE_TYPES` | resource fields and host presentation | Review each adapter; no type constant is copied automatically. |
 | `PRESENTATION_METADATA` | host layout or engine components | Redesign sections; CSS class passthrough is not supported. |
 
-`LISTABLE_ACTIONS` maps only after the target resource has explicit `authorize` declarations and actions/transitions. `RESOURCE_INSTANCE_LABEL_ATTRIBUTE` needs a host presentation choice. The audit reports both cases as warnings because they are not safe automatic rewrites.
+`LISTABLE_ACTIONS` maps only after the target resource has explicit `authorize` declarations and actions/transitions. `RESOURCE_INSTANCE_LABEL_ATTRIBUTE` needs a host presentation choice. The audit reports both cases as warnings because they are not safe automatic rewrites. Its JSON `classifications` identify each recognized item as `automatic`, `assisted`, `manual`, or `blocked`; a blocked item returns exit status `2` and must be redesigned before migration continues.
 
 ## Car And Passenger Recipe
 
@@ -55,7 +55,7 @@ class CarsResource < KrudminAI::Resources::Base
 end
 ```
 
-Add child field read/write predicates, parent `tenant_scope`, `policy_scope`, `tenant_record`, declared actions, and audit provider bindings before running the generated request test. A legacy manager containing `:HasOne`, `:BelongsToOne`, `:StateMachine`, `INLINE_EDITABLE_ATTRIBUTES`, or `BULK_ACTIONS` must not be converted automatically. The current generic editor supports direct `has_many` only; redesign the remaining feature with an owner and tests before continuing.
+Add child field read/write predicates, parent `tenant_scope`, `policy_scope`, `tenant_record`, declared actions, and audit provider bindings before running the generated request test. A legacy manager containing `:HasOne`, `:BelongsToOne`, `:StateMachine`, `INLINE_EDITABLE_ATTRIBUTES`, or `BULK_ACTIONS` must not be converted automatically. Direct `:HasMany` and `:HasOne` receive assisted relationship mappings; `:BelongsToOne` and `:StateMachine` are blocked. Inline editing and bulk actions require explicit authorization and audit review. Redesign blocked behavior with an owner and tests before continuing.
 
 ## Migration Checklist
 

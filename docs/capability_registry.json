@@ -8,10 +8,7 @@
     "owner": "KrudminAI maintainers",
     "target": "0.1.0.beta.1 after all assigned beta exit criteria pass",
     "blockers": [
-      "Root CI lint command has unresolved repository-wide offenses.",
-      "Independent generated-host CRUD, relationship, dashboard, and browser evidence is incomplete.",
-      "Remote CI history has not established passing blocking compatibility lanes.",
-      "Provider/security, response/audit, lifecycle, field, action, and AI production evidence remains companion-only or incomplete."
+      "The new blocking CI compatibility and browser lanes have not yet accumulated remote passing history for this revision."
     ]
   },
   "capabilities": [
@@ -24,6 +21,127 @@
         "whitelisted filters and sort fields",
         "bounded pagination"
       ]
+    },
+    {
+      "name": "classic_parity_ledger",
+      "status": "implemented",
+      "guarantees": [
+        "machine-readable inventory of every scoped Classic capability",
+        "each inventory item names an owner prompt, dependencies, and evidence requirements",
+        "a verifier rejects malformed ownership, unsupported claims, missing mandatory P1 through P6 coverage, registry disagreement, and a beta decision other than hold"
+      ],
+      "evidence_gap": "P0 is a documentation and verification capability; implementation prompts remain unproven until their independent generated-host and browser evidence exists."
+    },
+    {
+      "name": "field_adapter_registry",
+      "status": "implemented",
+      "guarantees": [
+        "resource-owned explicit string adapter declarations",
+        "safe schema-based string adapter inference",
+        "generic form, list, detail, JSON, CSV export, and default AI serialization dispatch through adapters",
+        "field read denial prevents adapter invocation in protected serialization paths"
+      ],
+      "evidence_gap": "The adapter registry and scalar adapter set have independent generated-host request proof. Sensitive, rich, media, relationship, field-driven filter UI, and final browser/accessibility evidence are owned by P3 through P13."
+    },
+    {
+      "name": "scalar_field_adapters",
+      "status": "implemented",
+      "guarantees": [
+        "native controls and adapter selection for the P2 scalar field set",
+        "typed number, decimal, boolean, date, time, datetime, JSON, and enum parameter validation with nullable scalar normalization",
+        "locale-independent ISO date/time parsing, configured time-zone datetime display, precision-aware numeric, currency, percentage, and identifier formatting",
+        "enum values are constrained to explicit value lists, labelled hashes, or callables",
+        "password and hidden adapter values are omitted from list, detail, JSON, CSV, and AI output",
+        "scalar parameters normalize after field-write authorization and before persistence"
+      ],
+      "evidence_gap": "P7 owns field-driven filter controls and query behavior; P13 consolidates independent browser/accessibility evidence after discovery and presentation layers are complete. Generated-host request evidence covers populated native controls, list/detail formatting, JSON mutation serialization, CSV export, AI context, denied read/write behavior, and password/hidden redaction."
+    },
+    {
+      "name": "sensitive_rich_media_field_adapters",
+      "status": "implemented",
+      "guarantees": [
+        "masked values are omitted from JSON, CSV, AI, and generic serialization",
+        "reveal requires separate read and reveal authorization and emits metadata-only audit events",
+        "rich text and Active Storage adapters fail closed unless the host declares their Rails contracts",
+        "generic detail rendering presents attached images, files, rich text, and computed values"
+      ],
+      "evidence_gap": "P13 owns consolidated independent browser/accessibility evidence for the completed adapter surface."
+    },
+    {
+      "name": "local_belongs_to_lookup",
+      "status": "implemented",
+      "guarantees": [
+        "small local options resolve through the target resource tenant, policy, and provider-scoped query pipeline",
+        "association labels require an explicit exact-true label-read decision",
+        "optional association links render only for label-readable targets",
+        "submitted IDs resolve through the same protected relation before persistence or audit"
+      ],
+      "evidence_gap": "P7 owns association filter query behavior; P13 owns independent browser/accessibility proof."
+    },
+    {
+      "name": "remote_belongs_to_lookup",
+      "status": "implemented",
+      "guarantees": [
+        "generated resource-specific lookup routes require the normal resource authentication boundary",
+        "minimum query length, positive pages, and a maximum bounded result page constrain lookup work",
+        "lookup JSON contains only target-resource tenant, policy, provider, and label-authorized identifiers and labels",
+        "the Hotwire control debounces and cancels lookups while retaining the protected submitted-ID validation from P4"
+      ],
+      "evidence_gap": "P13 owns independent browser/accessibility evidence for keyboard, loading, no-result, error, and pagination interaction."
+    },
+    {
+      "name": "complete_relationship_adapters",
+      "status": "implemented",
+      "guarantees": [
+        "direct has-many and has-one nested attributes enforce parent ownership, tenant, child action, and child field decisions before persistence",
+        "explicit nested belongs-to fields use the P4 protected target-resource contract",
+        "join-backed has-many IDs validate every target through the protected relation before assignment",
+        "polymorphic and arbitrary-depth nested editing are explicitly unsupported"
+      ],
+      "evidence_gap": "P13 owns independent browser/accessibility consolidation for relationship editing."
+    },
+    {
+      "name": "field_driven_discovery",
+      "status": "implemented",
+      "guarantees": [
+        "filter_field derives only resource-owned adapter metadata and bound predicates",
+        "text, constrained select, numeric, date, datetime, and protected association filters preserve canonical query order",
+        "declared sort headers, bounded pagination, and reset controls do not widen tenant or policy visibility",
+        "saved views are not persisted until an owner/tenant privacy and audit model exists"
+      ],
+      "evidence_gap": "P13 owns browser/accessibility consolidation for discovery controls."
+    },
+    {
+      "name": "responsive_resource_presentation",
+      "status": "implemented",
+      "guarantees": [
+        "form sections use constrained one- or two-column resource metadata and preserve ungrouped fields",
+        "list fields have explicit primary, standard, or secondary responsive priority",
+        "generic form, list, detail, media, association-link, and relationship surfaces retain adapter and field-policy dispatch"
+      ],
+      "evidence_gap": "P13 owns independent desktop, tablet, mobile, focus, and accessibility proof."
+    },
+    {
+      "name": "declared_actions_and_bulk_operations",
+      "status": "implemented",
+      "guarantees": [
+        "member actions have explicit labels, Lucide icons, placement, confirmation, method, variant, and declared writes",
+        "transitions reject invalid source states through the normal audited mutation path",
+        "bulk targets resolve from the canonical protected relation and the whole selection is authorized before mutation",
+        "inline editing is opt-in and restricted to adapters that use the normal protected update pipeline"
+      ],
+      "evidence_gap": "P13 owns independent browser and accessibility proof for confirmation, selection, Turbo, and prohibited-control behavior."
+    },
+    {
+      "name": "dashboards_and_durable_audit",
+      "status": "implemented",
+      "guarantees": [
+        "count, summary, table, and chart widgets use the protected resource query pipeline",
+        "dashboard table values use field adapters and exclude unreadable columns",
+        "drill-down filters are limited to declared resource filters",
+        "the Active Record audit store searches tenant-first and recursively redacts sensitive metadata"
+      ],
+      "evidence_gap": "P13 owns independent browser and accessibility proof for dashboard and audit product views."
     },
     {
       "name": "crud_mutation_pipeline",
@@ -54,7 +172,7 @@
     },
     {
       "name": "nested_association_editors",
-      "status": "companion_evidence",
+      "status": "implemented",
       "relationships": [
         "has_many"
       ],
@@ -66,7 +184,7 @@
         "atomic Active Record parent-child persistence with retained nested validation rows",
         "affected child identifiers in parent audit metadata"
       ],
-      "evidence_gap": "The demo Rails host covers Passenger create, validation, add, remove, and cross-tenant rejection; a separately generated Car/Passenger host plus has_one and nested belongs_to support remain pending."
+      "evidence_gap": "The disposable generated host proves Car/Passenger, Car/Insurance, and social-account create, validation retention, remove, denied child-field, and cross-tenant ID paths. P13 owns independent browser/accessibility proof."
     },
     {
       "name": "provider_contracts_and_security_baseline",
@@ -265,18 +383,20 @@
     },
     {
       "name": "legacy_migration_and_1_0_release_contract",
-      "status": "companion_evidence",
+      "status": "implemented",
       "guarantees": [
         "a Ripper-backed audit maps recognized legacy resource constants without modifying host code",
-        "the audit emits actionable manual-review warnings and exits non-zero for unsupported automatic translations",
+        "the audit returns deterministic automatic, assisted, manual, and blocked classifications for recognized constants and field metadata",
+        "the audit emits actionable manual-review warnings and exits non-zero for blocked translations",
+        "the resource generator creates typed scalar declarations and deny-by-default association and workflow stubs without duplicating routes",
         "the migration guide provides a direct Car/Passenger has_many recipe and an executable host validation checklist",
         "the 1.0 release gate requires beta closure, migration evidence, compatibility, security review, rollback ownership, and release approval"
       ],
-      "evidence_gap": "No independently migrated legacy Car/Passenger host, runtime compatibility shim/deprecation warning, codemod rewrite, remote CI evidence, or approved beta/1.0 release exists yet."
+      "evidence_gap": "A disposable clean host proves typed generation, precise Classic Car audit classification, and a reviewed tenant-scoped Car migration. P13 must consolidate browser/accessibility and release evidence; no compatibility shim, remote CI evidence, or approved beta/1.0 release exists yet."
     },
     {
       "name": "import_export_and_large_data_operations",
-      "status": "companion_evidence",
+      "status": "implemented",
       "operations": [
         "profiled_csv_export",
         "csv_import_preview",
@@ -289,7 +409,7 @@
         "accepted import rows execute through the mutation and audit pipeline",
         "Active Record audit or row failure rolls back the enclosing import"
       ],
-      "evidence_gap": "No authenticated controller/UI endpoint, browser/request delivery evidence, durable atomic idempotency-operation store, or persisted background-job retry contract exists yet. A bare fetch/record store is not crash-safe after commit."
+      "evidence_gap": "A generated Rails host proves authenticated tenant-scoped export and durable idempotent import delivery. P13 owns consolidated browser/accessibility and release evidence."
     },
     {
       "name": "observability_and_governance",

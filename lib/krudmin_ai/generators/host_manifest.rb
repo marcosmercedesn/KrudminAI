@@ -16,7 +16,7 @@ module KrudminAI
 
       def enable(module_name)
         manifest = read
-        manifest["enabled_modules"] = (manifest.fetch("enabled_modules", []) + [module_name]).uniq.sort
+        manifest["enabled_modules"] = (manifest.fetch("enabled_modules", []) + [ module_name ]).uniq.sort
         write(manifest)
       end
 

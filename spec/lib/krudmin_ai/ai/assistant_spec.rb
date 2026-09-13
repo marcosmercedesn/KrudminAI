@@ -67,12 +67,12 @@ RSpec.describe KrudminAI::Ai::Assistant do
     end
   end
 
-  let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [:manager]) }
+  let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [ :manager ]) }
   let(:relation) do
     AiRelation.new([
-      AiRecord.new(:north, [:manager], "North ticket", "north secret"),
-      AiRecord.new(:north, [:auditor], "Denied ticket", "denied secret"),
-      AiRecord.new(:south, [:manager], "South ticket", "south secret")
+      AiRecord.new(:north, [ :manager ], "North ticket", "north secret"),
+      AiRecord.new(:north, [ :auditor ], "Denied ticket", "denied secret"),
+      AiRecord.new(:south, [ :manager ], "South ticket", "south secret")
     ])
   end
   let(:resource) do
@@ -97,7 +97,7 @@ RSpec.describe KrudminAI::Ai::Assistant do
       expect(result).to be_success
     end
 
-    expect(provider.requests.first.context).to eq([{ title: "North ticket" }])
+    expect(provider.requests.first.context).to eq([ { title: "North ticket" } ])
     expect(provider.requests.first.mode).to eq(:read_only)
     expect(tracer.traces.last).to have_attributes(actor: :morgan, provider: "test-provider", status: :success)
   end
@@ -115,7 +115,7 @@ RSpec.describe KrudminAI::Ai::Assistant do
   it "does not expose records from another tenant or fields outside the allowlist" do
     assistant.call(task: :record_q_and_a, resource:, relation:, prompt_template: "support/q-and-a")
 
-    expect(provider.requests.first.context).to eq([{ title: "North ticket" }])
+    expect(provider.requests.first.context).to eq([ { title: "North ticket" } ])
     expect(provider.requests.first.context.to_s).not_to include("secret", "South ticket", "Denied ticket")
   end
 
@@ -124,11 +124,11 @@ RSpec.describe KrudminAI::Ai::Assistant do
 
     assistant.call(task: :record_q_and_a, resource:, relation:, prompt_template: "support/q-and-a")
 
-    expect(provider.requests.first.context).to eq([{}])
+    expect(provider.requests.first.context).to eq([ {} ])
   end
 
   it "rejects unsafe provider tool calls and traces the rejection" do
-    unsafe_provider = RecordingProvider.new(output: "Attempting mutation", tool_calls: [{ name: :delete_record }])
+    unsafe_provider = RecordingProvider.new(output: "Attempting mutation", tool_calls: [ { name: :delete_record } ])
     unsafe_assistant = described_class.new(context:, provider: unsafe_provider, provider_name: "test-provider", tracer:)
 
     result = unsafe_assistant.call(task: :record_summary, resource:, relation:, prompt_template: "support/summary")
@@ -159,7 +159,7 @@ RSpec.describe KrudminAI::Ai::Assistant do
     )
 
     expect(result).to have_attributes(status: :provider_failed, output: nil)
-    expect(result.errors).to eq([{ code: :provider_failed, detail: "The AI provider is temporarily unavailable" }])
+    expect(result.errors).to eq([ { code: :provider_failed, detail: "The AI provider is temporarily unavailable" } ])
     expect(tracer.traces.last).to have_attributes(provider: "offline-provider", status: :provider_failed)
   end
 end

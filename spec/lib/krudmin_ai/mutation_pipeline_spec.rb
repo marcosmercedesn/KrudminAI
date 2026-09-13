@@ -154,6 +154,38 @@ RSpec.describe KrudminAI::MutationPipeline do
     expect(auditor.events).to be_empty
   end
 
+  it "rejects a forged belongs-to ID before assignment or audit" do
+    candidate = Struct.new(:id, :tenant, :name).new(1, tenant, "Regional")
+    relation_class = Class.new do
+      def initialize(records) = @records = records
+      def where(tenant:) = self.class.new(@records.select { |record| record.tenant == tenant })
+      def order(*) = self
+      def find(id) = @records.find { |record| record.id == id.to_i } || raise(ActiveRecord::RecordNotFound)
+    end
+    target_model = Class.new do
+      define_singleton_method(:all) { relation_class.new([ candidate ]) }
+    end
+    target_resource = Class.new(KrudminAI::Resources::Base) do
+      model target_model
+      tenant_scope { |relation, access_context| relation.where(tenant: access_context.tenant) }
+      policy_scope { |relation, _context| relation }
+      sortable :name
+      default_sort_by :name
+    end
+    resource.field :rank_id, :belongs_to, resource: target_resource, association: :rank, label: :name,
+      label_read: ->(_candidate, _context) { true }
+    resource.permit :rank_id
+    resource.authorize_field :rank_id, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+    record = FakeRecord.new
+
+    result = described_class.new(resource:, context:, auditor:).call(operation: :update, record:, attributes: { rank_id: "999" })
+
+    expect(result.outcome).to eq(:forbidden)
+    expect(record.attributes).to be_empty
+    expect(record.save_calls).to eq(0)
+    expect(auditor.events).to be_empty
+  end
+
   it "rejects crafted write-denied nested fields before assignment or audit" do
     nested_record_class = Class.new
     relationship_association = Struct.new(:klass).new(nested_record_class)
@@ -182,7 +214,7 @@ RSpec.describe KrudminAI::MutationPipeline do
 
   it "runs declared actions through authorization, persistence, and audit" do
     resource.authorize(:assign_to_me) { |_record, _context| true }
-    resource.action :assign_to_me, writes: [:name] do |record, _context|
+    resource.action :assign_to_me, writes: [ :name ] do |record, _context|
       record.assign_attributes(name: "Morgan")
       true
     end
@@ -197,11 +229,11 @@ RSpec.describe KrudminAI::MutationPipeline do
   end
 
   it "returns validation errors without creating an audit event" do
-    record = FakeRecord.new(save_result: false, errors: ["Name cannot be blank"])
+    record = FakeRecord.new(save_result: false, errors: [ "Name cannot be blank" ])
 
     result = described_class.new(resource:, context:, auditor:).call(operation: :update, record:, attributes: { name: "" })
 
-    expect(result).to have_attributes(outcome: :invalid, errors: [{ code: :invalid, detail: "Name cannot be blank" }])
+    expect(result).to have_attributes(outcome: :invalid, errors: [ { code: :invalid, detail: "Name cannot be blank" } ])
     expect(auditor.events).to be_empty
   end
 
@@ -217,7 +249,7 @@ RSpec.describe KrudminAI::MutationPipeline do
   it "normalizes success and validation responses for HTML, JSON, and Turbo Stream" do
     success = described_class.new(resource:, context:, auditor:).call(operation: :create, record: FakeRecord.new)
     invalid = described_class.new(resource:, context:, auditor:).call(
-      operation: :update, record: FakeRecord.new(save_result: false, errors: ["Invalid"])
+      operation: :update, record: FakeRecord.new(save_result: false, errors: [ "Invalid" ])
     )
 
     expect(KrudminAI::MutationResponseAdapter.for(success, format: :html)).to have_attributes(status: 303)

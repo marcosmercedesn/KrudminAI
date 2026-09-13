@@ -19,7 +19,7 @@ module KrudminAI
         records_by_source = sources.to_h do |name, source|
           resource = source.fetch(:resource)
           relation = source.fetch(:relation)
-          [name.to_sym, ContextBuilder.new(resource:, context:, params:, max_records:).build(relation).records]
+          [ name.to_sym, ContextBuilder.new(resource:, context:, params:, max_records:).build(relation).records ]
         end
         MultiSourceContext.new(records_by_source, Digest::SHA256.hexdigest(JSON.generate(records_by_source)))
       end

@@ -3,11 +3,11 @@ module KrudminAI
 
   module Providers
     CONTRACTS = {
-      authentication_provider: [:authenticate],
-      authorization_provider: [:scope, :authorize?],
-      tenant_provider: [:resolve],
-      audit_provider: [:record],
-      notification_provider: [:deliver]
+      authentication_provider: [ :authenticate ],
+      authorization_provider: [ :scope, :authorize? ],
+      tenant_provider: [ :resolve ],
+      audit_provider: [ :record ],
+      notification_provider: [ :deliver ]
     }.freeze
 
     def self.validate!(configuration)

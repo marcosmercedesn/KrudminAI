@@ -5,6 +5,7 @@ require "krudmin_ai/query_access_pipeline"
 require "krudmin_ai/dashboards/base"
 require "krudmin_ai/dashboards/widgets/base"
 require "krudmin_ai/dashboards/widgets/count"
+require "krudmin_ai/dashboards/widgets/chart"
 require "krudmin_ai/dashboards/widgets/table"
 require "krudmin_ai/dashboards/widgets/summary"
 
@@ -13,24 +14,24 @@ RSpec.describe "dashboard widgets" do
 
   DashboardRelation = Data.define(:records, :operations) do
     def where(tenant:)
-      with(records.select { |record| record.tenant == tenant }, [:tenant, tenant])
+      with(records.select { |record| record.tenant == tenant }, [ :tenant, tenant ])
     end
 
     def policy(actor, roles)
-      with(records.select { |record| (record.permitted_roles & roles).any? }, [:policy, actor, roles])
+      with(records.select { |record| (record.permitted_roles & roles).any? }, [ :policy, actor, roles ])
     end
 
     def order(sort)
       attribute, direction = sort.first
-      with(records.sort_by { |record| record.public_send(attribute) }.then { |values| direction == :desc ? values.reverse : values }, [:order, attribute, direction])
+      with(records.sort_by { |record| record.public_send(attribute) }.then { |values| direction == :desc ? values.reverse : values }, [ :order, attribute, direction ])
     end
 
     def limit(value)
-      with(records.first(value), [:limit, value])
+      with(records.first(value), [ :limit, value ])
     end
 
     def offset(value)
-      with(records.drop(value), [:offset, value])
+      with(records.drop(value), [ :offset, value ])
     end
 
     def to_a
@@ -48,18 +49,18 @@ RSpec.describe "dashboard widgets" do
     private
 
     def with(updated_records, operation)
-      self.class.new(updated_records, operations + [operation])
+      self.class.new(updated_records, operations + [ operation ])
     end
   end
 
   let(:tenant) { :north }
   let(:actor) { :morgan }
-  let(:context) { KrudminAI::AccessContext.new(actor:, tenant:, roles: [:manager]) }
+  let(:context) { KrudminAI::AccessContext.new(actor:, tenant:, roles: [ :manager ]) }
   let(:relation) do
     DashboardRelation.new([
-      DashboardRecord.new(:north, [:manager], "North allowed", 25, 2),
-      DashboardRecord.new(:north, [:auditor], "North forbidden", 40, 3),
-      DashboardRecord.new(:south, [:manager], "South forbidden", 100, 1)
+      DashboardRecord.new(:north, [ :manager ], "North allowed", 25, 2),
+      DashboardRecord.new(:north, [ :auditor ], "North forbidden", 40, 3),
+      DashboardRecord.new(:south, [ :manager ], "South forbidden", 100, 1)
     ], [])
   end
   let(:resource) do
@@ -80,9 +81,9 @@ RSpec.describe "dashboard widgets" do
   end
 
   it "uses the full access pipeline before rendering table records" do
-    widget = KrudminAI::Dashboards::Widgets::Table.new(resource:, context:, relation:, columns: [:name], limit: 10)
+    widget = KrudminAI::Dashboards::Widgets::Table.new(resource:, context:, relation:, columns: [ :name ], limit: 10)
 
-    expect(widget.records.records.map(&:name)).to eq(["North allowed"])
+    expect(widget.records.records.map(&:name)).to eq([ "North allowed" ])
     expect(widget.records.operations.map(&:first)).to eq(%i[tenant policy order limit offset])
   end
 
@@ -91,7 +92,15 @@ RSpec.describe "dashboard widgets" do
     resource.authorize_field :amount, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
     widget = KrudminAI::Dashboards::Widgets::Table.new(resource:, context:, relation:, columns: %i[name amount], limit: 10)
 
-    expect(widget.visible_columns(relation.records.first)).to eq([:name])
+    expect(widget.visible_columns(relation.records.first)).to eq([ :name ])
+  end
+
+  it "formats dashboard table values through resource adapters" do
+    resource.field :amount, :currency, unit: "EUR ", precision: 2
+    resource.authorize_field :amount, read: ->(_record, _context) { true }, write: ->(_record, _context) { false }
+    widget = KrudminAI::Dashboards::Widgets::Table.new(resource:, context:, relation:, columns: [ :amount ], limit: 10)
+
+    expect(widget.rows).to eq([ { amount: "EUR 25.00" } ])
   end
 
   it "summarizes only authorized tenant data" do
@@ -103,6 +112,17 @@ RSpec.describe "dashboard widgets" do
     )
 
     expect(widget.value).to eq(total_amount: 25)
+  end
+
+  it "builds labelled chart series from only authorized tenant data" do
+    widget = KrudminAI::Dashboards::Widgets::Chart.new(
+      resource:,
+      context:,
+      relation:,
+      series: ->(scoped_relation) { [ { label: "Visible", value: scoped_relation.sum(:amount) } ] }
+    )
+
+    expect(widget.value).to eq([ { label: "Visible", value: 25 } ])
   end
 
   it "does not evaluate a summary when policy scope denies access" do
@@ -137,7 +157,7 @@ RSpec.describe "dashboard widgets" do
 
     result = dashboard.new(context:).render
 
-    expect(result).to contain_exactly(have_attributes(name: :recent, state: :ready, columns: [:name], rows: [{ name: "North allowed" }], drill_down_params: { filters: { name: "North" } }))
+    expect(result).to contain_exactly(have_attributes(name: :recent, state: :ready, columns: [ :name ], rows: [ { name: "North allowed" } ], drill_down_params: { filters: { name: "North" } }))
   end
 
   it "represents loading, empty, and unexpected widget errors without broadening data access" do
@@ -149,7 +169,7 @@ RSpec.describe "dashboard widgets" do
         resource: configured_resource,
         relation: ->(_context) { configured_relation },
         visible: ->(_access_context) { true },
-        columns: [:name],
+        columns: [ :name ],
         limit: 10
       widget :broken,
         widget_class: KrudminAI::Dashboards::Widgets::Summary,

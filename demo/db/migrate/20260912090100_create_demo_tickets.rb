@@ -10,6 +10,6 @@ class CreateDemoTickets < ActiveRecord::Migration[8.1]
       table.timestamps
     end
 
-    add_index :demo_tickets, [:tenant, :state]
+    add_index :demo_tickets, [ :tenant, :state ]
   end
 end

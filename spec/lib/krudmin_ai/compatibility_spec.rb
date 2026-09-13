@@ -30,7 +30,7 @@ RSpec.describe "KrudminAI compatibility contract" do
   it "keeps the CI matrix synchronized with published compatibility lanes" do
     workflow = YAML.load_file(File.join(root, ".github/workflows/ci.yml"))
     lanes = workflow.fetch("jobs").fetch("test").fetch("strategy").fetch("matrix").fetch("include")
-    actual = lanes.to_h { |lane| [lane.fetch("name"), lane.slice("ruby", "rails", "allow_failure")] }
+    actual = lanes.to_h { |lane| [ lane.fetch("name"), lane.slice("ruby", "rails", "allow_failure") ] }
 
     expect(actual).to eq(
       "minimum" => { "ruby" => "3.3", "rails" => "~> 8.1.3" },

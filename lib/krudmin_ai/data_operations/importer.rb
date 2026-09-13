@@ -12,11 +12,12 @@ module KrudminAI
     end
 
     class Importer
-      def initialize(resource:, context:, auditor:, idempotency_store:, authorization_provider: nil)
+      def initialize(resource:, context:, auditor:, idempotency_store: nil, operation_store: nil, authorization_provider: nil)
         @resource = resource
         @context = context
         @auditor = auditor
         @idempotency_store = idempotency_store
+        @operation_store = operation_store
         @authorization_provider = authorization_provider
       end
 
@@ -38,7 +39,9 @@ module KrudminAI
 
       def commit(profile:, csv:, idempotency_key:)
         raise ArgumentError, "An idempotency key is required" if idempotency_key.to_s.empty?
-        raise ArgumentError, "An idempotency store is required" unless idempotency_store.respond_to?(:fetch) && idempotency_store.respond_to?(:record)
+        raise ArgumentError, "An idempotency store is required" unless durable_operation_store? || idempotency_store.respond_to?(:fetch) && idempotency_store.respond_to?(:record)
+
+        return commit_durable(profile:, csv:, idempotency_key:) if durable_operation_store?
 
         existing = idempotency_store.fetch(idempotency_key)
         return existing if existing
@@ -71,7 +74,58 @@ module KrudminAI
 
       class ImportFailure < StandardError; end
 
-      attr_reader :resource, :context, :auditor, :idempotency_store, :authorization_provider
+      attr_reader :resource, :context, :auditor, :idempotency_store, :operation_store, :authorization_provider
+
+      def commit_durable(profile:, csv:, idempotency_key:)
+        operation = operation_store.claim(
+          tenant: context.tenant,
+          idempotency_key:,
+          kind: :import,
+          payload: { "resource" => resource.name, "profile" => profile.to_s }
+        )
+        return durable_result(operation, idempotency_key) if operation.status == "completed"
+        return failure(:cancelled, "Import was cancelled") if operation.status == "cancelled"
+
+        operation_store.start(operation)
+        result = commit_without_idempotency(profile:, csv:, idempotency_key:)
+        if result.success?
+          operation_store.complete(operation, result: { "outcome" => result.outcome.to_s, "row_count" => result.rows.length })
+        else
+          operation_store.fail(operation, error: result.errors.first&.fetch(:detail, "Import failed"))
+        end
+        result
+      end
+
+      def commit_without_idempotency(profile:, csv:, idempotency_key:)
+        preview_result = preview(profile:, csv:)
+        return preview_result unless preview_result.outcome == :preview
+
+        transaction do
+          preview_result.rows.each do |row|
+            record = resource.model_class.new(resource.tenant_attribute => context.tenant)
+            result = MutationPipeline.new(resource:, context:, auditor:, authorization_provider:).call(operation: :create, record:, attributes: row.attributes)
+            raise AuditFailure if result.outcome == :audit_failed
+            raise ImportFailure unless result.success?
+          end
+          auditor.record(AuditEvent.new(:import, context.actor, context.tenant, context.roles, resource.name, profile.to_sym, preview_result.rows.length))
+        end
+        result = ImportResult.new(:success, preview_result.rows, [], idempotency_key)
+        Observability.emit("import.completed", resource: resource.name, profile: profile.to_sym, row_count: preview_result.rows.length, tenant: context.tenant)
+        result
+      rescue ImportFailure
+        failure(:failed, "Import could not be completed")
+      rescue AuditFailure, AuditSinkRequired
+        failure(:audit_failed, "Import could not be audited")
+      end
+
+      def durable_result(operation, idempotency_key)
+        result = operation.result || {}
+        ImportResult.new(result.fetch("outcome", "success").to_sym, [], [], idempotency_key)
+      end
+
+      def durable_operation_store?
+        operation_store.respond_to?(:claim) && operation_store.respond_to?(:start) && operation_store.respond_to?(:complete) && operation_store.respond_to?(:fail)
+      end
 
       def preview_row(row, number, profile)
         attributes = profile.mapping.each_with_object({}) do |(header, field), values|
@@ -116,7 +170,7 @@ module KrudminAI
       end
 
       def failure(outcome, detail)
-        ImportResult.new(outcome, [], [{ code: outcome, detail: }], nil)
+        ImportResult.new(outcome, [], [ { code: outcome, detail: } ], nil)
       end
     end
   end

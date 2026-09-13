@@ -26,4 +26,25 @@ The editor uses a native button, an HTML `template`, and the `krudmin-ai-nested-
 
 Before assignment, each supplied existing child ID is looked up through the parent association. A missing ID, a cross-parent ID, a tenant predicate failure, or a child action predicate failure rejects the entire parent mutation. Parent and child saves use the Active Record transaction created by nested attributes. Validation errors retain submitted nested rows and render child field errors. The audit event records current and submitted child IDs under `affected_child_references`.
 
-Current support is one direct `has_many` level. `has_one`, nested `belongs_to`, polymorphic relationships, remote association search, and arbitrary-depth nesting are not yet supported.
+## Has-One And Nested Belongs-To
+
+Direct `has_one` relationships use the same `fields`, authorization, tenant, and field-authorizer contract as `has_many`, but render one stable nested row and accept one Rails nested-attributes hash. Existing child IDs must resolve to the current parent record; a cross-parent or cross-tenant identifier rejects the whole parent mutation before persistence and audit.
+
+Nested child foreign keys are supported only through an explicit `belongs_to_fields` mapping. Each mapping uses the P4 target-resource contract, so its candidate IDs are tenant-, policy-, provider-, and label-read-scoped before assignment:
+
+```ruby
+has_one :insurance,
+  fields: %i[provider rank_id],
+  # authorize, tenant_record, and field_authorizers omitted
+  belongs_to_fields: {
+    rank_id: { resource: RanksResource, association: :rank, label: :name, label_read: ->(rank, context) { RankPolicy.new(context.actor, rank).show? } }
+  }
+```
+
+## Authorized Multi-Select
+
+Use `field :team_ids, :has_many_ids` for direct join-backed associations. It uses the same target resource and `label_read` contract as local belongs-to lookup, validates every submitted ID through its protected relation before Rails assigns it, and rejects an entire crafted set without persistence or audit leakage. Pass the array shape explicitly to `permit`, for example `permit :name, team_ids: []`.
+
+## Explicit Boundaries
+
+P6 supports one direct nested `has_many` or `has_one` level plus explicit nested belongs-to fields. Polymorphic nested relationships and arbitrary-depth nested editors are intentionally unsupported: their target type/path resolution would make tenant, policy, field, and audit decisions ambiguous. Hosts must expose them through separate protected resources until a future capability defines an explicit type allowlist, per-type target resource, and independent evidence.

@@ -1,7 +1,7 @@
 users = [
-  { name: "Morgan Lee", tenant: "northwind", roles: ["support_agent"] },
-  { name: "Avery Patel", tenant: "northwind", roles: ["manager"] },
-  { name: "Jordan Kim", tenant: "southwind", roles: ["support_agent"] }
+  { name: "Morgan Lee", tenant: "northwind", roles: [ "support_agent" ] },
+  { name: "Avery Patel", tenant: "northwind", roles: [ "manager" ] },
+  { name: "Jordan Kim", tenant: "southwind", roles: [ "support_agent" ] }
 ]
 
 users.each { |attributes| DemoUser.find_or_create_by!(name: attributes[:name], tenant: attributes[:tenant]) { |user| user.roles = attributes[:roles] } }

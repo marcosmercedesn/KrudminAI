@@ -38,6 +38,8 @@ jobs:
       - run: bundle exec ruby -S rspec
       - run: bundle exec ruby -S rubocop
       - run: ruby bin/verify_showcase
+      - run: ruby bin/verify_generator_migration_host
+      - run: ruby bin/verify_data_operations_host
       - run: bundle install
         working-directory: demo
       - run: bundle update rails erb json --conservative
@@ -61,6 +63,7 @@ jobs:
         working-directory: demo
       - run: bundle exec bin/rails test:system test/system/admin_visual_regression_test.rb
         working-directory: demo
+      - run: ruby bin/verify_field_adapters_host
       - uses: actions/upload-artifact@v4
         if: always()
         with:

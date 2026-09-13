@@ -19,6 +19,6 @@ RSpec.describe KrudminAI::Generators::DashboardContract do
     dashboard = File.read(File.join(@destination_root, "app/dashboards/operations_dashboard.rb"))
     manifest = JSON.parse(File.read(File.join(@destination_root, "docs/krudmin_ai/capability_registry.json")))
     expect(dashboard).to include("OperationsDashboard", "OrdersResource", "visible: ->(_context) { false }")
-    expect(manifest.fetch("enabled_modules")).to eq(["dashboards"])
+    expect(manifest.fetch("enabled_modules")).to eq([ "dashboards" ])
   end
 end

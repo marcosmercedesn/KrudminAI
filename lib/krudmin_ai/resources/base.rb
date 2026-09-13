@@ -1,6 +1,7 @@
 require "krudmin_ai/resources/action"
 require "krudmin_ai/resources/filter"
 require "krudmin_ai/data_operations/profile"
+require "krudmin_ai/fields/registry"
 
 module KrudminAI
   module Resources
@@ -11,10 +12,12 @@ module KrudminAI
         attr_reader :model_class, :tenant_scope_handler, :policy_scope_handler, :filters,
                     :sortable_attributes, :default_sort, :pagination_options, :tenant_record_handler,
                     :action_authorizers, :ai_context_fields, :permitted_attributes, :tenant_attribute, :filter_definitions,
+                    :permitted_attribute_parameters,
                     :route_key, :icon_name, :resource_label, :resources_label, :list_fields,
                     :form_fields, :show_fields, :relationships, :included_associations,
                     :preloaded_associations, :archive_attribute, :field_authorizers, :resource_actions,
-                    :export_profiles, :import_profiles
+                    :export_profiles, :import_profiles, :field_definitions, :form_sections, :list_field_priorities,
+                    :bulk_actions, :inline_editable_fields
 
         def inherited(subclass)
           super
@@ -29,6 +32,7 @@ module KrudminAI
           subclass.instance_variable_set(:@tenant_record_handler, tenant_record_handler)
           subclass.instance_variable_set(:@ai_context_fields, ai_context_fields.dup)
           subclass.instance_variable_set(:@permitted_attributes, permitted_attributes.dup)
+          subclass.instance_variable_set(:@permitted_attribute_parameters, permitted_attribute_parameters.dup)
           subclass.instance_variable_set(:@tenant_attribute, tenant_attribute)
           subclass.instance_variable_set(:@route_key, route_key)
           subclass.instance_variable_set(:@icon_name, icon_name)
@@ -43,6 +47,11 @@ module KrudminAI
           subclass.instance_variable_set(:@archive_attribute, archive_attribute)
           subclass.instance_variable_set(:@export_profiles, export_profiles.dup)
           subclass.instance_variable_set(:@import_profiles, import_profiles.dup)
+          subclass.instance_variable_set(:@field_definitions, field_definitions.dup)
+          subclass.instance_variable_set(:@form_sections, form_sections.dup)
+          subclass.instance_variable_set(:@list_field_priorities, list_field_priorities.dup)
+          subclass.instance_variable_set(:@bulk_actions, bulk_actions.dup)
+          subclass.instance_variable_set(:@inline_editable_fields, inline_editable_fields.dup)
         end
 
         def model(value = nil)
@@ -70,15 +79,23 @@ module KrudminAI
           action_authorizers[action.to_sym] = handler
         end
 
-        def action(name, label: nil, writes: [], &block)
+        def action(name, label: nil, writes: [], icon: :play, placement: :record, confirmation: nil, method: :post, variant: :default, &block)
           raise ArgumentError, "An action handler is required" unless block
+          raise ArgumentError, "Action placement must be :record, :list, or :both" unless %i[record list both].include?(placement.to_sym)
+          raise ArgumentError, "Action method must be :post, :patch, or :delete" unless %i[post patch delete].include?(method.to_sym)
+          raise ArgumentError, "Action variant must be :default, :primary, :edit, or :danger" unless %i[default primary edit danger].include?(variant.to_sym)
 
           normalized_name = name.to_sym
           resource_actions[normalized_name] = Action.new(
             name: normalized_name,
             label: label || normalized_name.to_s.tr("_", " ").capitalize,
             writes:,
-            handler: block
+            handler: block,
+            icon:,
+            placement:,
+            confirmation:,
+            method:,
+            variant:
           )
         end
 
@@ -88,7 +105,7 @@ module KrudminAI
           state_attribute = attribute.to_sym
           raise ArgumentError, "At least one source state is required" if allowed_states.empty?
 
-          action(name, label:, writes: [state_attribute]) do |record, _context|
+          action(name, label:, writes: [ state_attribute ]) do |record, _context|
             if allowed_states.include?(record.public_send(state_attribute).to_s)
               record.public_send("#{state_attribute}=", target_state)
               true
@@ -107,11 +124,46 @@ module KrudminAI
           resource_actions[name.to_sym]
         end
 
-        def authorize_field(attribute, read:, write:)
+        def bulk_action(name)
+          normalized_name = name.to_sym
+          raise ArgumentError, "Bulk action must be declared before it can be enabled" unless action?(normalized_name)
+
+          @bulk_actions = (bulk_actions + [ normalized_name ]).uniq.freeze
+        end
+
+        def inline_edit(*attributes)
+          normalized_attributes = attributes.flatten.map(&:to_sym)
+          unsupported = normalized_attributes.reject { |attribute| inline_editable_adapter?(field_adapter(attribute)) }
+          raise ArgumentError, "Inline editing is not supported for #{unsupported.join(', ')}" if unsupported.any?
+
+          @inline_editable_fields = (inline_editable_fields + normalized_attributes).uniq.freeze
+        end
+
+        def authorize_field(attribute, read:, write:, reveal: nil)
           raise ArgumentError, "A field read authorization handler is required" unless read
           raise ArgumentError, "A field write authorization handler is required" unless write
 
-          field_authorizers[attribute.to_sym] = { read:, write: }.freeze
+          field_authorizers[attribute.to_sym] = { read:, write:, reveal: }.freeze
+        end
+
+        def field(attribute, type = nil, **options)
+          return field_definition(attribute) if type.nil? && options.empty?
+
+          raise ArgumentError, "A field adapter type is required" unless type
+
+          field_definitions[attribute.to_sym] = { type: type.to_sym, options: options }.freeze
+        end
+
+        def field_definition(attribute)
+          field_definitions.fetch(attribute.to_sym, { options: {} })
+        end
+
+        def field_adapter(attribute)
+          Fields::Registry.resolve(self, attribute)
+        end
+
+        def field_filter_definition(attribute)
+          field_adapter(attribute).filter_definition
         end
 
         def field_readable?(attribute, record, context)
@@ -120,6 +172,10 @@ module KrudminAI
 
         def field_writable?(attribute, record, context)
           authorize_field_decision(attribute, :write, record, context)
+        end
+
+        def field_revealable?(attribute, record, context)
+          authorize_field_decision(attribute, :reveal, record, context)
         end
 
         def readable_fields(fields, record, context)
@@ -131,7 +187,7 @@ module KrudminAI
         end
 
         def ai_field(attribute, &block)
-          ai_context_fields[attribute.to_sym] = block || ->(record) { record.public_send(attribute) }
+          ai_context_fields[attribute.to_sym] = block || ->(record) { field_adapter(attribute).ai_value(record) }
         end
 
         def export_profile(name, fields:, masks: {})
@@ -151,7 +207,8 @@ module KrudminAI
         end
 
         def permit(*attributes)
-          @permitted_attributes = attributes.flatten.map(&:to_sym).uniq.freeze
+          @permitted_attribute_parameters = attributes.freeze
+          @permitted_attributes = attributes.flat_map { |attribute| attribute.is_a?(Hash) ? attribute.keys : attribute }.map(&:to_sym).uniq.freeze
         end
 
         def label(value = nil)
@@ -172,10 +229,24 @@ module KrudminAI
           @list_fields = attributes.flatten.map(&:to_sym).uniq.freeze
         end
 
+        def list_priority(attribute, value = :standard)
+          normalized_value = value.to_sym
+          raise ArgumentError, "List priority must be :primary, :standard, or :secondary" unless %i[primary standard secondary].include?(normalized_value)
+
+          list_field_priorities[attribute.to_sym] = normalized_value
+        end
+
         def form(*attributes)
           return form_fields.empty? ? permitted_attributes : form_fields unless attributes.any?
 
           @form_fields = attributes.flatten.map(&:to_sym).uniq.freeze
+        end
+
+        def section(name, fields:, label: nil, columns: :one)
+          normalized_columns = columns.to_sym
+          raise ArgumentError, "Section columns must be :one or :two" unless %i[one two].include?(normalized_columns)
+
+          form_sections[name.to_sym] = { label: (label || name.to_s.humanize).to_s, fields: fields.map(&:to_sym).freeze, columns: normalized_columns }.freeze
         end
 
         def show(*attributes)
@@ -204,7 +275,7 @@ module KrudminAI
           !archive_attribute.nil?
         end
 
-        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {})
+        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {})
           raise ArgumentError, "Nested fields are required" if fields.empty?
           raise ArgumentError, "maximum must be positive" unless maximum.positive?
           raise ArgumentError, "A child authorization handler is required" unless authorize
@@ -219,7 +290,29 @@ module KrudminAI
             order:,
             authorizer: authorize,
             tenant_record_handler: tenant_record,
-            field_authorizers:
+            field_authorizers:,
+            cardinality: :many,
+            belongs_to_fields:
+          )
+        end
+
+        def has_one(name, fields:, label: nil, display: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {})
+          raise ArgumentError, "Nested fields are required" if fields.empty?
+          raise ArgumentError, "A child authorization handler is required" unless authorize
+          raise ArgumentError, "A child tenant record handler is required" unless tenant_record
+
+          relationships[name.to_sym] = Relationship.new(
+            name:,
+            fields:,
+            label: label || name.to_s.humanize,
+            display_fields: display || fields,
+            maximum: 1,
+            order: nil,
+            authorizer: authorize,
+            tenant_record_handler: tenant_record,
+            field_authorizers:,
+            cardinality: :one,
+            belongs_to_fields:
           )
         end
 
@@ -258,6 +351,21 @@ module KrudminAI
             options:,
             handler: block
           )
+        end
+
+        def filter_field(attribute, label: nil)
+          adapter_definition = field_filter_definition(attribute)
+          raise ArgumentError, "Field #{attribute} does not support filtering" unless adapter_definition
+
+          filter(
+            attribute,
+            type: adapter_definition.fetch(:type),
+            label: label,
+            operators: adapter_definition[:operators],
+            options: adapter_definition[:options]
+          ) do |relation, value, _context, operator|
+            apply_field_filter(relation, attribute.to_sym, adapter_definition.fetch(:type), value, operator)
+          end
         end
 
         def sortable(*attributes)
@@ -314,6 +422,38 @@ module KrudminAI
         rescue StandardError
           false
         end
+
+        def apply_field_filter(relation, attribute, type, value, operator)
+          quoted_attribute = model_class.connection.quote_column_name(attribute)
+
+          case type.to_sym
+          when :text
+            escaped_value = ActiveRecord::Base.sanitize_sql_like(value.to_s)
+            predicate = case operator
+            when :equals then value.to_s
+            when :starts_with then "#{escaped_value}%"
+            when :ends_with then "%#{escaped_value}"
+            else "%#{escaped_value}%"
+            end
+            operator == :equals ? relation.where(attribute => predicate) : relation.where("#{quoted_attribute} LIKE ?", predicate)
+          when :select
+            relation.where(attribute => value)
+          when :number_range, :date_range, :datetime_range
+            bounds = value.to_h
+            scoped_relation = relation
+            scoped_relation = scoped_relation.where("#{quoted_attribute} >= ?", bounds[:from] || bounds["from"]) if (bounds[:from] || bounds["from"]).present?
+            scoped_relation = scoped_relation.where("#{quoted_attribute} <= ?", bounds[:to] || bounds["to"]).present?
+            scoped_relation
+          else
+            relation
+          end
+        end
+
+        def inline_editable_adapter?(adapter)
+          adapter.is_a?(Fields::String) || adapter.is_a?(Fields::Text) || adapter.is_a?(Fields::Number) ||
+            adapter.is_a?(Fields::Boolean) || adapter.is_a?(Fields::Date) || adapter.is_a?(Fields::DateTime) ||
+            adapter.is_a?(Fields::Enum) || adapter.is_a?(Fields::BelongsTo)
+        end
       end
 
       @filters = {}.freeze
@@ -327,6 +467,7 @@ module KrudminAI
       @tenant_record_handler = nil
       @ai_context_fields = {}.freeze
       @permitted_attributes = [].freeze
+      @permitted_attribute_parameters = [].freeze
       @tenant_attribute = :tenant
       @route_key = nil
       @icon_name = :file_text
@@ -341,6 +482,11 @@ module KrudminAI
       @archive_attribute = nil
       @export_profiles = {}.freeze
       @import_profiles = {}.freeze
+      @field_definitions = {}.freeze
+      @form_sections = {}.freeze
+      @list_field_priorities = {}.freeze
+      @bulk_actions = [].freeze
+      @inline_editable_fields = [].freeze
     end
   end
 end

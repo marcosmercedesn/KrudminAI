@@ -21,7 +21,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_120000) do
     t.string "record_type"
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "created_at"], name: "index_demo_audit_events_on_tenant_and_created_at"
+    t.index [ "tenant", "created_at" ], name: "index_demo_audit_events_on_tenant_and_created_at"
   end
 
   create_table "demo_passengers", force: :cascade do |t|
@@ -31,8 +31,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_120000) do
     t.integer "position", default: 0, null: false
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["demo_ticket_id", "tenant"], name: "index_demo_passengers_on_demo_ticket_id_and_tenant"
-    t.index ["demo_ticket_id"], name: "index_demo_passengers_on_demo_ticket_id"
+    t.index [ "demo_ticket_id", "tenant" ], name: "index_demo_passengers_on_demo_ticket_id_and_tenant"
+    t.index [ "demo_ticket_id" ], name: "index_demo_passengers_on_demo_ticket_id"
   end
 
   create_table "demo_tickets", force: :cascade do |t|
@@ -45,8 +45,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_120000) do
     t.string "tenant", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "archived_at"], name: "index_demo_tickets_on_tenant_and_archived_at"
-    t.index ["tenant", "state"], name: "index_demo_tickets_on_tenant_and_state"
+    t.index [ "tenant", "archived_at" ], name: "index_demo_tickets_on_tenant_and_archived_at"
+    t.index [ "tenant", "state" ], name: "index_demo_tickets_on_tenant_and_state"
   end
 
   create_table "demo_users", force: :cascade do |t|
@@ -55,7 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_120000) do
     t.text "roles", null: false
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "name"], name: "index_demo_users_on_tenant_and_name", unique: true
+    t.index [ "tenant", "name" ], name: "index_demo_users_on_tenant_and_name", unique: true
   end
 
   add_foreign_key "demo_passengers", "demo_tickets"

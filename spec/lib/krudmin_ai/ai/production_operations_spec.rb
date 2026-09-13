@@ -19,8 +19,8 @@ RSpec.describe "AI production operations" do
     end
   end
 
-  let(:north_context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [:manager]) }
-  let(:south_context) { KrudminAI::AccessContext.new(actor: :sam, tenant: :south, roles: [:manager]) }
+  let(:north_context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [ :manager ]) }
+  let(:south_context) { KrudminAI::AccessContext.new(actor: :sam, tenant: :south, roles: [ :manager ]) }
 
   it "routes only configured task-specific providers and fails closed for unknown routes" do
     provider = ProductionOperationsProvider.new
@@ -40,14 +40,14 @@ RSpec.describe "AI production operations" do
     store.recorder_for(north_context).record(north_trace)
     store.recorder_for(south_context).record(south_trace)
 
-    expect(store.search(context: north_context, query: "summary").map(&:prompt_template)).to eq(["support/summary"])
-    expect(store.search(context: north_context, statuses: [:provider_failed])).to be_empty
+    expect(store.search(context: north_context, query: "summary").map(&:prompt_template)).to eq([ "support/summary" ])
+    expect(store.search(context: north_context, statuses: [ :provider_failed ])).to be_empty
     expect(store.export(context: north_context).first[:output]).to eq("[redacted]")
     expect(store.export(context: north_context).to_s).not_to include("South analysis", "North analysis")
   end
 
   it "contains prompt-injection attempts that cause unsafe tool calls and retains their trace" do
-    provider = ProductionOperationsProvider.new(output: "Deleting records", tool_calls: [{ name: :destroy_record }])
+    provider = ProductionOperationsProvider.new(output: "Deleting records", tool_calls: [ { name: :destroy_record } ])
     store = KrudminAI::Ai::InMemoryTraceStore.new
     assistant = KrudminAI::Ai::Assistant.new(
       context: north_context,

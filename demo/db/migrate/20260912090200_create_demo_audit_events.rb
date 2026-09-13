@@ -11,6 +11,6 @@ class CreateDemoAuditEvents < ActiveRecord::Migration[8.1]
       table.timestamps
     end
 
-    add_index :demo_audit_events, [:tenant, :created_at]
+    add_index :demo_audit_events, [ :tenant, :created_at ]
   end
 end

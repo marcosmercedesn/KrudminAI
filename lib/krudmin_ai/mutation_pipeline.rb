@@ -32,23 +32,27 @@ module KrudminAI
         authorize_action!(normalized_operation, record)
         validate_action_field_writes!(normalized_operation, record) if resource.action?(normalized_operation)
         validate_field_writes!(record, attributes) if %i[create update].include?(normalized_operation)
+        validate_adapter_submissions!(record, attributes) if %i[create update].include?(normalized_operation)
+        attributes = normalize_scalar_parameters(attributes) if %i[create update].include?(normalized_operation)
         validate_relationships!(record, attributes) if %i[create update].include?(normalized_operation)
         @submitted_child_references = submitted_child_references(attributes) if %i[create update].include?(normalized_operation)
 
         persisted, event = persist_and_audit(normalized_operation, record, attributes)
         persisted ? MutationResult.new(normalized_operation, :success, record, [], event) : failure(normalized_operation, :invalid, record_errors(record))
       rescue AuthenticationRequired
-        failure(normalized_operation, :unauthenticated, [error(:unauthenticated, "An authenticated actor is required")])
+        failure(normalized_operation, :unauthenticated, [ error(:unauthenticated, "An authenticated actor is required") ])
       rescue TenantRequired
-        failure(normalized_operation, :tenant_required, [error(:tenant_required, "A tenant is required")])
+        failure(normalized_operation, :tenant_required, [ error(:tenant_required, "A tenant is required") ])
       rescue AuthorizationDenied, ScopeViolation
-        failure(normalized_operation, :forbidden, [error(:forbidden, "You are not authorized to perform this action")])
+        failure(normalized_operation, :forbidden, [ error(:forbidden, "You are not authorized to perform this action") ])
       rescue Resources::ConfigurationError, AuditSinkRequired
-        failure(normalized_operation, :configuration_error, [error(:configuration_error, "Mutation security is not configured")])
+        failure(normalized_operation, :configuration_error, [ error(:configuration_error, "Mutation security is not configured") ])
       rescue AuditFailure
-        failure(normalized_operation, :audit_failed, [error(:audit_failed, "The mutation could not be audited")])
+        failure(normalized_operation, :audit_failed, [ error(:audit_failed, "The mutation could not be audited") ])
+      rescue ArgumentError => error
+        failure(normalized_operation, :invalid, [ error(:invalid, error.message) ])
       rescue StandardError
-        failure(normalized_operation, :persistence_failed, [error(:persistence_failed, "The mutation could not be completed")])
+        failure(normalized_operation, :persistence_failed, [ error(:persistence_failed, "The mutation could not be completed") ])
       end
       Observability.emit("mutation.completed", operation: normalized_operation, outcome: result.outcome, resource: resource.name, tenant: context.tenant)
       result
@@ -123,14 +127,14 @@ module KrudminAI
         event = audit(operation, record)
         true
       end
-      [persisted, event]
+      [ persisted, event ]
     end
 
     def persist_and_audit_without_transaction(operation, record, attributes)
       persisted = persist(operation, record, attributes)
-      return [false, nil] unless persisted
+      return [ false, nil ] unless persisted
 
-      [true, audit(operation, record)]
+      [ true, audit(operation, record) ]
     end
 
     def audit(operation, record)
@@ -185,6 +189,10 @@ module KrudminAI
 
             raise AuthorizationDenied, "Nested field write access rejected"
           end
+          submitted_fields(row, relationship.fields).each do |field|
+            adapter = relationship.belongs_to_adapter(field, resource)
+            adapter&.validate_submission(child, row[field] || row[field.to_s], context, authorization_provider:)
+          end
         end
       end
     end
@@ -197,6 +205,28 @@ module KrudminAI
       end
     end
 
+    def validate_adapter_submissions!(record, attributes)
+      values = attributes.respond_to?(:to_unsafe_h) ? attributes.to_unsafe_h : attributes.to_h
+      resource.permitted_attributes.each do |attribute|
+        next unless values.key?(attribute) || values.key?(attribute.to_s)
+
+        resource.field_adapter(attribute).validate_submission(
+          record,
+          values[attribute] || values[attribute.to_s],
+          context,
+          authorization_provider:
+        )
+      end
+    end
+
+    def normalize_scalar_parameters(attributes)
+      values = attributes.respond_to?(:to_unsafe_h) ? attributes.to_unsafe_h : attributes.to_h
+      values.each_with_object({}) do |(field, value), normalized|
+        attribute = field.to_sym
+        normalized[field] = resource.permitted_attributes.include?(attribute) ? resource.field_adapter(attribute).parameter(value) : value
+      end
+    end
+
     def submitted_fields(attributes, allowed_fields)
       values = attributes.respond_to?(:to_unsafe_h) ? attributes.to_unsafe_h : attributes.to_h
       allowed_fields.select { |field| values.key?(field) || values.key?(field.to_s) }
@@ -204,7 +234,11 @@ module KrudminAI
 
     def nested_rows(attributes, name)
       values = attributes["#{name}_attributes"] || attributes["#{name}_attributes".to_sym] || {}
-      values.respond_to?(:to_unsafe_h) ? values.to_unsafe_h.values : values.to_h.values
+      values = values.respond_to?(:to_unsafe_h) ? values.to_unsafe_h : values.to_h
+      return [ values ] if values.key?("id") || values.key?(:id)
+      return [ values ] if values.any? && values.values.none? { |value| value.respond_to?(:to_h) }
+
+      values.values
     end
 
     def relationship_child(record, relationship, row)
@@ -213,7 +247,10 @@ module KrudminAI
 
       raise ScopeViolation, "New records cannot reference nested children" if record.new_record?
 
-      record.public_send(relationship.name).find(identifier)
+      association = record.public_send(relationship.name)
+      return association.find(identifier) unless relationship.singular?
+
+      association && association.id.to_s == identifier.to_s ? association : raise(ScopeViolation, "Nested record is outside the parent association")
     rescue ActiveRecord::RecordNotFound
       raise ScopeViolation, "Nested record is outside the parent association"
     end
@@ -232,7 +269,8 @@ module KrudminAI
       resource.relationships.each_with_object({}) do |(name, relationship), references|
         next unless relationship
 
-        current_ids = record.public_send(name).map(&:id).compact
+        associated_records = relationship.singular? ? [ record.public_send(name) ].compact : record.public_send(name)
+        current_ids = associated_records.map(&:id).compact
         submitted_ids = (@submitted_child_references || {}).fetch(name, [])
         references[name] = (current_ids + submitted_ids).uniq
       end
@@ -246,7 +284,8 @@ module KrudminAI
 
     def assign_nested_tenants(record)
       resource.relationships.each_key do |name|
-        record.public_send(name).each do |child|
+        associated_records = resource.relationships.fetch(name).singular? ? [ record.public_send(name) ].compact : record.public_send(name)
+        associated_records.each do |child|
           child.public_send("#{resource.tenant_attribute}=", context.tenant) if child.new_record? && child.respond_to?("#{resource.tenant_attribute}=")
         end
       end

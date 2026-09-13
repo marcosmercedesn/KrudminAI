@@ -1,0 +1,6 @@
+<fieldset class="krudmin-ai-nested-fields">
+  <legend><%= relationship.label %></legend>
+  <%= form.fields_for relationship.name, model.public_send(relationship.name) || model.public_send("build_#{relationship.name}") do |child_form| %>
+    <%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship %>
+  <% end %>
+</fieldset>

@@ -4,7 +4,7 @@ require "krudmin_ai/version"
 Gem::Specification.new do |spec|
   spec.name = "krudmin_ai"
   spec.version = KrudminAI::VERSION
-  spec.authors = ["KrudminAI contributors"]
+  spec.authors = [ "KrudminAI contributors" ]
   spec.summary = "A secure, Hotwire-first Rails engine for admin applications."
   spec.description = "KrudminAI provides policy-aware, tenant-aware foundations for Rails admin applications."
   spec.license = "MIT"

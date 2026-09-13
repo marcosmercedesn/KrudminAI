@@ -6,6 +6,7 @@ require "krudmin_ai/query_access_pipeline"
 require "krudmin_ai/mutation_pipeline"
 require "krudmin_ai/data_operations/exporter"
 require "krudmin_ai/data_operations/importer"
+require "krudmin_ai/data_operations/active_record_operation_store"
 
 RSpec.describe "data operations" do
   class DataOperationsRecord
@@ -93,7 +94,27 @@ RSpec.describe "data operations" do
     end
   end
 
-  let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [:operator]) }
+  DurableOperation = Struct.new(:tenant, :idempotency_key, :kind, :status, :payload, :progress, :result, :error, keyword_init: true) do
+    def update!(attributes)
+      attributes.each { |key, value| public_send("#{key}=", value) }
+    end
+  end
+
+  class DurableOperationModel
+    class << self
+      attr_accessor :records
+
+      def create_or_find_by!(attributes)
+        records.find { |record| attributes.all? { |key, value| record.public_send(key) == value } } || DurableOperation.new(**attributes).tap { |record| yield record; records << record }
+      end
+
+      def find_by(attributes)
+        records.find { |record| attributes.all? { |key, value| record.public_send(key) == value } }
+      end
+    end
+  end
+
+  let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [ :operator ]) }
   let(:auditor) { DataOperationsAuditor.new }
   let(:store) { DataOperationsIdempotencyStore.new }
   let(:resource) do
@@ -111,7 +132,7 @@ RSpec.describe "data operations" do
       authorize_field :title, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
       authorize_field :priority, read: ->(_record, _context) { false }, write: ->(_record, _context) { true }
       export_profile :safe_csv, fields: %i[title priority], masks: { title: ->(value, _record, _context) { value.upcase } }
-      import_profile :tickets_csv, mapping: { "Title" => :title, "Priority" => :priority }, required: [:title]
+      import_profile :tickets_csv, mapping: { "Title" => :title, "Priority" => :priority }, required: [ :title ]
     end
   end
 
@@ -120,6 +141,7 @@ RSpec.describe "data operations" do
       DataOperationsRecord.new(tenant: :north, title: "North ticket", priority: "high"),
       DataOperationsRecord.new(tenant: :south, title: "South ticket", priority: "urgent")
     ]
+    DurableOperationModel.records = []
   end
 
   it "exports only tenant-scoped, field-readable, masked columns and audits the result" do
@@ -129,7 +151,7 @@ RSpec.describe "data operations" do
     )
 
     expect(result).to be_success
-    expect(CSV.parse(result.csv, headers: true).map(&:to_h)).to eq([{ "title" => "NORTH TICKET" }])
+    expect(CSV.parse(result.csv, headers: true).map(&:to_h)).to eq([ { "title" => "NORTH TICKET" } ])
     expect(result.csv).not_to include("high", "South ticket", "urgent")
     expect(auditor.events.last).to have_attributes(operation: :export, profile: :safe_csv, row_count: 1)
   end
@@ -171,5 +193,16 @@ RSpec.describe "data operations" do
     expect(result.outcome).to eq(:audit_failed)
     expect(DataOperationsRecord.records.map(&:title)).to contain_exactly("North ticket", "South ticket")
     expect(store.fetch("upload-43")).to be_nil
+  end
+
+  it "claims a durable tenant-bound import operation before mutation and prevents duplicate writes" do
+    durable_store = KrudminAI::DataOperations::ActiveRecordOperationStore.new(model: DurableOperationModel)
+    importer = KrudminAI::DataOperations::Importer.new(resource:, context:, auditor:, operation_store: durable_store)
+    csv = "Title,Priority\nDurably imported ticket,normal\n"
+
+    expect(importer.commit(profile: :tickets_csv, csv:, idempotency_key: "durable-42")).to be_success
+    expect(importer.commit(profile: :tickets_csv, csv:, idempotency_key: "durable-42")).to be_success
+    expect(DataOperationsRecord.records.map(&:title)).to contain_exactly("North ticket", "South ticket", "Durably imported ticket")
+    expect(durable_store.find(tenant: :north, idempotency_key: "durable-42", kind: :import)).to have_attributes(status: "completed", progress: 0, result: { "outcome" => "success", "row_count" => 1 })
   end
 end

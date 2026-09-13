@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require "json"
+
+root = File.expand_path("..", __dir__)
+ledger = JSON.parse(File.read(File.join(root, "docs/classic_parity_ledger.json")))
+registry = JSON.parse(File.read(File.join(root, "docs/capability_registry.json")))
+
+abort "Unsupported parity ledger schema" unless ledger.fetch("schema_version") == 1
+statuses = ledger.fetch("status_vocabulary")
+prompts = ledger.fetch("prompt_dependencies")
+required_categories = %w[
+  resource_metadata fields associations discovery presentation crud operations operational_context delivery data_operations release_evidence
+]
+items = ledger.fetch("items")
+abort "Parity ledger contains no items" if items.empty?
+abort "Parity ledger is missing capability categories" unless (required_categories - items.map { |item| item.fetch("category") }).empty?
+abort "Parity ledger item IDs are not unique" unless items.map { |item| item.fetch("id") }.uniq.length == items.length
+
+items.each do |item|
+  %w[id category classic_capability krudmin_ai_status owner_prompt dependencies evidence].each { |key| item.fetch(key) }
+  abort "Invalid status for #{item.fetch('id')}" unless statuses.include?(item.fetch("krudmin_ai_status"))
+  abort "Unknown owner prompt for #{item.fetch('id')}" unless prompts.key?(item.fetch("owner_prompt"))
+  abort "Missing evidence requirement for #{item.fetch('id')}" if item.fetch("evidence").empty?
+  abort "Independent proof is incomplete for #{item.fetch('id')}" if item.fetch("krudmin_ai_status") == "independently_proven" && !%w[engine generated_host_request browser_accessibility documentation].all? { |evidence| item.fetch("evidence").include?(evidence) }
+end
+
+%w[P1 P2 P3 P4 P5 P6].each do |prompt|
+  abort "Mandatory prompt #{prompt} has no owned capability" unless items.any? { |item| item.fetch("owner_prompt") == prompt }
+end
+
+progress = ledger.fetch("progress")
+abort "P0 progress record is missing" unless progress.fetch("P0").fetch("state") == "completed"
+abort "P1 progress record is invalid" unless %w[in_progress completed].include?(progress.fetch("P1").fetch("state"))
+
+capability = registry.fetch("capabilities").find { |item| item.fetch("name") == "classic_parity_ledger" }
+abort "Parity ledger capability is not registered" unless capability
+abort "Parity ledger registry status disagrees" unless capability.fetch("status") == "implemented"
+abort "Beta outcome must remain hold" unless registry.fetch("beta_release_decision").fetch("outcome") == "hold"
+
+puts "Classic parity ledger OK: #{items.length} capabilities, beta hold"

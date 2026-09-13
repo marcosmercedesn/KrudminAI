@@ -13,7 +13,7 @@ KrudminAI must provide a resource-owned, extensible field and relationship syste
 The required baseline includes:
 
 - Scalar fields: string, text, email, password, hidden, number, decimal, currency, percentage, boolean, date, time, datetime, JSON, enum, and formatted identifiers.
-- Sensitive and visual fields: masked/reveal-controlled values, rich text, files, images, QR codes, and safe computed displays where a host enables the required Rails integration.
+- Sensitive and visual fields: masked/reveal-controlled values, rich text, files, images, and safe computed displays where a host enables the required Rails integration. QR-code fields are explicitly out of scope.
 - Relationships: local and remote `belongs_to` lookup, direct `has_many`, `has_one`, authorized multi-select relationships, and explicit decisions for any polymorphic or deeper nesting support.
 - Operations: CRUD, archive/restore where configured, declared actions, workflow transitions, inline editing where adapter-safe, and tenant/policy-safe bulk operations.
 - Discovery: typed filters, sorting, pagination, association search, and safe state persistence or saved views when enabled.

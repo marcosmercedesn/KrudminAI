@@ -8,6 +8,16 @@ require "krudmin_ai/observability"
 require "krudmin_ai/navigation_item"
 require "krudmin_ai/access_context"
 require "krudmin_ai/data_operations/profile"
+require "krudmin_ai/fields/adapter"
+require "krudmin_ai/fields/string"
+require "krudmin_ai/fields/scalar"
+require "krudmin_ai/fields/sensitive"
+require "krudmin_ai/fields/reveal"
+require "krudmin_ai/fields/media"
+require "krudmin_ai/fields/belongs_to"
+require "krudmin_ai/fields/remote_belongs_to"
+require "krudmin_ai/fields/has_many_ids"
+require "krudmin_ai/fields/registry"
 require "krudmin_ai/resources/relationship"
 require "krudmin_ai/resources/action"
 require "krudmin_ai/resources/base"
@@ -16,12 +26,17 @@ require "krudmin_ai/resource_controller"
 require "krudmin_ai/query_access_pipeline"
 require "krudmin_ai/data_operations/exporter"
 require "krudmin_ai/data_operations/importer"
+require "krudmin_ai/data_operations/active_record_operation_store"
+require "krudmin_ai/data_operations/operation_runner"
 require "krudmin_ai/ai/context_builder"
 require "krudmin_ai/ai/multi_source_context"
 require "krudmin_ai/ai/prompt_templates"
 require "krudmin_ai/ai/tool_router"
 require "krudmin_ai/ai/provider_router"
 require "krudmin_ai/ai/trace_store"
+require "krudmin_ai/ai/active_record_trace_store"
+require "krudmin_ai/ai/active_record_proposal_store"
+require "krudmin_ai/ai/durable_proposal_executor"
 require "krudmin_ai/ai/assistant"
 require "krudmin_ai/ai/reviewable_extraction"
 require "krudmin_ai/ai/multi_source_analysis"
@@ -29,9 +44,11 @@ require "krudmin_ai/ai/approved_automation"
 require "krudmin_ai/dashboards/base"
 require "krudmin_ai/dashboards/widgets/base"
 require "krudmin_ai/dashboards/widgets/count"
+require "krudmin_ai/dashboards/widgets/chart"
 require "krudmin_ai/dashboards/widgets/table"
 require "krudmin_ai/dashboards/widgets/summary"
 require "krudmin_ai/mutation_pipeline"
+require "krudmin_ai/audit/active_record_store"
 require "krudmin_ai/mutation_response"
 require "krudmin_ai/generators/file_writer"
 require "krudmin_ai/generators/host_manifest"
@@ -42,13 +59,13 @@ require "krudmin_ai/generators/dashboard_contract"
 require "krudmin_ai/generators/showcase_contract"
 
 module KrudminAI
-	class << self
-		def config
-			@config ||= Configuration.new
-		end
+  class << self
+    def config
+      @config ||= Configuration.new
+    end
 
-		def configure
-			yield config
-		end
-	end
+    def configure
+      yield config
+    end
+  end
 end

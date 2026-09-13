@@ -1,0 +1,1100 @@
+{
+  "schema_version": 1,
+  "ledger": "Krudmin Classic functional parity",
+  "source": {
+    "reference": "../krudmin workspace reference",
+    "documentation": "docs/fields.md and .github/copilot-instructions.md",
+    "captured_on": "2026-09-12"
+  },
+  "status_vocabulary": [
+    "implemented",
+    "partial",
+    "missing",
+    "independently_proven"
+  ],
+  "prompt_dependencies": {
+    "P0": [],
+    "P1": [
+      "P0"
+    ],
+    "P2": [
+      "P1"
+    ],
+    "P3": [
+      "P1",
+      "P2"
+    ],
+    "P4": [
+      "P1"
+    ],
+    "P5": [
+      "P1",
+      "P4"
+    ],
+    "P6": [
+      "P1",
+      "P4",
+      "P5"
+    ],
+    "P7": [
+      "P1",
+      "P2",
+      "P4",
+      "P5",
+      "P6"
+    ],
+    "P8": [
+      "P1",
+      "P2",
+      "P3",
+      "P6",
+      "P7"
+    ],
+    "P9": [
+      "P1",
+      "P2",
+      "P6",
+      "P7",
+      "P8"
+    ],
+    "P10": [
+      "P1",
+      "P2",
+      "P7",
+      "P8",
+      "P9"
+    ],
+    "P11": [
+      "P1",
+      "P6",
+      "P9",
+      "P10"
+    ],
+    "P12": [
+      "P1",
+      "P2",
+      "P3",
+      "P7",
+      "P10"
+    ],
+    "P13": [
+      "P1",
+      "P2",
+      "P3",
+      "P4",
+      "P5",
+      "P6",
+      "P7",
+      "P8",
+      "P9",
+      "P10",
+      "P11",
+      "P12"
+    ]
+  },
+  "evidence_requirements": {
+    "engine": "Focused engine contract tests cover the documented behavior and deny paths.",
+    "generated_host_request": "A clean independently generated Rails host proves authenticated request behavior; the companion demo is insufficient.",
+    "browser_accessibility": "Required browser and accessibility proof runs against the independent host.",
+    "documentation": "The public contract, setup prerequisites, security boundaries, and residual exclusions are documented."
+  },
+  "items": [
+    {
+      "id": "resource_metadata",
+      "category": "resource_metadata",
+      "classic_capability": "ResourceManager constants, attribute metadata, labels, scopes, and eager-load declarations",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P1",
+      "dependencies": [
+        "P0"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_string",
+      "category": "fields",
+      "classic_capability": "String field",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P1",
+      "dependencies": [
+        "P0"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_text",
+      "category": "fields",
+      "classic_capability": "Text field",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_email",
+      "category": "fields",
+      "classic_capability": "Email field",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_password_hidden",
+      "category": "fields",
+      "classic_capability": "Password and hidden fields",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_number_decimal_currency_percentage_identifier",
+      "category": "fields",
+      "classic_capability": "Number, decimal, currency, percentage, and formatted identifier fields",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_boolean",
+      "category": "fields",
+      "classic_capability": "Boolean field",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_date_time_datetime",
+      "category": "fields",
+      "classic_capability": "Date, time, and datetime fields",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_json_enum",
+      "category": "fields",
+      "classic_capability": "JSON and enum fields",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P2",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_sensitive_reveal",
+      "category": "fields",
+      "classic_capability": "Sensitive masked and reveal-controlled values",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P3",
+      "dependencies": [
+        "P1",
+        "P2"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_rich_text",
+      "category": "fields",
+      "classic_capability": "Rich text field",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P3",
+      "dependencies": [
+        "P1",
+        "P2"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "field_file_image_computed",
+      "category": "fields",
+      "classic_capability": "File, image, and computed display fields (QR code fields are excluded from scope)",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P3",
+      "dependencies": [
+        "P1",
+        "P2"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "association_belongs_to_local",
+      "category": "associations",
+      "classic_capability": "Local belongs-to selector with labels and links",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P4",
+      "dependencies": [
+        "P1"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "association_belongs_to_remote",
+      "category": "associations",
+      "classic_capability": "Remote large-dataset belongs-to lookup",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P5",
+      "dependencies": [
+        "P1",
+        "P4"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "association_has_many",
+      "category": "associations",
+      "classic_capability": "Has-many nested editing",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P6",
+      "dependencies": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "association_has_one_belongs_to_one",
+      "category": "associations",
+      "classic_capability": "Has-one and nested belongs-to editing",
+      "krudmin_ai_status": "missing",
+      "owner_prompt": "P6",
+      "dependencies": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "association_has_many_ids",
+      "category": "associations",
+      "classic_capability": "Authorized has-many IDs multi-select",
+      "krudmin_ai_status": "missing",
+      "owner_prompt": "P6",
+      "dependencies": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "association_polymorphic",
+      "category": "associations",
+      "classic_capability": "Polymorphic associations",
+      "krudmin_ai_status": "missing",
+      "owner_prompt": "P6",
+      "dependencies": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "documentation"
+      ]
+    },
+    {
+      "id": "search_filters_sort_pagination",
+      "category": "discovery",
+      "classic_capability": "Search, typed filters, sorting, reset behavior, and pagination",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P7",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "dense_presentation",
+      "category": "presentation",
+      "classic_capability": "List, form, show layouts, sections, themes, and record detail presentation",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P8",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P3",
+        "P6",
+        "P7"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "crud_responses",
+      "category": "crud",
+      "classic_capability": "CRUD HTML, JSON, and remote response flows",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P8",
+      "dependencies": [
+        "P1",
+        "P2"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "actions_workflows_inline_bulk",
+      "category": "operations",
+      "classic_capability": "Declared actions, workflows, inline editing, and bulk operations",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P9",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P6",
+        "P7",
+        "P8"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "dashboards",
+      "category": "operational_context",
+      "classic_capability": "Dashboards and authorized drill-downs",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P10",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P7",
+        "P8",
+        "P9"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "audit_ui",
+      "category": "operational_context",
+      "classic_capability": "Audit trail UI and change diffs",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P10",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P7",
+        "P8",
+        "P9"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "navigation",
+      "category": "presentation",
+      "classic_capability": "Authorized administration navigation",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P8",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P7"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "themes",
+      "category": "presentation",
+      "classic_capability": "Theme-aware views",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P8",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "generators",
+      "category": "delivery",
+      "classic_capability": "Install, resource, action, dashboard, and documentation generators",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P11",
+      "dependencies": [
+        "P1",
+        "P6",
+        "P9",
+        "P10"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "documentation"
+      ]
+    },
+    {
+      "id": "migration",
+      "category": "delivery",
+      "classic_capability": "Classic migration audit and supported migration behavior",
+      "krudmin_ai_status": "implemented",
+      "owner_prompt": "P11",
+      "dependencies": [
+        "P1",
+        "P6",
+        "P9",
+        "P10"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "documentation"
+      ]
+    },
+    {
+      "id": "imports_exports_ai_operations",
+      "category": "data_operations",
+      "classic_capability": "Import/export and policy-safe AI operations",
+      "krudmin_ai_status": "partial",
+      "owner_prompt": "P12",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P3",
+        "P7",
+        "P10"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    },
+    {
+      "id": "independent_release_proof",
+      "category": "release_evidence",
+      "classic_capability": "Independent host parity and release evidence",
+      "krudmin_ai_status": "missing",
+      "owner_prompt": "P13",
+      "dependencies": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P5",
+        "P6",
+        "P7",
+        "P8",
+        "P9",
+        "P10",
+        "P11",
+        "P12"
+      ],
+      "evidence": [
+        "engine",
+        "generated_host_request",
+        "browser_accessibility",
+        "documentation"
+      ]
+    }
+  ],
+  "progress": {
+    "P0": {
+      "state": "completed",
+      "implementation_files": [
+        "docs/classic_parity_ledger.json",
+        "bin/verify_classic_parity",
+        "docs/classic_parity_ledger.md"
+      ],
+      "tests": [
+        {
+          "command": "ruby bin/verify_classic_parity",
+          "result": "passed: Classic parity ledger OK: 30 capabilities, beta hold"
+        },
+        {
+          "command": "ruby -rjson -e 'JSON.parse(File.read(\"docs/capability_registry.json\")); puts \"capability registry JSON OK\"'",
+          "result": "passed: capability registry JSON OK"
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed: no output"
+        }
+      ],
+      "independent_generated_host_evidence": "Not applicable: P0 changes documentation and verification only.",
+      "browser_accessibility_evidence": "Not applicable: P0 changes documentation and verification only.",
+      "remaining_risks": [
+        "The inventory is based on the local Classic documentation and must be updated when Classic public behavior changes."
+      ],
+      "next_unfinished_acceptance_criterion": "P1: generic rendering must select registered string adapters through declared and inferred fields, with independent generated-host proof."
+    },
+    "P1": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/fields/adapter.rb",
+        "lib/krudmin_ai/fields/string.rb",
+        "lib/krudmin_ai/fields/registry.rb",
+        "lib/krudmin_ai/resources/base.rb",
+        "app/views/krudmin_ai/resources/_form.html.erb",
+        "app/views/krudmin_ai/ui/_field.html.erb",
+        "app/views/krudmin_ai/ui/_list_table.html.erb",
+        "app/views/krudmin_ai/ui/_record_details.html.erb",
+        "lib/krudmin_ai/resource_controller.rb",
+        "lib/krudmin_ai/data_operations/exporter.rb",
+        "lib/krudmin_ai/ai/context_builder.rb"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb",
+          "result": "passed: 3 examples, 0 failures"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/data_operations_spec.rb",
+          "result": "passed: 4 examples, 0 failures"
+        },
+        {
+          "command": "cd demo && bundle exec bin/rails test test/integration/ticket_access_test.rb -n /field_policies_hide_data/",
+          "result": "passed: 1 run, 27 assertions, 0 failures, 0 errors, 0 skips; companion-only renderer regression evidence"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: 1 run, 19 assertions, 0 failures, 0 errors, 0 skips; generated field-adapter host conformance OK"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: bin/verify_field_adapters_host creates a disposable Rails host, invokes the resource generator, and proves declared and inferred string adapters through authenticated index, new, and show requests.",
+      "browser_accessibility_evidence": "Missing.",
+      "remaining_risks": [
+        "Only the string adapter is implemented.",
+        "The safe schema inference fallback currently selects string until P2 maps additional column types.",
+        "A clean independently generated host has not proved declared and inferred adapter selection."
+      ],
+      "next_unfinished_acceptance_criterion": "P2: implement the remaining scalar adapters and their locale, time-zone, precision, enum, JSON, password, and hidden-value contracts."
+    },
+    "P2": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/fields/scalar.rb",
+        "lib/krudmin_ai/fields/registry.rb",
+        "lib/krudmin_ai/mutation_pipeline.rb",
+        "spec/lib/krudmin_ai/fields/registry_spec.rb",
+        "bin/verify_field_adapters_host",
+        "docs/scalar_field_adapters.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb",
+          "result": "passed: 4 examples, 0 failures"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb spec/lib/krudmin_ai/data_operations_spec.rb",
+          "result": "passed: 8 examples, 0 failures"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb",
+          "result": "passed: 5 examples, 0 failures"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: 1 run, 86 assertions, 0 failures, 0 errors, 0 skips; generated host proves P2 native controls, populated list/detail formatting, JSON mutation serialization, CSV export, AI context, and password/hidden redaction"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: 1 run, 93 assertions, 0 failures, 0 errors, 0 skips; generated host additionally proves denied scalar reads omit values and forged denied scalar writes are rejected without persistence"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: generated host proves every P2 adapter declaration and native control plus populated list/detail formatting, JSON mutation serialization, CSV export, AI context, password/hidden redaction, denied scalar read omission, and forged denied scalar write rejection without persistence.",
+      "browser_accessibility_evidence": "Owned by P13 after P7 field-driven discovery and P8 presentation work; P2 establishes native accessible controls and has no standalone browser dependency.",
+      "remaining_risks": [
+        "P7 must consume scalar filter definitions in the canonical protected query/UI contract.",
+        "P13 must provide independent browser/accessibility evidence across the completed adapter surface."
+      ],
+      "next_unfinished_acceptance_criterion": "P3: implement sensitive, rich, and media field adapters."
+    },
+    "P3": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/fields/sensitive.rb",
+        "lib/krudmin_ai/fields/reveal.rb",
+        "lib/krudmin_ai/fields/media.rb",
+        "lib/krudmin_ai/fields/registry.rb",
+        "lib/krudmin_ai/resources/base.rb",
+        "spec/lib/krudmin_ai/fields/registry_spec.rb",
+        "spec/lib/krudmin_ai/fields/reveal_spec.rb",
+        "spec/lib/krudmin_ai/fields/media_spec.rb"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb",
+          "result": "passed: 6 examples, 0 failures; masked values are redacted from every indirect adapter serialization path and reveal authorization denies by default"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/reveal_spec.rb",
+          "result": "passed: 2 examples, 0 failures; reveal requires separate read and reveal authorization, audits only metadata, and denies a missing reveal decision"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/media_spec.rb",
+          "result": "passed: 2 examples, 0 failures; rich text and attachments require explicit host metadata, while computed fields reject assignment"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: 1 run, 117 assertions, 0 failures, 0 errors, 0 skips; generated Rails host proves Action Text and Active Storage controls and rendering, computed label rendering, masked list/JSON/CSV/AI redaction, and denied reveal without audit creation"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: generated Rails host provisions Action Text and Active Storage, renders rich notes, an image, a file link, and a computed label, and proves masked indirect redaction plus denied reveal without an audit event.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P13 must provide independent browser/accessibility evidence across the completed adapter surface."
+      ],
+      "next_unfinished_acceptance_criterion": "P4: implement the local belongs-to lookup adapter."
+    },
+    "P4": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/fields/belongs_to.rb",
+        "lib/krudmin_ai/fields/adapter.rb",
+        "lib/krudmin_ai/fields/registry.rb",
+        "lib/krudmin_ai/mutation_pipeline.rb",
+        "lib/krudmin_ai/resource_controller.rb",
+        "app/views/krudmin_ai/ui/_field.html.erb",
+        "app/views/krudmin_ai/ui/_list_table.html.erb",
+        "app/views/krudmin_ai/ui/_record_details.html.erb",
+        "spec/lib/krudmin_ai/fields/registry_spec.rb",
+        "spec/lib/krudmin_ai/mutation_pipeline_spec.rb",
+        "bin/verify_field_adapters_host",
+        "docs/belongs_to_field_adapter.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb spec/lib/krudmin_ai/mutation_pipeline_spec.rb",
+          "result": "passed: 20 examples, 0 failures; protected options, unreadable labels, links, and forged foreign-key denial covered"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: 1 run, 131 assertions, 0 failures, 0 errors, 0 skips; generated host proves rank, province, and recruiter lookup scoping and forged cross-tenant rejection"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: a disposable generated host provisions Rank, Province, and User targets. Authenticated forms show only tenant- and policy-scoped, label-readable options; detail rendering links authorized ranks; a forged cross-tenant rank update is forbidden without persistence or an audit event.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P5 must add remote lookup for large collections.",
+        "P7 must consume association filter metadata in the canonical filter query contract.",
+        "P13 must provide independent browser/accessibility evidence."
+      ],
+      "next_unfinished_acceptance_criterion": "P5: implement the remote belongs-to combobox and authenticated lookup endpoint."
+    },
+    "P5": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/fields/remote_belongs_to.rb",
+        "lib/krudmin_ai/fields/registry.rb",
+        "lib/krudmin_ai/resource_controller.rb",
+        "lib/krudmin_ai/generators/resource_contract.rb",
+        "lib/krudmin_ai/generators/install_contract.rb",
+        "app/javascript/krudmin_ai/controllers/remote_belongs_to_controller.js",
+        "app/javascript/krudmin_ai/index.js",
+        "app/views/krudmin_ai/ui/_field.html.erb",
+        "bin/verify_field_adapters_host",
+        "docs/remote_belongs_to_field_adapter.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/resource_controller_spec.rb spec/lib/krudmin_ai/generators",
+          "result": "passed: 16 examples, 0 failures; generated namespaced lookup routes are covered"
+        },
+        {
+          "command": "node --check app/javascript/krudmin_ai/controllers/remote_belongs_to_controller.js",
+          "result": "passed: JavaScript syntax OK"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: 1 run, 145 assertions, 0 failures, 0 errors, 0 skips; remote lookup minimum length, page bound, tenant exclusion, result limit, and label restoration covered"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: a generated Rails host uses a 12-record remote recruiter fixture and proves authenticated remote lookup result limits, pagination metadata, minimum query behavior, cross-tenant exclusion, and selected-label restoration. P4 covers forged submitted ID denial before persistence/audit.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases; the isolated controller implements keyboard, loading, no-result, error, cancellation, and live-announcement behavior.",
+      "remaining_risks": [
+        "P13 must independently exercise the remote combobox interaction in a browser.",
+        "P7 must consume association lookup metadata for protected filtering."
+      ],
+      "next_unfinished_acceptance_criterion": "P6: complete has-one, nested belongs-to, and authorized multi-select relationship adapters."
+    },
+    "P6": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/resources/relationship.rb",
+        "lib/krudmin_ai/resources/base.rb",
+        "lib/krudmin_ai/mutation_pipeline.rb",
+        "app/views/krudmin_ai/resources/_form.html.erb",
+        "app/views/krudmin_ai/resources/_has_one.html.erb",
+        "lib/krudmin_ai/fields/has_many_ids.rb",
+        "spec/lib/krudmin_ai/resources/relationship_spec.rb",
+        "spec/lib/krudmin_ai/fields/registry_spec.rb"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/resource_controller_spec.rb spec/lib/krudmin_ai/resources/relationship_spec.rb spec/lib/krudmin_ai/mutation_pipeline_spec.rb",
+          "result": "passed: 19 examples, 0 failures"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/registry_spec.rb",
+          "result": "passed: 8 examples, 0 failures; multi-select normalization and forged ID denial covered"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: the disposable generated host proves Car/Passenger direct has-many and Car/Insurance has-one creation, validation-retained rows, denied child fields, cross-tenant child-ID rejection, and removal; social-account validation, denied-field, cross-tenant-ID, and removal workflows; Widget nested protected Rank lookup; and authorized Team multi-select assignment with cross-tenant rejection without audit leakage.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P13 must independently exercise relationship editing in a browser.",
+        "Polymorphic and arbitrary-depth nested editing remain intentionally unsupported."
+      ],
+      "next_unfinished_acceptance_criterion": "P7: move field filter metadata into the canonical protected search, filter, sorting, pagination, and reset behavior."
+    },
+    "P7": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/fields/string.rb",
+        "lib/krudmin_ai/fields/scalar.rb",
+        "lib/krudmin_ai/resources/filter.rb",
+        "lib/krudmin_ai/resources/base.rb",
+        "lib/krudmin_ai/query_access_pipeline.rb",
+        "lib/krudmin_ai/resource_controller.rb",
+        "app/views/krudmin_ai/ui/_filter_form.html.erb",
+        "app/views/krudmin_ai/ui/_list_table.html.erb",
+        "docs/field_driven_discovery.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/query_access_pipeline_spec.rb spec/lib/krudmin_ai/resource_controller_spec.rb spec/lib/krudmin_ai/fields/registry_spec.rb",
+          "result": "passed: focused field metadata, range query, controller, and adapter contract tests"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: generated host proves text, enum, boolean, numeric/date/datetime range, protected association filtering, sorting, pagination, reset, malformed payload safety, and tenant isolation"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: the disposable generated host uses filter_field declarations and proves populated discovery results, tenant-safe association selection, date/datetime formatting and ranges, sorting, pagination, reset, and malformed range requests without server errors.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P13 must independently exercise filter and sort controls in a browser.",
+        "Saved views are intentionally not persisted pending an explicit owner/tenant privacy and audit contract."
+      ],
+      "next_unfinished_acceptance_criterion": "P8: add responsive dense form, list, and detail presentation metadata and browser evidence."
+    },
+    "P8": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/resources/base.rb",
+        "app/views/krudmin_ai/resources/_form.html.erb",
+        "app/views/krudmin_ai/ui/_list_table.html.erb",
+        "app/assets/stylesheets/krudmin_ai/application.css",
+        "docs/presentation.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/resources/base_spec.rb spec/lib/krudmin_ai/resource_controller_spec.rb",
+          "result": "passed: form section and list priority metadata contracts"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: generated Widget host renders constrained form sections and primary/secondary list priority semantics"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: the disposable generated host renders labelled form sections, preserves all configured form fields, and renders semantic primary and secondary table priorities alongside existing adapter formatting and relationship controls.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P13 must independently verify 1440px, 768px, and 390px layouts, focus behavior, and accessibility assertions."
+      ],
+      "next_unfinished_acceptance_criterion": "P9: complete declared actions, state transitions, inline editing, and scoped bulk operations."
+    },
+    "P9": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/resources/action.rb",
+        "lib/krudmin_ai/resources/base.rb",
+        "lib/krudmin_ai/resource_controller.rb",
+        "lib/krudmin_ai/generators/resource_contract.rb",
+        "app/views/krudmin_ai/resources/show.html.erb",
+        "app/views/krudmin_ai/resources/index.html.erb",
+        "app/views/krudmin_ai/ui/_list_table.html.erb",
+        "docs/actions_and_bulk_operations.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/resources/base_spec.rb spec/lib/krudmin_ai/resource_controller_spec.rb spec/lib/krudmin_ai/mutation_pipeline_spec.rb spec/lib/krudmin_ai/generators/resource_contract_spec.rb",
+          "result": "passed: declared action metadata, scoped bulk declaration, routing, controller, and mutation contracts"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: generated host proves declared state transition success and invalid repeat rejection, inline PATCH, bulk controls, approved multi-record transition, and cross-tenant bulk rejection without audit leakage"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: the disposable generated host renders declared action and bulk controls, successfully runs audited member and bulk publish transitions, rejects invalid repeated transitions and cross-tenant bulk IDs, and updates an inline-editable field through the normal mutation path.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P13 must independently verify confirmations, prohibited controls, Turbo outcomes, and keyboard interaction."
+      ],
+      "next_unfinished_acceptance_criterion": "P10: implement dashboard widgets and durable authorized audit product surfaces."
+    },
+    "P10": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/dashboards/widgets/chart.rb",
+        "lib/krudmin_ai/dashboards/widgets/table.rb",
+        "lib/krudmin_ai/dashboards/base.rb",
+        "lib/krudmin_ai/audit/active_record_store.rb",
+        "docs/dashboards_and_audit.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/dashboards/widgets_spec.rb spec/lib/krudmin_ai/audit/active_record_store_spec.rb",
+          "result": "passed: scoped count, summary, table, chart, drill-down, adapter formatting, audit search, and redaction contracts"
+        },
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: generated host proves tenant-safe dashboard table/chart output, filtered drill-down metadata, durable audit persistence, tenant-scoped audit search, and sensitive diff redaction"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: generated dashboard widgets return only north-tenant rows with adapter-formatted currency and declared drill-down filters; generated Active Record audit logs retain the allowed tenant history and redact sensitive metadata while preserving safe diffs.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "P13 must independently verify dashboard and activity-history browser rendering and accessibility."
+      ],
+      "next_unfinished_acceptance_criterion": "P11: update generators and migration tooling for the completed runtime."
+    },
+    "P11": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/generators/resource_contract.rb",
+        "lib/generators/krudmin_ai/resource/resource_generator.rb",
+        "lib/krudmin_ai/migration/legacy_resource_audit.rb",
+        "bin/verify_generator_migration_host",
+        "docs/generators_and_migration.md",
+        "docs/migration.md"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/generators/resource_contract_spec.rb",
+          "result": "passed: 5 examples, 0 failures"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/migration/legacy_resource_audit_spec.rb",
+          "result": "passed: 3 examples, 0 failures"
+        },
+        {
+          "command": "ruby bin/verify_generator_migration_host",
+          "result": "passed: disposable Rails host verifies typed Member generation and route idempotence, precise Classic Car audit output, and a reviewed tenant-scoped Car migration request: 1 run, 5 assertions, 0 failures, 0 errors, 0 skips"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: a clean Rails host generates an idempotent typed Member resource, audits a Classic Car manager containing scalar, HasMany, HasOne, and StateMachine metadata, and serves a manually reviewed tenant-scoped Car migration without exposing another tenant's row.",
+      "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
+      "remaining_risks": [
+        "Association and workflow generator stubs intentionally deny access until a host supplies explicit policies and tenant checks.",
+        "P13 must provide consolidated generated-host browser/accessibility and release evidence."
+      ],
+      "next_unfinished_acceptance_criterion": "P12: add durable import/export and AI operation lifecycle delivery."
+    },
+    "P12": {
+      "state": "completed",
+      "implementation_files": [
+        "lib/krudmin_ai/data_operations/active_record_operation_store.rb",
+        "lib/krudmin_ai/data_operations/operation_runner.rb",
+        "lib/krudmin_ai/ai/active_record_trace_store.rb",
+        "lib/krudmin_ai/ai/active_record_proposal_store.rb",
+        "lib/krudmin_ai/resource_controller.rb"
+      ],
+      "tests": [
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/data_operations_spec.rb spec/lib/krudmin_ai/data_operations/active_record_operation_store_spec.rb spec/lib/krudmin_ai/data_operations/operation_runner_spec.rb",
+          "result": "passed: durable idempotency, lifecycle, cancellation, and importer compatibility"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/ai/active_record_trace_store_spec.rb spec/lib/krudmin_ai/ai/active_record_proposal_store_spec.rb",
+          "result": "passed: redacted tenant-scoped trace and review proposal persistence"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/ai/durable_proposal_executor_spec.rb",
+          "result": "passed: only a same-tenant approved proposal delegates to ApprovedAutomation; the normal approval, trace, authorization, validation, and audit path remains required"
+        },
+        {
+          "command": "ruby bin/verify_data_operations_host",
+          "result": "passed: 1 run, 8 assertions, 0 failures, 0 errors, 0 skips; generated host proves tenant-scoped CSV export and durable idempotent import commit"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed: ruby bin/verify_data_operations_host provisions a clean Rails host and proves tenant-scoped CSV export plus durable idempotent import commit with one persisted north-tenant row.",
+      "browser_accessibility_evidence": "Passed through P13: the independently generated host verifies generic Spanish discovery controls, named controls, keyboard focus, and responsive rendering at desktop, tablet, and mobile widths.",
+      "remaining_risks": [
+        "Hosts must provide Active Record models with the documented unique operation index and configure durable stores."
+      ],
+      "next_unfinished_acceptance_criterion": null
+    },
+    "P13": {
+      "state": "completed",
+      "implementation_files": [
+        "config/locales/en.yml",
+        "config/locales/es.yml",
+        "app/views/krudmin_ai/resources/index.html.erb",
+        "app/views/krudmin_ai/resources/_form.html.erb",
+        "app/views/krudmin_ai/ui/_filter_form.html.erb",
+        "app/views/krudmin_ai/ui/_list_table.html.erb",
+        "app/views/krudmin_ai/ui/_pagination.html.erb",
+        "bin/verify_field_adapters_host",
+        ".github/workflows/ci.yml"
+      ],
+      "tests": [
+        {
+          "command": "ruby bin/verify_field_adapters_host",
+          "result": "passed: independently generated Rails host verifies protected resource behavior and runs a Selenium browser test in Spanish at 1440x900, 768x1024, and 390x844; landmarks, named controls, focus indicators, and absence of horizontal overflow are asserted"
+        },
+        {
+          "command": "bundle exec rubocop && ruby bin/verify_classic_parity && ruby bin/verify_generator_migration_host && ruby bin/verify_data_operations_host",
+          "result": "passed: root lint, parity ledger validation, generator/migration host verification, and durable data operations host verification"
+        },
+        {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/data_operations_spec.rb spec/lib/krudmin_ai/data_operations/active_record_operation_store_spec.rb spec/lib/krudmin_ai/data_operations/operation_runner_spec.rb spec/lib/krudmin_ai/ai/active_record_trace_store_spec.rb spec/lib/krudmin_ai/ai/active_record_proposal_store_spec.rb spec/lib/krudmin_ai/ai/durable_proposal_executor_spec.rb",
+          "result": "passed: 13 examples, 0 failures; durable idempotency, lifecycle cancellation, redacted traces, tenant-scoped review proposals, and approved automation delegation preserve the normal authorization, validation, audit, and pre-mutation trace path"
+        }
+      ],
+      "independent_generated_host_evidence": "Passed locally: ruby bin/verify_field_adapters_host creates a disposable Rails host with sanitized member-style records, ranks, provinces, users, teams, attachments, masked IDs, protected local and remote relationships, nested social accounts, statuses, workflows, advanced filters, dashboard/audit contracts, and adapter serialization. Generator/migration and data-operation hosts provide complementary generated-host proof.",
+      "browser_accessibility_evidence": "Passed locally: the independently generated host runs a headless Chrome system test at desktop, tablet, and mobile viewports under es locale, asserting semantic main/pagination landmarks, Spanish named controls, keyboard focus outline, accessible visible controls, and no document-level horizontal overflow.",
+      "remaining_risks": [
+        "Remote inspection on 2026-09-12 found origin https://github.com/marcosmercedesn/KrudminAI.git but gh run list --limit 10 returned no runs; the newly configured blocking CI lanes therefore have no remote passing history for this revision. Beta remains on hold pending that external evidence and maintainer approval."
+      ],
+      "next_unfinished_acceptance_criterion": null
+    }
+  }
+}

@@ -52,7 +52,7 @@ module KrudminAI
 
       def failure(status, detail, prompt_template)
         trace(status, prompt_template, nil, [])
-        AnalysisResult.new(status, nil, [], nil, [{ code: status, detail: }])
+        AnalysisResult.new(status, nil, [], nil, [ { code: status, detail: } ])
       end
 
       def trace(status, prompt_template, fingerprint, references)

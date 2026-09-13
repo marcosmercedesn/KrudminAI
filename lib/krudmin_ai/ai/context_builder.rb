@@ -28,7 +28,7 @@ module KrudminAI
 
       def serialize(record)
         resource.ai_context_fields.filter_map do |field, serializer|
-          [field, serializer.call(record)] if resource.field_readable?(field, record, context)
+          [ field, serializer.call(record) ] if resource.field_readable?(field, record, context) && resource.field_adapter(field).serializable?
         end.to_h
       end
     end

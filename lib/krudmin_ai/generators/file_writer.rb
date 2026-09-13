@@ -24,7 +24,7 @@ module KrudminAI
         absolute_path = File.join(destination_root, path)
         start_marker = "# BEGIN #{marker}"
         end_marker = "# END #{marker}"
-        block = [start_marker, contents.rstrip, end_marker].join("\n") + "\n"
+        block = [ start_marker, contents.rstrip, end_marker ].join("\n") + "\n"
         existing = File.exist?(absolute_path) ? File.read(absolute_path) : ""
         pattern = /#{Regexp.escape(start_marker)}.*?#{Regexp.escape(end_marker)}\n?/m
         replacement = if existing.match?(pattern)

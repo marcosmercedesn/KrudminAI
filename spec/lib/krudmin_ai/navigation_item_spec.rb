@@ -31,14 +31,14 @@ RSpec.describe KrudminAI::NavigationItem do
   end
 
   it "evaluates visibility with the same access context supplied by the controller" do
-    context = Struct.new(:roles).new([:manager])
+    context = Struct.new(:roles).new([ :manager ])
     item = described_class.new(label: "Admin", route: :admin_path, visible: ->(access_context) { access_context.roles.include?(:manager) })
 
     expect(item).to be_visible(context)
   end
 
   it "fails closed when a visibility predicate raises or does not return true" do
-    context = Struct.new(:roles).new([:manager])
+    context = Struct.new(:roles).new([ :manager ])
     raising_item = described_class.new(label: "Admin", route: :admin_path, visible: ->(_access_context) { raise "unavailable" })
     ambiguous_item = described_class.new(label: "Reports", route: :reports_path, visible: ->(_access_context) { "yes" })
 

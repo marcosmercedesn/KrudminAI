@@ -33,5 +33,6 @@ RSpec.describe KrudminAI::ResourceController do
     expect(controller.send(:namespaced_route_helper, "new_order_path")).to eq("new_admin_order_path")
     expect(controller.send(:namespaced_route_helper, "edit_order_path")).to eq("edit_admin_order_path")
     expect(controller.send(:namespaced_route_helper, "action_order_path")).to eq("action_admin_order_path")
+    expect(controller.send(:namespaced_route_helper, "lookup_field_orders_path")).to eq("lookup_field_admin_orders_path")
   end
 end

@@ -26,6 +26,7 @@ module KrudminAI
         raise AuditSinkRequired unless auditor.respond_to?(:record)
 
         fields = resource.readable_fields(export_profile.fields, resource.model_class.new, context)
+          .select { |field| resource.field_adapter(field).serializable? }
         raise AuthorizationDenied if fields.empty?
 
         row_count = 0
@@ -63,12 +64,12 @@ module KrudminAI
       end
 
       def serialize(record, field, mask)
-        value = record.public_send(field)
+        value = resource.field_adapter(field).export_value(record)
         mask ? mask.call(value, record, context) : value
       end
 
       def failure(outcome, detail)
-        ExportResult.new(outcome, nil, 0, [{ code: outcome, detail: }])
+        ExportResult.new(outcome, nil, 0, [ { code: outcome, detail: } ])
       end
     end
   end

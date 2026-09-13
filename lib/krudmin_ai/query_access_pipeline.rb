@@ -87,7 +87,7 @@ module KrudminAI
     def paginate(relation)
       options = resource.pagination_options
       page = positive_integer(params[:page], fallback: 1)
-      per_page = [positive_integer(params[:per_page], fallback: options[:per_page]), options[:max_per_page]].min
+      per_page = [ positive_integer(params[:per_page], fallback: options[:per_page]), options[:max_per_page] ].min
       QueryResult.new(relation.limit(per_page).offset((page - 1) * per_page), page, per_page)
     end
 
@@ -96,21 +96,21 @@ module KrudminAI
     end
 
     def normalized_filter_value(value, definition)
-      return [value, nil] unless value.respond_to?(:to_h)
+      return [ value, nil ] unless value.respond_to?(:to_h)
 
       values = value.to_h
-      if definition.type == :date_range
+      if %i[number_range date_range datetime_range].include?(definition.type)
         range = { from: values[:from] || values["from"], to: values[:to] || values["to"] }.compact
-        return [nil, nil] if range.values.all? { |item| item.to_s.empty? }
+        return [ nil, nil ] if range.values.all? { |item| item.to_s.empty? }
 
-        return [range, :between]
+        return [ range, :between ]
       end
 
       operator = values[:operator] || values["operator"] || definition.operators.first
       filter_value = values[:value] || values["value"]
-      return [nil, nil] if filter_value.to_s.empty? || !definition.operator?(operator)
+      return [ nil, nil ] if filter_value.to_s.empty? || !definition.operator?(operator)
 
-      [filter_value, operator.to_sym]
+      [ filter_value, operator.to_sym ]
     end
 
     def requested_sort

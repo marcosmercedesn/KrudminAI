@@ -9,7 +9,8 @@ module KrudminAI
           :signed_in?, :navigation_items, :authorized_action?, :field_readable?, :field_writable?,
           :readable_fields, :readable_relationship_fields, :relationship_field_writable?, :resource_actions,
             :resource_action_path, :pagination_path, :filter_current_value, :filter_options, :relationship_records,
-            :readable_relationship_display_fields
+            :readable_relationship_display_fields, :krudmin_ai_access_context, :krudmin_ai_authorization_provider,
+            :remote_lookup_field_path, :reset_filters_path, :sort_path, :sort_direction, :sort_active?, :bulk_action_path
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy restore perform_action]
@@ -66,6 +67,63 @@ module KrudminAI
       persist(action.name)
     end
 
+    def perform_bulk_action
+      action = resource.action_for(params[:action_name])
+      raise ActionController::RoutingError, "Unknown bulk resource action" unless action && resource.bulk_actions.include?(action.name)
+
+      records = bulk_records
+      authorize_bulk_records!(action, records)
+      results = records.map { |record| mutation_pipeline.call(operation: action.name, record:) }
+      return render_bulk_failure(results) unless results.all?(&:success?)
+
+      respond_to do |format|
+        format.html { redirect_to collection_path, notice: "#{records.length} #{resources_label.downcase} updated and audited." }
+        format.json { render json: { outcome: "success", data: records.map { |record| serialize_json_record(record) } } }
+      end
+    rescue AuthenticationRequired, TenantRequired, AuthorizationDenied, ScopeViolation
+      respond_to do |format|
+        format.html { head :forbidden }
+        format.json { render json: { outcome: "forbidden", errors: [ { code: "forbidden", detail: "You are not authorized to perform this action" } ] }, status: :forbidden }
+      end
+    end
+
+    def lookup_field
+      adapter = resource.field_adapter(params[:field_name])
+      raise ActionController::RoutingError, "Unknown remote lookup field" unless adapter.is_a?(Fields::RemoteBelongsTo)
+
+      page = Integer(params[:page], exception: false) || 1
+      raise ActionController::BadRequest, "Invalid lookup page" unless page.positive?
+
+      render json: adapter.lookup_results(
+        query: params[:q],
+        page:,
+        context: access_context,
+        authorization_provider:
+      )
+    rescue AuthenticationRequired, TenantRequired, AuthorizationDenied, ScopeViolation
+      render json: { error: "Not authorized" }, status: :forbidden
+    end
+
+    def export
+      result = DataOperations::Exporter.new(
+        resource:,
+        context: access_context,
+        auditor: audit_sink,
+        authorization_provider:
+      ).call(profile: params[:profile], relation: resource.model_class.all, params: query_params)
+      return render json: { outcome: result.outcome, errors: result.errors }, status: export_status(result) unless result.success?
+
+      send_data result.csv, filename: "#{route_key}-#{params[:profile]}.csv", type: "text/csv", disposition: "attachment"
+    end
+
+    def import_preview
+      render_import_result(importer.preview(profile: params[:profile], csv: import_csv))
+    end
+
+    def import_commit
+      render_import_result(importer.commit(profile: params[:profile], csv: import_csv, idempotency_key: request.headers["Idempotency-Key"]))
+    end
+
     def model
       @model
     end
@@ -92,6 +150,22 @@ module KrudminAI
 
     def pagination_path(page)
       route_helper("#{route_key}_path", query_params.merge(page: page))
+    end
+
+    def reset_filters_path
+      route_helper("#{route_key}_path")
+    end
+
+    def sort_path(attribute)
+      route_helper("#{route_key}_path", query_params.merge(page: nil, sort: "#{attribute}:#{sort_direction(attribute)}"))
+    end
+
+    def sort_direction(attribute)
+      sort_active?(attribute) && params[:sort].to_s.end_with?(":asc") ? :desc : :asc
+    end
+
+    def sort_active?(attribute)
+      params[:sort].to_s.split(":", 2).first == attribute.to_s
     end
 
     def resource_label
@@ -138,12 +212,17 @@ module KrudminAI
       route_helper("action_#{route_key.singularize}_path", record, action_name: action)
     end
 
+    def bulk_action_path(action)
+      route_helper("bulk_action_#{route_key}_path", action_name: action)
+    end
+
     def relationship_field_writable?(relationship, field, record)
       relationship.field_writable?(field, record, access_context)
     end
 
     def relationship_records(relationship)
       records = model.public_send(relationship.name)
+      return [ records ].compact if relationship.singular?
       return records unless relationship.order && records.respond_to?(:order)
 
       records.order(relationship.order)
@@ -155,7 +234,8 @@ module KrudminAI
 
     def filter_current_value(definition, part = :value)
       value = params.dig(:filters, definition.name) || params.dig("filters", definition.name.to_s)
-      return value if part == :value && !value.respond_to?(:[])
+      return value if part == :value && !value.respond_to?(:to_unsafe_h) && !value.is_a?(Hash)
+      return unless value.respond_to?(:[])
 
       value&.[](part) || value&.[](part.to_s)
     end
@@ -176,6 +256,18 @@ module KrudminAI
 
     def navigation_items
       KrudminAI.config.navigation_items.select { |item| item.visible?(access_context) }
+    end
+
+    def krudmin_ai_access_context
+      access_context
+    end
+
+    def krudmin_ai_authorization_provider
+      authorization_provider
+    end
+
+    def remote_lookup_field_path(field)
+      route_helper("lookup_field_#{route_key}_path", field_name: field)
     end
 
     private
@@ -251,6 +343,35 @@ module KrudminAI
       render_html_mutation(response, result, operation)
     end
 
+    def mutation_pipeline
+      MutationPipeline.new(resource:, context: access_context, auditor: audit_sink, authorization_provider:)
+    end
+
+    def bulk_records
+      identifiers = Array(params[:ids]).filter_map { |identifier| Integer(identifier, exception: false) }.uniq
+      raise AuthorizationDenied, "At least one record is required" if identifiers.empty?
+
+      records = query_pipeline.authorized_relation(resource.model_class.all).where(id: identifiers).to_a
+      raise ScopeViolation, "A bulk record is outside the protected relation" unless records.length == identifiers.length
+
+      records
+    end
+
+    def authorize_bulk_records!(action, records)
+      records.each do |record|
+        raise AuthorizationDenied, "Bulk action access rejected" unless authorized_action?(action.name, record)
+
+        action.writes.each do |field|
+          raise AuthorizationDenied, "Bulk action field access rejected" unless resource.field_writable?(field, record, access_context)
+        end
+      end
+    end
+
+    def render_bulk_failure(results)
+      result = results.find { |candidate| !candidate.success? }
+      render json: { outcome: result.outcome, errors: result.errors }, status: :unprocessable_entity
+    end
+
     def render_html_mutation(response, result, operation)
       if response.payload[:redirect]
         destination = %i[destroy archive].include?(operation) ? collection_path : resource_path(model)
@@ -273,7 +394,7 @@ module KrudminAI
       end
 
       template = resource.action?(operation) ? "krudmin_ai/mutations/action_#{result.success? ? "success" : "error"}" : response.payload[:template]
-      render template:, formats: [:turbo_stream], status: response.status
+      render template:, formats: [ :turbo_stream ], status: response.status
     end
 
     def query_pipeline(archive: nil)
@@ -287,6 +408,31 @@ module KrudminAI
 
     def authorization_provider
       KrudminAI.config.authorization_provider
+    end
+
+    def importer
+      DataOperations::Importer.new(
+        resource:,
+        context: access_context,
+        auditor: audit_sink,
+        operation_store: KrudminAI.config.operation_store,
+        authorization_provider:
+      )
+    end
+
+    def import_csv
+      params.require(:file).read
+    end
+
+    def render_import_result(result)
+      status = result.success? ? :ok : result.outcome == :preview ? :unprocessable_entity : :forbidden
+      render json: { outcome: result.outcome, rows: result.rows.map(&:to_h), errors: result.errors }, status:
+    rescue ActionController::ParameterMissing
+      render json: { outcome: "invalid", errors: [ { code: "invalid", detail: "A CSV file is required" } ] }, status: :unprocessable_entity
+    end
+
+    def export_status(result)
+      result.outcome == :forbidden ? :forbidden : :unprocessable_entity
     end
 
     def query_params
@@ -307,13 +453,14 @@ module KrudminAI
       return unless value.respond_to?(:to_unsafe_h)
 
       raw = value.to_unsafe_h
-      allowed_keys = definition.type == :date_range ? %w[from to] : %w[value operator]
+      range_filter = %i[number_range date_range datetime_range].include?(definition.type)
+      allowed_keys = range_filter ? %w[from to] : %w[value operator]
       raw.slice(*allowed_keys).transform_values { |item| item if item.is_a?(String) || item.is_a?(Numeric) }.compact
     end
 
     def permitted_attributes
       params.fetch(resource.model_class.model_name.param_key, {}).permit(
-        *resource.permitted_attributes,
+        *resource.permitted_attribute_parameters,
         *resource.nested_permitted_attributes
       )
     end
@@ -321,7 +468,10 @@ module KrudminAI
     def serialize_json_record(record)
       return unless record
 
-      readable_fields(resource.show, record).to_h { |field| [field, record.public_send(field)] }
+      readable_fields(resource.show, record).filter_map do |field|
+        adapter = resource.field_adapter(field)
+        [ field, adapter.json_value(record) ] if adapter.serializable?
+      end.to_h
     end
 
     def route_key
@@ -336,12 +486,12 @@ module KrudminAI
       namespace = controller_path.split("/")[0...-1]
       return name if namespace.empty?
 
-      prefix, route_name = name.match(/\A(new|edit|action)_(.+)\z/)&.captures || [nil, name]
-      [prefix, namespace.join("_"), route_name].compact.join("_")
+      prefix, route_name = name.match(/\A(new|edit|action|bulk_action|lookup_field)_(.+)\z/)&.captures || [ nil, name ]
+      [ prefix, namespace.join("_"), route_name ].compact.join("_")
     end
 
     def render_resource_template(name, status: :ok)
-      if lookup_context.exists?(name.to_s, [controller_path], false)
+      if lookup_context.exists?(name.to_s, [ controller_path ], false)
         render name, status: status
       else
         render template: "krudmin_ai/resources/#{name}", status: status

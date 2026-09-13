@@ -1,24 +1,34 @@
-<section class="krudmin-ai-form-shell" aria-label="<%= model.persisted? ? "Edit #{resource_label}" : "New #{resource_label}" %>">
+<section class="krudmin-ai-form-shell" aria-label="<%= model.persisted? ? t("krudmin_ai.edit", resource: resource_label) : t("krudmin_ai.new", resource: resource_label) %>">
   <%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-form-grid" do |form| %>
     <% if model.errors.any? %>
       <section class="validation-summary krudmin-ai-validation-summary" role="alert" aria-labelledby="validation-summary-title">
-        <h2 id="validation-summary-title"><%= resource_label.capitalize %> could not be saved</h2>
+        <h2 id="validation-summary-title"><%= t("krudmin_ai.validation_error", resource: resource_label.capitalize) %></h2>
         <ul><% model.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
       </section>
     <% end %>
 
-    <% readable_fields(resource.form).each do |field| %>
-      <% writable = field_writable?(field) %>
-      <%= render "krudmin_ai/ui/field", form: form, field: field, writable: writable, access_note_id: "#{field}-access-note", errors: model.errors.full_messages_for(field) %>
+    <% sections = resource.form_sections.values %>
+    <% sections = [{ fields: resource.form }] if sections.empty? %>
+    <% assigned_fields = sections.flat_map { |section| section.fetch(:fields) } %>
+    <% remaining_fields = resource.form - assigned_fields %>
+    <% sections << { label: t("krudmin_ai.additional_details"), fields: remaining_fields, columns: :one } if remaining_fields.any? %>
+    <% sections.each do |section| %>
+      <fieldset class="krudmin-ai-form-section krudmin-ai-form-section--<%= section.fetch(:columns, :one) %>">
+        <% if section[:label] %><legend><%= section[:label] %></legend><% end %>
+        <% readable_fields(section.fetch(:fields)).each do |field| %>
+          <% writable = field_writable?(field) %>
+          <%= render "krudmin_ai/ui/field", form: form, field: field, adapter: resource.field_adapter(field), writable: writable, access_note_id: "#{field}-access-note", errors: model.errors.full_messages_for(field) %>
+        <% end %>
+      </fieldset>
     <% end %>
 
     <% resource.relationships.each_value do |relationship| %>
-      <%= render "krudmin_ai/resources/has_many", form: form, relationship: relationship %>
+      <%= render relationship.singular? ? "krudmin_ai/resources/has_one" : "krudmin_ai/resources/has_many", form: form, relationship: relationship %>
     <% end %>
 
     <div class="krudmin-ai-form-actions">
-      <%= link_to model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:x, class: "krudmin-ai-button__icon") %><span>Cancel</span><% end %>
-      <%= form.button class: "krudmin-ai-button krudmin-ai-button--save" do %><%= krudmin_ai_icon(:save, class: "krudmin-ai-button__icon") %><span>Save <%= resource_label %></span><% end %>
+      <%= link_to model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:x, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.cancel") %></span><% end %>
+      <%= form.button class: "krudmin-ai-button krudmin-ai-button--save" do %><%= krudmin_ai_icon(:save, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.save", resource: resource_label) %></span><% end %>
     </div>
   <% end %>
 </section>

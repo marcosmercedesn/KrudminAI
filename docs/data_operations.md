@@ -21,6 +21,12 @@ Exports start with the canonical tenant, resource-policy, provider-policy, archi
 
 `Importer#commit` requires a non-empty idempotency key and performs every accepted row through `MutationPipeline#create`. Tenant checks, writer authorization, model validation, row-level audit events, and the enclosing import audit event therefore retain their normal semantics. For Active Record models, an audit or row failure rolls back the complete import. Retrying a completed key returns the stored `ImportResult` rather than writing again.
 
+## Durable Operations
+
+`ActiveRecordOperationStore` is the production operation-record contract. Its model must enforce a unique index over `tenant`, `kind`, and `idempotency_key`; this makes `claim` atomic across concurrent requests. The store retains `queued`, `running`, `completed`, `failed`, `retrying`, and `cancelled` states, bounded numeric progress, terminal results, and redacted errors. `OperationRunner` transitions a claimed operation and reports worker progress; it never starts an operation already cancelled.
+
+Resource controllers expose authenticated collection routes generated with each resource: `GET /resources/exports/:profile`, `POST /resources/imports/:profile/preview`, and `POST /resources/imports/:profile`. Import commits require an `Idempotency-Key` request header and a CSV upload in `file`. The host must configure `KrudminAI.config.operation_store`; without it, commit is denied rather than falling back to non-durable process memory.
+
 ## Host Responsibilities
 
 The current engine processors accept an idempotency store with `fetch(key)` and `record(key, result)`. That minimal interface is appropriate for synchronous development and test use only. Production background imports must supply a durable store that atomically claims a tenant-bound idempotency key before enqueueing or writing rows, records terminal success/failure states, and retains the uploaded source outside job arguments. A crash after database commit but before a separate `record` call can otherwise be retried as a duplicate import.

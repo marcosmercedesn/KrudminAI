@@ -4,11 +4,18 @@
       <div class="krudmin-ai-field">
         <%= form.label "filters[#{definition.name}][value]", definition.label %>
         <% if definition.type == :select %>
-          <%= form.select "filters[#{definition.name}][value]", options_for_select(filter_options(definition), filter_current_value(definition)), { include_blank: "Any" }, class: "krudmin-ai-select" %>
-        <% elsif definition.type == :date_range %>
+          <%= form.select "filters[#{definition.name}][value]", options_for_select(filter_options(definition), filter_current_value(definition)), { include_blank: t("krudmin_ai.any") }, class: "krudmin-ai-select" %>
+        <% elsif %i[number_range date_range datetime_range].include?(definition.type) %>
           <div class="krudmin-ai-filter-range">
-            <%= form.date_field "filters[#{definition.name}][from]", value: filter_current_value(definition, :from), class: "krudmin-ai-input", aria: { label: "#{definition.label} from" } %>
-            <%= form.date_field "filters[#{definition.name}][to]", value: filter_current_value(definition, :to), class: "krudmin-ai-input", aria: { label: "#{definition.label} to" } %>
+            <% input_type = if definition.type == :number_range
+                              :number_field
+                            elsif definition.type == :datetime_range
+                              :datetime_local_field
+                            else
+                              :date_field
+                            end %>
+            <%= form.public_send(input_type, "filters[#{definition.name}][from]", value: filter_current_value(definition, :from), class: "krudmin-ai-input", aria: { label: "#{definition.label} #{t("krudmin_ai.from")}" }) %>
+            <%= form.public_send(input_type, "filters[#{definition.name}][to]", value: filter_current_value(definition, :to), class: "krudmin-ai-input", aria: { label: "#{definition.label} #{t("krudmin_ai.to")}" }) %>
           </div>
         <% else %>
           <div class="krudmin-ai-filter-value">
@@ -19,5 +26,5 @@
       </div>
     <% end %>
   </div>
-  <div class="krudmin-ai-form-actions"><%= form.button class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:filter, class: "krudmin-ai-button__icon") %><span>Apply filters</span><% end %></div>
+  <div class="krudmin-ai-form-actions"><%= form.button class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:filter, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.apply_filters") %></span><% end %><%= link_to reset_filters_path, class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:rotate_ccw, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.reset") %></span><% end %></div>
 <% end %>

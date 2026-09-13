@@ -4,7 +4,7 @@ module KrudminAI
 
     def krudmin_ai_icon(name, **options)
       icon_options = default_icon_options.merge(options)
-      icon_options[:class] = [default_icon_options[:class], options[:class]].compact.join(" ")
+      icon_options[:class] = [ default_icon_options[:class], options[:class] ].compact.join(" ")
       lucide_icon(name.to_s.tr("_", "-"), **icon_options)
     end
 

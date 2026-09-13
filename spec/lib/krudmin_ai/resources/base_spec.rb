@@ -28,12 +28,32 @@ RSpec.describe KrudminAI::Resources::Base do
 
     expect(child_resource.label).to eq("Order")
     expect(child_resource.plural_label).to eq("Orders")
-    expect(child_resource.list).to eq([:name])
-    expect(child_resource.form).to eq([:name])
-    expect(child_resource.show).to eq([:name, :status])
-    expect(default_resource.list).to eq([:name, :status])
-    expect(default_resource.form).to eq([:name, :status])
-    expect(default_resource.show).to eq([:name, :status])
+    expect(child_resource.list).to eq([ :name ])
+    expect(child_resource.form).to eq([ :name ])
+    expect(child_resource.show).to eq([ :name, :status ])
+    expect(default_resource.list).to eq([ :name, :status ])
+    expect(default_resource.form).to eq([ :name, :status ])
+    expect(default_resource.show).to eq([ :name, :status ])
+  end
+
+  it "declares inheritable constrained form sections" do
+    parent_resource = Class.new(described_class) do
+      section :identity, fields: %i[name email], label: "Identity", columns: :two
+    end
+
+    expect(Class.new(parent_resource).form_sections).to eq(identity: { label: "Identity", fields: %i[name email], columns: :two })
+    expect do
+      Class.new(described_class) { section :invalid, fields: [ :name ], columns: :three }
+    end.to raise_error(ArgumentError, "Section columns must be :one or :two")
+  end
+
+  it "declares inheritable constrained list priorities" do
+    parent_resource = Class.new(described_class) { list_priority :email, :secondary }
+
+    expect(Class.new(parent_resource).list_field_priorities).to eq(email: :secondary)
+    expect do
+      Class.new(described_class) { list_priority :email, :hidden }
+    end.to raise_error(ArgumentError, "List priority must be :primary, :standard, or :secondary")
   end
 
   it "inherits eager-loading and archive lifecycle metadata" do
@@ -44,8 +64,8 @@ RSpec.describe KrudminAI::Resources::Base do
     end
     child_resource = Class.new(parent_resource)
 
-    expect(child_resource.included_associations).to eq([:owner])
-    expect(child_resource.preloaded_associations).to eq([:comments])
+    expect(child_resource.included_associations).to eq([ :owner ])
+    expect(child_resource.preloaded_associations).to eq([ :comments ])
     expect(child_resource).to be_archivable
     expect(child_resource.archive_attribute).to eq(:archived_at)
   end
@@ -66,14 +86,38 @@ RSpec.describe KrudminAI::Resources::Base do
 
   it "declares inheritable custom actions and state transitions" do
     resource = Class.new(described_class) do
-      action(:assign_to_me, label: "Assign to me", writes: [:assignee]) { |_record, _context| true }
+      action(:assign_to_me, label: "Assign to me", writes: [ :assignee ]) { |_record, _context| true }
       transition :resolve, from: %i[open assigned], to: :resolved
     end
     record = Struct.new(:state).new("open")
 
-    expect(resource.action_for(:assign_to_me)).to have_attributes(label: "Assign to me", writes: [:assignee])
+    expect(resource.action_for(:assign_to_me)).to have_attributes(label: "Assign to me", writes: [ :assignee ])
     expect(resource).to be_action(:resolve)
     expect(resource.action_for(:resolve).call(record, Object.new)).to be(true)
     expect(record.state).to eq("resolved")
+  end
+
+  it "enables only previously declared actions for bulk workflows" do
+    resource = Class.new(described_class) do
+      action(:archive_selected) { |_record, _context| true }
+      bulk_action :archive_selected
+    end
+
+    expect(Class.new(resource).bulk_actions).to eq([ :archive_selected ])
+    expect do
+      Class.new(described_class) { bulk_action :undeclared }
+    end.to raise_error(ArgumentError, "Bulk action must be declared before it can be enabled")
+  end
+
+  it "allows inline editing only for supported adapters" do
+    resource = Class.new(described_class) do
+      field :name, :string
+      inline_edit :name
+    end
+
+    expect(resource.inline_editable_fields).to eq([ :name ])
+    expect do
+      Class.new(described_class) { field :token, :hidden; inline_edit :token }
+    end.to raise_error(ArgumentError, "Inline editing is not supported for token")
   end
 end

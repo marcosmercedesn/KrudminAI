@@ -1,6 +1,24 @@
 <div class="krudmin-ai-field">
   <%= form.label field %>
-  <%= form.text_field field, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id } %>
-  <% unless writable %><p id="<%= access_note_id %>" class="krudmin-ai-field-note">You are not authorized to edit this field.</p><% end %>
+  <% adapter = local_assigns[:adapter] %>
+  <% if adapter.is_a?(KrudminAI::Fields::Computed) %>
+    <output aria-describedby="<%= access_note_id %>"><%= t("krudmin_ai.computed_on_save") %></output>
+  <% elsif adapter.is_a?(KrudminAI::Fields::RemoteBelongsTo) %>
+    <div data-controller="krudmin-ai-remote-belongs-to" data-krudmin-ai-remote-belongs-to-url-value="<%= remote_lookup_field_path(field) %>" data-krudmin-ai-remote-belongs-to-minimum-value="<%= adapter.minimum_query_length %>">
+      <%= form.hidden_field field, data: { krudmin_ai_remote_belongs_to_target: "value" } %>
+      <input type="search" role="combobox" autocomplete="off" value="<%= adapter.selected_label(form.object, krudmin_ai_access_context) %>" aria-autocomplete="list" aria-expanded="false" aria-controls="<%= field %>-lookup-results" data-krudmin-ai-remote-belongs-to-target="input" data-action="input->krudmin-ai-remote-belongs-to#search keydown->krudmin-ai-remote-belongs-to#keydown" <%= "disabled" unless writable %>>
+      <div id="<%= field %>-lookup-results" role="listbox" hidden data-krudmin-ai-remote-belongs-to-target="listbox"></div>
+      <p role="status" aria-live="polite" data-krudmin-ai-remote-belongs-to-target="status"></p>
+    </div>
+  <% elsif adapter.is_a?(KrudminAI::Fields::HasManyIds) %>
+    <%= adapter.form_control(form, writable: writable, errors: errors, access_note_id: access_note_id, context: krudmin_ai_access_context, authorization_provider: krudmin_ai_authorization_provider) %>
+  <% else %>
+    <% if adapter.is_a?(KrudminAI::Fields::BelongsTo) %>
+      <%= adapter.form_control(form, writable: writable, errors: errors, access_note_id: access_note_id, context: krudmin_ai_access_context, authorization_provider: krudmin_ai_authorization_provider) %>
+    <% else %>
+      <%= adapter ? adapter.form_control(form, writable: writable, errors: errors, access_note_id: access_note_id) : form.text_field(field, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id }) %>
+    <% end %>
+  <% end %>
+  <% unless writable %><p id="<%= access_note_id %>" class="krudmin-ai-field-note"><%= t("krudmin_ai.edit_field_denied") %></p><% end %>
   <% errors.each do |message| %><p class="krudmin-ai-field-error"><%= message %></p><% end %>
 </div>

@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+require "rbconfig"
+require "tmpdir"
+
+root = File.expand_path("..", __dir__)
+rails = [RbConfig.ruby, "-S", "bundle", "exec", "rails"]
+
+def write_file(root, path, content)
+  destination = File.join(root, path)
+  FileUtils.mkdir_p(File.dirname(destination))
+  File.write(destination, content)
+end
+
+Dir.mktmpdir("krudmin_ai_generator_migration") do |directory|
+  host = File.join(directory, "migration_host")
+  abort "Unable to create generated host" unless system(*rails, "new", host, "--skip-bundle", "--skip-test", "--quiet")
+
+  gemfile = File.join(host, "Gemfile")
+  File.write(gemfile, File.read(gemfile).concat("\ngem \"krudmin_ai\", path: \"#{root}\"\n"))
+  run = ->(*arguments) { abort "Generated host command failed: #{arguments.join(' ')}" unless system(*arguments, chdir: host) }
+  run.call(RbConfig.ruby, "-S", "bundle", "install")
+  write_file(host, "config/initializers/krudmin_ai.rb", <<~RUBY)
+    KrudminAI.configure do |config|
+      config.authentication_provider = KrudminAI::Providers::TestAdapters::Authentication.new(Object.new)
+      config.authorization_provider = KrudminAI::Providers::TestAdapters::Authorization.new
+      config.tenant_provider = KrudminAI::Providers::TestAdapters::Tenant.new("north")
+      config.audit_provider = KrudminAI::Providers::TestAdapters::Audit.new
+      config.notification_provider = KrudminAI::Providers::TestAdapters::Notification.new
+    end
+  RUBY
+
+  run.call(*rails, "generate", "krudmin_ai:resource", "Member", "--fields", "name:string", "rank:enum", "joined_on:date")
+  run.call(*rails, "generate", "krudmin_ai:resource", "Member", "--fields", "name:string", "rank:enum", "joined_on:date")
+  member_resource = File.read(File.join(host, "app/resources/members_resource.rb"))
+  abort "Typed fields were not generated" unless member_resource.include?("field :name, :string") && member_resource.include?("field :rank, :enum")
+  routes = File.read(File.join(host, "config/routes.rb"))
+  abort "Generated routes are not idempotent" unless routes.scan("resources :members").length == 1
+
+  classic = File.join(host, "cars_resource_manager.rb")
+  File.write(classic, <<~RUBY)
+    class CarsResourceManager < Krudmin::ResourceManagers::Base
+      MODEL_CLASSNAME = "Car"
+      ATTRIBUTE_TYPES = { model: :Text, passengers: :HasMany, insurance: :HasOne, status: :StateMachine }
+    end
+  RUBY
+  audit_output = `#{RbConfig.ruby} #{File.join(root, "bin/krudmin_ai_migrate")} #{classic}`
+  abort "Classic audit did not classify Car relationships" unless audit_output.include?("ATTRIBUTE_TYPES.passengers") && audit_output.include?("blocked")
+
+  write_file(host, "app/models/car.rb", "class Car < ApplicationRecord; end\n")
+  write_file(host, "app/policies/application_policy.rb", <<~RUBY)
+    class ApplicationPolicy
+      def initialize(_actor, _record); end
+      class Scope
+        attr_reader :scope
+        def initialize(_actor, scope); @scope = scope; end
+      end
+    end
+  RUBY
+  write_file(host, "app/policies/car_policy.rb", <<~RUBY)
+    class CarPolicy < ApplicationPolicy
+      def create? = true
+      def update? = true
+      def destroy? = true
+      class Scope < ApplicationPolicy::Scope
+        def resolve = scope
+      end
+    end
+  RUBY
+  write_file(host, "app/resources/cars_resource.rb", <<~RUBY)
+    class CarsResource < KrudminAI::Resources::Base
+      model Car
+      routes :cars
+      tenant_key :tenant
+      permit :model
+      field :model, :text
+      form :model
+      list :model
+      show :model
+      authorize_field :model, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+      tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
+      policy_scope { |relation, context| CarPolicy::Scope.new(context.actor, relation).resolve }
+      tenant_record { |record, context| record.tenant == context.tenant }
+      authorize(:create) { |record, context| CarPolicy.new(context.actor, record).create? }
+      authorize(:update) { |record, context| CarPolicy.new(context.actor, record).update? }
+      authorize(:destroy) { |record, context| CarPolicy.new(context.actor, record).destroy? }
+      sortable :created_at
+      default_sort_by :created_at, direction: :desc
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000000_create_cars.rb", <<~RUBY)
+    class CreateCars < ActiveRecord::Migration[8.1]
+      def change
+        create_table :cars do |table|
+          table.string :tenant, null: false
+          table.string :model, null: false
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "test/integration/migrated_cars_test.rb", <<~RUBY)
+    require File.expand_path("../../config/environment", __dir__)
+    require "rails/test_help"
+
+    class MigratedCarsTest < ActionDispatch::IntegrationTest
+      test "reviewed Car migration remains tenant scoped" do
+        Car.create!(tenant: "north", model: "North car")
+        Car.create!(tenant: "south", model: "South car")
+
+        get admin_cars_path
+
+        assert_response :success
+        assert_includes response.body, "North car"
+        assert_not_includes response.body, "South car"
+      end
+    end
+  RUBY
+  run.call(*rails, "generate", "krudmin_ai:resource", "Car", "--fields", "model:text")
+  run.call(*rails, "db:migrate")
+  run.call(*rails, "test", "test/integration/migrated_cars_test.rb")
+end
+
+puts "Generated resource and reviewed migration host conformance OK"

@@ -1,7 +1,7 @@
 <% previous_page = page > 1 ? page - 1 : nil %>
 <% next_page = records_count == per_page ? page + 1 : nil %>
-<nav class="krudmin-ai-pagination" aria-label="Pagination">
-  <% if previous_page %><%= link_to pagination_path(previous_page), class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:arrow_left, class: "krudmin-ai-button__icon") %><span>Previous page</span><% end %><% else %><span class="krudmin-ai-button" aria-disabled="true"><%= krudmin_ai_icon(:arrow_left, class: "krudmin-ai-button__icon") %><span>Previous page</span></span><% end %>
-  <span class="krudmin-ai-pagination__current" aria-current="page">Page <%= page %></span>
-  <% if next_page %><%= link_to pagination_path(next_page), class: "krudmin-ai-button" do %><span>Next page</span><%= krudmin_ai_icon(:arrow_right, class: "krudmin-ai-button__icon") %><% end %><% else %><span class="krudmin-ai-button" aria-disabled="true"><span>Next page</span><%= krudmin_ai_icon(:arrow_right, class: "krudmin-ai-button__icon") %></span><% end %>
+<nav class="krudmin-ai-pagination" aria-label="<%= t("krudmin_ai.pagination") %>">
+  <% if previous_page %><%= link_to pagination_path(previous_page), class: "krudmin-ai-button" do %><%= krudmin_ai_icon(:arrow_left, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.previous_page") %></span><% end %><% else %><span class="krudmin-ai-button" aria-disabled="true"><%= krudmin_ai_icon(:arrow_left, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.previous_page") %></span></span><% end %>
+  <span class="krudmin-ai-pagination__current" aria-current="page"><%= t("krudmin_ai.page", page: page) %></span>
+  <% if next_page %><%= link_to pagination_path(next_page), class: "krudmin-ai-button" do %><span><%= t("krudmin_ai.next_page") %></span><%= krudmin_ai_icon(:arrow_right, class: "krudmin-ai-button__icon") %><% end %><% else %><span class="krudmin-ai-button" aria-disabled="true"><span><%= t("krudmin_ai.next_page") %></span><%= krudmin_ai_icon(:arrow_right, class: "krudmin-ai-button__icon") %></span><% end %>
 </nav>

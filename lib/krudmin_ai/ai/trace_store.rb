@@ -40,7 +40,7 @@ module KrudminAI
 
         normalized_query = query.to_s.downcase
         matches.select do |trace|
-          [trace.prompt_template, trace.provider, trace.status].join(" ").downcase.include?(normalized_query)
+          [ trace.prompt_template, trace.provider, trace.status ].join(" ").downcase.include?(normalized_query)
         end
       end
 

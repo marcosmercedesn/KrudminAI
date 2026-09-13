@@ -1,0 +1,124 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+require "rbconfig"
+require "tmpdir"
+
+root = File.expand_path("..", __dir__)
+rails = [RbConfig.ruby, "-S", "bundle", "exec", "rails"]
+
+def write_file(root, path, content)
+  destination = File.join(root, path)
+  FileUtils.mkdir_p(File.dirname(destination))
+  File.write(destination, content)
+end
+
+Dir.mktmpdir("krudmin_ai_data_operations") do |directory|
+  host = File.join(directory, "operations_host")
+  abort "Unable to create generated host" unless system(*rails, "new", host, "--skip-bundle", "--skip-test", "--quiet")
+  gemfile = File.join(host, "Gemfile")
+  File.write(gemfile, File.read(gemfile).concat("\ngem \"krudmin_ai\", path: \"#{root}\"\n"))
+  run = ->(*arguments) { abort "Generated host command failed: #{arguments.join(' ')}" unless system(*arguments, chdir: host) }
+  run.call(RbConfig.ruby, "-S", "bundle", "install")
+  write_file(host, "config/initializers/krudmin_ai.rb", <<~RUBY)
+    KrudminAI.configure do |config|
+      config.authentication_provider = KrudminAI::Providers::TestAdapters::Authentication.new(Object.new)
+      config.authorization_provider = KrudminAI::Providers::TestAdapters::Authorization.new
+      config.tenant_provider = KrudminAI::Providers::TestAdapters::Tenant.new("north")
+      config.audit_provider = KrudminAI::Providers::TestAdapters::Audit.new
+      config.notification_provider = KrudminAI::Providers::TestAdapters::Notification.new
+      config.operation_store = KrudminAI::DataOperations::ActiveRecordOperationStore.new(model: -> { DataOperation })
+    end
+  RUBY
+  write_file(host, "app/models/ticket.rb", "class Ticket < ApplicationRecord; end\n")
+  write_file(host, "app/models/data_operation.rb", "class DataOperation < ApplicationRecord; end\n")
+  write_file(host, "app/policies/application_policy.rb", "class ApplicationPolicy; def initialize(*); end; class Scope; attr_reader :scope; def initialize(_, scope); @scope = scope; end; end; end\n")
+  write_file(host, "app/policies/ticket_policy.rb", <<~RUBY)
+    class TicketPolicy < ApplicationPolicy
+      def export? = true
+      def import? = true
+
+      class Scope < ApplicationPolicy::Scope
+        def resolve = scope
+      end
+    end
+  RUBY
+  write_file(host, "app/resources/tickets_resource.rb", <<~RUBY)
+    class TicketsResource < KrudminAI::Resources::Base
+      model Ticket
+      routes :tickets
+      tenant_key :tenant
+      permit :title
+      field :title, :string
+      list :title
+      show :title
+      authorize_field :title, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+      tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
+      policy_scope { |relation, context| TicketPolicy::Scope.new(context.actor, relation).resolve }
+      tenant_record { |record, context| record.tenant == context.tenant }
+      authorize(:export) { |record, context| TicketPolicy.new(context.actor, record).export? }
+      authorize(:import) { |record, context| TicketPolicy.new(context.actor, record).import? }
+      authorize(:create) { |_record, _context| true }
+      export_profile :tickets_csv, fields: [:title]
+      import_profile :tickets_csv, mapping: { "Title" => :title }, required: [:title]
+      sortable :created_at
+      default_sort_by :created_at, direction: :desc
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000000_create_tickets.rb", <<~RUBY)
+    class CreateTickets < ActiveRecord::Migration[8.1]
+      def change
+        create_table :tickets do |table|
+          table.string :tenant, null: false
+          table.string :title, null: false
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000001_create_data_operations.rb", <<~RUBY)
+    class CreateDataOperations < ActiveRecord::Migration[8.1]
+      def change
+        create_table :data_operations do |table|
+          table.string :tenant, null: false
+          table.string :idempotency_key, null: false
+          table.string :kind, null: false
+          table.string :status, null: false
+          table.json :payload
+          table.integer :progress, null: false, default: 0
+          table.json :result
+          table.string :error
+          table.timestamps
+        end
+        add_index :data_operations, %i[tenant kind idempotency_key], unique: true
+      end
+    end
+  RUBY
+  run.call(*rails, "generate", "krudmin_ai:resource", "Ticket", "--fields", "title:string")
+  write_file(host, "test/integration/data_operations_test.rb", <<~RUBY)
+    require File.expand_path("../../config/environment", __dir__)
+    require "rails/test_help"
+
+    class DataOperationsTest < ActionDispatch::IntegrationTest
+      test "exports tenant rows and commits an idempotent import" do
+        Ticket.create!(tenant: "north", title: "North ticket")
+        Ticket.create!(tenant: "south", title: "South ticket")
+        get export_admin_tickets_path(profile: :tickets_csv)
+        assert_response :success
+        assert_includes response.body, "North ticket"
+        assert_not_includes response.body, "South ticket"
+
+        upload = Rack::Test::UploadedFile.new(StringIO.new("Title\nImported ticket\n"), "text/csv", original_filename: "tickets.csv")
+        post import_admin_tickets_path(profile: :tickets_csv), params: { file: upload }, headers: { "Idempotency-Key" => "upload-42" }
+        assert_response :success
+        post import_admin_tickets_path(profile: :tickets_csv), params: { file: upload }, headers: { "Idempotency-Key" => "upload-42" }
+        assert_response :success
+        assert_equal 1, Ticket.where(tenant: "north", title: "Imported ticket").count
+      end
+    end
+  RUBY
+  run.call(*rails, "db:migrate")
+  run.call(*rails, "test", "test/integration/data_operations_test.rb")
+end
+
+puts "Generated data-operations host conformance OK"

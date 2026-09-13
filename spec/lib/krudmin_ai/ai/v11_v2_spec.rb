@@ -99,7 +99,7 @@ RSpec.describe "AI V1.1 and V2 contracts" do
     end
   end
 
-  let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [:manager]) }
+  let(:context) { KrudminAI::AccessContext.new(actor: :morgan, tenant: :north, roles: [ :manager ]) }
   let(:tracer) { AiV2Tracer.new }
   let(:auditor) { AiV2Auditor.new }
   let(:resource) do
@@ -134,40 +134,40 @@ RSpec.describe "AI V1.1 and V2 contracts" do
     )
 
     expect(context_result.sources).to eq(
-      tickets: [{ title: "North ticket" }],
-      related_tickets: [{ title: "North ticket" }]
+      tickets: [ { title: "North ticket" } ],
+      related_tickets: [ { title: "North ticket" } ]
     )
     expect(context_result.sources.to_s).not_to include("secret", "South ticket")
   end
 
   it "returns a reviewable extraction draft with evidence and never persists provider proposals" do
-    provider = AiV2Provider.new(attributes: { title: "Extracted title", secret: "forged secret" }, evidence: { title: ["page 1"] })
+    provider = AiV2Provider.new(attributes: { title: "Extracted title", secret: "forged secret" }, evidence: { title: [ "page 1" ] })
     draft = KrudminAI::Ai::ReviewableExtraction.new(context:, provider:, tracer:).call(
       resource:,
       relation:,
       prompt_template: "support/extract",
-      fields: [:title],
+      fields: [ :title ],
       input: { document: "untrusted document" }
     )
 
-    expect(draft).to have_attributes(attributes: { title: "Extracted title" }, evidence: { title: ["page 1"] }, status: :pending_review)
+    expect(draft).to have_attributes(attributes: { title: "Extracted title" }, evidence: { title: [ "page 1" ] }, status: :pending_review)
     expect(AiV2Record.records.first.title).to eq("North ticket")
-    expect(provider.requests.first.context).to eq([{ title: "North ticket" }])
+    expect(provider.requests.first.context).to eq([ { title: "North ticket" } ])
     expect(tracer.traces.last).to have_attributes(status: :pending_review, output: nil)
   end
 
   it "runs read-only cross-record analysis from a reusable template with scoped evidence" do
     templates = KrudminAI::Ai::PromptTemplates.new
     template = templates.register(:duplicate_review, task: :cross_record_analysis, instructions: "Identify duplicate tickets.")
-    provider = AiV2Provider.new(output: "No duplicates", action_references: [{ source: :tickets, record_id: 1 }])
+    provider = AiV2Provider.new(output: "No duplicates", action_references: [ { source: :tickets, record_id: 1 } ])
     result = KrudminAI::Ai::MultiSourceAnalysis.new(context:, provider:, provider_name: "primary", tracer:).call(
       task: :cross_record_analysis,
       sources: { tickets: { resource:, relation: } },
       template: template.to_h
     )
 
-    expect(result).to have_attributes(status: :success, output: "No duplicates", evidence: [{ source: :tickets, record_id: 1 }])
-    expect(provider.requests.first.context).to eq(tickets: [{ title: "North ticket" }])
+    expect(result).to have_attributes(status: :success, output: "No duplicates", evidence: [ { source: :tickets, record_id: 1 } ])
+    expect(provider.requests.first.context).to eq(tickets: [ { title: "North ticket" } ])
     expect(provider.requests.first.mode).to eq(:read_only)
     expect(tracer.traces.last.status).to eq(:success)
     expect { templates.fetch(:duplicate_review, task: :dashboard_narrative) }.to raise_error(ArgumentError)
@@ -201,7 +201,7 @@ RSpec.describe "AI V1.1 and V2 contracts" do
     expect(result).to be_success
     expect(AiV2Record.records.first.title).to eq("Approved change")
     expect(auditor.events.last.operation).to eq(:update)
-    expect(tracer.traces.last).to have_attributes(actor: :morgan, roles: [:manager], tenant: :north, status: :success)
+    expect(tracer.traces.last).to have_attributes(actor: :morgan, roles: [ :manager ], tenant: :north, status: :success)
   end
 
   it "rejects a cross-tenant automation proposal before mutation" do

@@ -7,6 +7,6 @@ class CreateDemoUsers < ActiveRecord::Migration[8.1]
       table.timestamps
     end
 
-    add_index :demo_users, [:tenant, :name], unique: true
+    add_index :demo_users, [ :tenant, :name ], unique: true
   end
 end

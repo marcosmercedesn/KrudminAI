@@ -78,7 +78,7 @@ module KrudminAI
           records = widget.records.to_a
           columns = records.flat_map { |record| widget.visible_columns(record) }.uniq
           rows = records.map do |record|
-            widget.visible_columns(record).to_h { |field| [field, record.public_send(field)] }
+            widget.visible_columns(record).to_h { |field| [ field, widget.value_for(record, field) ] }
           end
           state = rows.empty? ? :empty : :ready
           WidgetResult.new(definition.name, definition.label, definition.resource, state, nil, columns, rows, drill_down_params(definition), nil)

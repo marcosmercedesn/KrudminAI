@@ -15,13 +15,13 @@ RSpec.describe KrudminAI::MutationResponseAdapter do
     }
 
     expected_statuses.each do |outcome, status|
-      result = KrudminAI::MutationResult.new(:update, outcome, nil, [{ code: outcome }], nil)
+      result = KrudminAI::MutationResult.new(:update, outcome, nil, [ { code: outcome } ], nil)
 
       %i[html json turbo_stream].each do |format|
         response = described_class.for(result, format:)
 
         expect(response.status).to eq(status)
-        expect(response.payload.fetch(:errors)).to eq([{ code: outcome }]) unless format == :html
+        expect(response.payload.fetch(:errors)).to eq([ { code: outcome } ]) unless format == :html
       end
     end
   end

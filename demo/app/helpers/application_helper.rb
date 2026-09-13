@@ -1,3 +1,3 @@
 module ApplicationHelper
-	include KrudminAI::IconHelper
+  include KrudminAI::IconHelper
 end

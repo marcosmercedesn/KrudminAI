@@ -32,7 +32,7 @@ RSpec.describe KrudminAI::Observability do
 
   around do |example|
     configuration = KrudminAI.config
-    original = [configuration.observability_logger, configuration.metrics_provider, configuration.tracing_provider]
+    original = [ configuration.observability_logger, configuration.metrics_provider, configuration.tracing_provider ]
     example.run
   ensure
     configuration.observability_logger, configuration.metrics_provider, configuration.tracing_provider = original
@@ -67,8 +67,8 @@ RSpec.describe KrudminAI::Observability do
 
     expect(payload).to include(event: "mutation.completed", correlation_id: "request-42", operation: :update, outcome: :success)
     expect(notification).to eq(payload)
-    expect([payload, output.string, metrics.events, tracer.events].to_s).not_to include("northwind", "Visible only to the form", "do-not-log", "AI response")
-    expect(metrics.events).to eq([{ name: "krudmin_ai.mutation.completed", tags: { event: "mutation.completed", operation: "update", outcome: "success", resource: "Ticket" } }])
+    expect([ payload, output.string, metrics.events, tracer.events ].to_s).not_to include("northwind", "Visible only to the form", "do-not-log", "AI response")
+    expect(metrics.events).to eq([ { name: "krudmin_ai.mutation.completed", tags: { event: "mutation.completed", operation: "update", outcome: "success", resource: "Ticket" } } ])
     expect(tracer.events.first.dig(:attributes, :correlation_id)).to eq("request-42")
   ensure
     ActiveSupport::Notifications.unsubscribe(subscription) if subscription

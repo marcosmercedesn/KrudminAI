@@ -53,7 +53,7 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
     private
 
     def with(*operation)
-      self.class.new(operations + [operation])
+      self.class.new(operations + [ operation ])
     end
   end
 
@@ -82,8 +82,8 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
     ).call(relation)
 
     expect(result.records.operations).to eq([
-      [:tenant, tenant], [:policy, actor, %i[operator manager]], [:filter, :status, "active"],
-      [:order, { name: :asc }], [:limit, 30], [:offset, 30]
+      [ :tenant, tenant ], [ :policy, actor, %i[operator manager] ], [ :filter, :status, "active" ],
+      [ :order, { name: :asc } ], [ :limit, 30 ], [ :offset, 30 ]
     ])
     expect(result).to have_attributes(page: 2, per_page: 30)
   end
@@ -147,8 +147,8 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
       params: { filters: { internal_sql: "unsafe" }, sort: "internal_sql:desc" }
     ).call(relation)
 
-    expect(result.records.operations).to include([:order, { created_at: :desc }])
-    expect(result.records.operations).not_to include([:filter, :internal_sql, "unsafe"])
+    expect(result.records.operations).to include([ :order, { created_at: :desc } ])
+    expect(result.records.operations).not_to include([ :filter, :internal_sql, "unsafe" ])
   end
 
   it "passes only declared structured filter operators to operator-aware handlers" do
@@ -162,11 +162,11 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
       params: { filters: { name: { operator: "equals", value: "North" } } }
     ).call(relation)
 
-    expect(result.records.operations).to include([:filter, :equals, "North"])
+    expect(result.records.operations).to include([ :filter, :equals, "North" ])
   end
 
   it "does not pass malformed structured filter operators to the relation" do
-    resource.filter(:name, operators: [:equals]) do |scoped_relation, value, _access_context, operator|
+    resource.filter(:name, operators: [ :equals ]) do |scoped_relation, value, _access_context, operator|
       scoped_relation.filter(operator, value)
     end
 
@@ -176,14 +176,44 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
       params: { filters: { name: { operator: "unsafe", value: "North" } } }
     ).call(relation)
 
-    expect(result.records.operations).not_to include([:filter, :unsafe, "North"])
+    expect(result.records.operations).not_to include([ :filter, :unsafe, "North" ])
+  end
+
+  it "passes declared numeric and datetime range bounds to operator-aware filters" do
+    resource.filter(:quantity, type: :number_range) do |scoped_relation, value, _access_context, operator|
+      scoped_relation.filter(operator, value)
+    end
+    resource.filter(:published_at, type: :datetime_range) do |scoped_relation, value, _access_context, operator|
+      scoped_relation.filter(operator, value)
+    end
+
+    result = described_class.new(
+      resource:,
+      context:,
+      params: { filters: { quantity: { from: "2", to: "9" }, published_at: { from: "2026-09-01T00:00", to: "2026-09-30T23:59" } } }
+    ).call(relation)
+
+    expect(result.records.operations).to include(
+      [ :filter, :between, { from: "2", to: "9" } ],
+      [ :filter, :between, { from: "2026-09-01T00:00", to: "2026-09-30T23:59" } ]
+    )
+  end
+
+  it "does not pass empty range filters to the relation" do
+    resource.filter(:quantity, type: :number_range) do |scoped_relation, value, _access_context, operator|
+      scoped_relation.filter(operator, value)
+    end
+
+    result = described_class.new(resource:, context:, params: { filters: { quantity: { from: "", to: "" } } }).call(relation)
+
+    expect(result.records.operations).not_to include([ :filter, :between, anything ])
   end
 
   it "clamps per-page requests to the configured maximum" do
     result = described_class.new(resource:, context:, params: { page: "3", per_page: "1000" }).call(relation)
 
     expect(result).to have_attributes(page: 3, per_page: 50)
-    expect(result.records.operations.last(2)).to eq([[:limit, 50], [:offset, 100]])
+    expect(result.records.operations.last(2)).to eq([ [ :limit, 50 ], [ :offset, 100 ] ])
   end
 
   it "applies declared eager loading before filters, sort, and pagination" do
@@ -193,8 +223,8 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
     result = described_class.new(resource:, context:, params: { filters: { status: "active" } }).call(relation)
 
     expect(result.records.operations).to eq([
-      [:tenant, tenant], [:policy, actor, %i[operator manager]], [:includes, [:owner]], [:preload, [:comments]],
-      [:filter, :status, "active"], [:order, { created_at: :desc }], [:limit, 20], [:offset, 0]
+      [ :tenant, tenant ], [ :policy, actor, %i[operator manager] ], [ :includes, [ :owner ] ], [ :preload, [ :comments ] ],
+      [ :filter, :status, "active" ], [ :order, { created_at: :desc } ], [ :limit, 20 ], [ :offset, 0 ]
     ])
   end
 
@@ -206,9 +236,9 @@ RSpec.describe KrudminAI::QueryAccessPipeline do
     all = described_class.new(resource:, context:, params: { archive: "all" }).call(relation)
     invalid = described_class.new(resource:, context:, params: { archive: "outside" }).call(relation)
 
-    expect(active.records.operations).to include([:where, { archived_at: nil }])
-    expect(archived.records.operations).to include([:where_not, { archived_at: nil }])
-    expect(all.records.operations).not_to include([:where, { archived_at: nil }], [:where_not, { archived_at: nil }])
-    expect(invalid.records.operations).to include([:where, { archived_at: nil }])
+    expect(active.records.operations).to include([ :where, { archived_at: nil } ])
+    expect(archived.records.operations).to include([ :where_not, { archived_at: nil } ])
+    expect(all.records.operations).not_to include([ :where, { archived_at: nil } ], [ :where_not, { archived_at: nil } ])
+    expect(invalid.records.operations).to include([ :where, { archived_at: nil } ])
   end
 end

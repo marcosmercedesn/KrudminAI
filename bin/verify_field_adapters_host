@@ -1,0 +1,833 @@
+#!/usr/bin/env ruby
+
+require "fileutils"
+require "rbconfig"
+require "tmpdir"
+
+root = File.expand_path("..", __dir__)
+rails = [ RbConfig.ruby, "-S", "bundle", "exec", "rails" ]
+
+def write_file(root, path, content)
+  destination = File.join(root, path)
+  FileUtils.mkdir_p(File.dirname(destination))
+  File.write(destination, content)
+end
+
+Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
+  host = File.join(directory, "field_adapter_host")
+  abort "Unable to create generated host" unless system(*rails, "new", host, "--skip-bundle", "--skip-test", "--quiet")
+
+  gemfile = File.join(host, "Gemfile")
+  File.write(gemfile, File.read(gemfile).concat("\ngem \"krudmin_ai\", path: \"#{root}\"\n"))
+  run = ->(*arguments) { abort "Generated host command failed: #{arguments.join(' ')}" unless system(*arguments, chdir: host) }
+  run.call(RbConfig.ruby, "-S", "bundle", "install")
+  write_file(host, "config/initializers/krudmin_ai.rb", <<~RUBY)
+    KrudminAI.configure do |config|
+      config.authentication_provider = KrudminAI::Providers::TestAdapters::Authentication.new(Object.new)
+      config.authorization_provider = KrudminAI::Providers::TestAdapters::Authorization.new
+      config.tenant_provider = KrudminAI::Providers::TestAdapters::Tenant.new("north")
+      config.audit_provider = KrudminAI::Providers::TestAdapters::Audit.new
+      config.notification_provider = KrudminAI::Providers::TestAdapters::Notification.new
+    end
+  RUBY
+  run.call(*rails, "action_text:install")
+
+  write_file(host, "app/models/widget.rb", <<~RUBY)
+    class Widget < ApplicationRecord
+      belongs_to :rank, optional: true
+      belongs_to :province, optional: true
+      belongs_to :recruiter, class_name: "User", optional: true
+      belongs_to :remote_recruiter, class_name: "User", optional: true
+      has_one :insurance, dependent: :destroy
+      has_many :memberships, dependent: :destroy
+      has_many :teams, through: :memberships
+      has_many :passengers, dependent: :destroy
+      accepts_nested_attributes_for :passengers, allow_destroy: true
+      accepts_nested_attributes_for :insurance, allow_destroy: true
+      has_rich_text :notes
+      has_one_attached :avatar
+      has_one_attached :attachment
+    end
+  RUBY
+  write_file(host, "app/models/rank.rb", "class Rank < ApplicationRecord; end\n")
+  write_file(host, "app/models/province.rb", "class Province < ApplicationRecord; end\n")
+  write_file(host, "app/models/user.rb", "class User < ApplicationRecord; end\n")
+  write_file(host, "app/models/insurance.rb", "class Insurance < ApplicationRecord; belongs_to :widget; belongs_to :rank, optional: true; end\n")
+  write_file(host, "app/models/team.rb", "class Team < ApplicationRecord; has_many :memberships; has_many :widgets, through: :memberships; end\n")
+  write_file(host, "app/models/membership.rb", "class Membership < ApplicationRecord; belongs_to :widget; belongs_to :team; end\n")
+  write_file(host, "app/models/passenger.rb", "class Passenger < ApplicationRecord; belongs_to :widget; validates :name, presence: true; end\n")
+  write_file(host, "app/models/car.rb", <<~RUBY)
+    class Car < ApplicationRecord
+      has_many :passengers, class_name: "CarPassenger", dependent: :destroy
+      has_one :insurance, class_name: "CarInsurance", dependent: :destroy
+      has_many :social_accounts, dependent: :destroy
+      accepts_nested_attributes_for :passengers, :insurance, :social_accounts, allow_destroy: true
+    end
+  RUBY
+  write_file(host, "app/models/car_passenger.rb", "class CarPassenger < ApplicationRecord; belongs_to :car; validates :name, presence: true; end\n")
+  write_file(host, "app/models/car_insurance.rb", "class CarInsurance < ApplicationRecord; belongs_to :car; end\n")
+  write_file(host, "app/models/social_account.rb", "class SocialAccount < ApplicationRecord; belongs_to :car; validates :handle, presence: true; end\n")
+  write_file(host, "app/models/audit_log.rb", "class AuditLog < ApplicationRecord; serialize :metadata, coder: JSON, type: Hash; end\n")
+  write_file(host, "db/migrate/20260912000000_create_widgets.rb", <<~RUBY)
+    class CreateWidgets < ActiveRecord::Migration[8.1]
+      def change
+        create_table :widgets do |table|
+          table.string :tenant, null: false
+          table.string :title, null: false
+          table.string :summary, null: false
+          table.text :description
+          table.string :email
+          table.string :password
+          table.string :token
+          table.integer :quantity
+          table.decimal :amount, precision: 12, scale: 2
+          table.decimal :discount, precision: 8, scale: 2
+          table.boolean :active, default: false
+          table.date :starts_on
+          table.time :opens_at
+          table.datetime :published_at
+          table.json :metadata
+          table.string :state
+          table.integer :reference_number
+          table.integer :internal_code
+          table.string :masked_id
+          table.references :rank, foreign_key: true
+          table.references :province, foreign_key: true
+          table.references :recruiter, foreign_key: { to_table: :users }
+          table.references :remote_recruiter, foreign_key: { to_table: :users }
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000005_create_cars.rb", <<~RUBY)
+    class CreateCars < ActiveRecord::Migration[8.1]
+      def change
+        create_table :cars do |table|
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.timestamps
+        end
+        create_table :car_passengers do |table|
+          table.references :car, null: false, foreign_key: true
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.string :secret
+          table.timestamps
+        end
+        create_table :car_insurances do |table|
+          table.references :car, null: false, foreign_key: true
+          table.string :tenant, null: false
+          table.string :provider, null: false
+          table.string :secret
+          table.timestamps
+        end
+        create_table :social_accounts do |table|
+          table.references :car, null: false, foreign_key: true
+          table.string :tenant, null: false
+          table.string :provider, null: false
+          table.string :handle, null: false
+          table.string :secret
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000006_create_audit_logs.rb", <<~RUBY)
+    class CreateAuditLogs < ActiveRecord::Migration[8.1]
+      def change
+        create_table :audit_logs do |table|
+          table.string :event_type, null: false
+          table.string :actor_identifier, null: false
+          table.string :tenant, null: false
+          table.string :operation, null: false
+          table.string :record_type
+          table.string :record_identifier
+          table.json :metadata, null: false, default: {}
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000004_create_passengers.rb", <<~RUBY)
+    class CreatePassengers < ActiveRecord::Migration[8.1]
+      def change
+        create_table :passengers do |table|
+          table.references :widget, null: false, foreign_key: true
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.string :secret
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000003_create_teams.rb", <<~RUBY)
+    class CreateTeams < ActiveRecord::Migration[8.1]
+      def change
+        create_table :teams do |table|
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.timestamps
+        end
+        create_table :memberships do |table|
+          table.references :widget, null: false, foreign_key: true
+          table.references :team, null: false, foreign_key: true
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000002_create_insurances.rb", <<~RUBY)
+    class CreateInsurances < ActiveRecord::Migration[8.1]
+      def change
+        create_table :insurances do |table|
+          table.references :widget, null: false, foreign_key: true
+          table.string :tenant, null: false
+          table.string :provider, null: false
+          table.references :rank, foreign_key: true
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "db/migrate/20260912000001_create_lookup_targets.rb", <<~RUBY)
+    class CreateLookupTargets < ActiveRecord::Migration[8.1]
+      def change
+        create_table :ranks do |table|
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.timestamps
+        end
+        create_table :provinces do |table|
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.boolean :available, null: false, default: true
+          table.timestamps
+        end
+        create_table :users do |table|
+          table.string :tenant, null: false
+          table.string :name, null: false
+          table.boolean :lookup_visible, null: false, default: true
+          table.timestamps
+        end
+      end
+    end
+  RUBY
+  write_file(host, "app/policies/application_policy.rb", <<~RUBY)
+    class ApplicationPolicy
+      attr_reader :user, :record
+
+      def initialize(user, record)
+        @user = user
+        @record = record
+      end
+
+      class Scope
+        attr_reader :user, :scope
+
+        def initialize(user, scope)
+          @user = user
+          @scope = scope
+        end
+      end
+    end
+  RUBY
+  write_file(host, "config/initializers/krudmin_ai.rb", <<~RUBY)
+    KrudminAI.configure do |config|
+      config.authentication_provider = KrudminAI::Providers::TestAdapters::Authentication.new(Object.new)
+      config.authorization_provider = KrudminAI::Providers::TestAdapters::Authorization.new
+      config.tenant_provider = KrudminAI::Providers::TestAdapters::Tenant.new("north")
+      config.audit_provider = KrudminAI::Providers::TestAdapters::Audit.new
+      config.notification_provider = KrudminAI::Providers::TestAdapters::Notification.new
+    end
+  RUBY
+  write_file(host, "test/test_helper.rb", <<~RUBY)
+    ENV["RAILS_ENV"] ||= "test"
+    require_relative "../config/environment"
+    require "rails/test_help"
+  RUBY
+  write_file(host, "test/application_system_test_case.rb", <<~RUBY)
+    require "test_helper"
+
+    class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
+      driven_by :selenium, using: :headless_chrome, screen_size: [1400, 1400]
+    end
+  RUBY
+
+  run.call(*rails, "generate", "krudmin_ai:resource", "Widget")
+  resource_path = File.join(host, "app/resources/widgets_resource.rb")
+  resource = File.read(resource_path).sub(/^\s+permit\s*$/, <<~RUBY.chomp)
+    class RanksResource < KrudminAI::Resources::Base
+      model Rank
+      tenant_scope { |scope, context| scope.where(tenant: context.tenant) }
+      policy_scope { |scope, _context| scope }
+      sortable :name
+      default_sort_by :name
+    end
+    class ProvincesResource < KrudminAI::Resources::Base
+      model Province
+      tenant_scope { |scope, context| scope.where(tenant: context.tenant) }
+      policy_scope { |scope, _context| scope.where(available: true) }
+      sortable :name
+      default_sort_by :name
+    end
+    class RecruitersResource < KrudminAI::Resources::Base
+      model User
+      tenant_scope { |scope, context| scope.where(tenant: context.tenant) }
+      policy_scope { |scope, _context| scope.where(lookup_visible: true) }
+      sortable :name
+      default_sort_by :name
+    end
+    class TeamsResource < KrudminAI::Resources::Base
+      model Team
+      tenant_scope { |scope, context| scope.where(tenant: context.tenant) }
+      policy_scope { |scope, _context| scope }
+      sortable :name
+      default_sort_by :name
+    end
+    permit :title, :summary, :description, :email, :password, :token, :quantity, :amount, :discount, :active, :starts_on, :opens_at, :published_at, :metadata, :state, :reference_number, :internal_code, :masked_id, :rank_id, :province_id, :recruiter_id, :remote_recruiter_id, :notes, :avatar, :attachment, team_ids: []
+    field :title, :string
+    field :description, :text
+    field :email, :email
+    field :password, :password
+    field :token, :hidden
+    field :quantity, :number
+    field :amount, :currency, unit: "EUR ", precision: 2
+    field :discount, :percentage, precision: 1
+    field :active, :boolean
+    field :starts_on, :date
+    field :opens_at, :time
+    field :published_at, :datetime
+    field :metadata, :json
+    field :state, :enum, values: %w[draft published]
+    field :reference_number, :identifier, prefix: "REF-", padding: 4
+    field :internal_code, :identifier, prefix: "INT-", padding: 4
+    field :masked_id, :masked
+    field :notes, :rich_text
+    field :avatar, :image
+    field :attachment, :file
+    field :label, :computed, value: ->(record) { "Widget: \#{record.title}" }
+    field :rank_id, :belongs_to, resource: RanksResource, association: :rank, label: :name, label_read: ->(_record, _context) { true }, link: ->(record, _context) { "/admin/ranks/\#{record.id}" }
+    field :province_id, :belongs_to, resource: ProvincesResource, association: :province, label: :name, label_read: ->(_record, _context) { true }
+    field :recruiter_id, :belongs_to, resource: RecruitersResource, association: :recruiter, label: :name, label_read: ->(record, _context) { record.name != "Restricted recruiter" }
+    field :remote_recruiter_id, :remote_belongs_to, resource: RecruitersResource, association: :remote_recruiter, label: :name, label_read: ->(record, _context) { record.name != "Restricted recruiter" }, minimum_query_length: 2, per_page: 5
+    field :team_ids, :has_many_ids, resource: TeamsResource, association: :teams, label: :name, label_read: ->(_record, _context) { true }
+    section :identity, fields: %i[title summary email state], label: "Identity", columns: :two
+    section :details, fields: %i[description quantity amount discount active starts_on opens_at published_at metadata], label: "Details", columns: :two
+    section :relationships, fields: %i[rank_id province_id recruiter_id remote_recruiter_id team_ids], label: "Relationships", columns: :one
+    section :attachments, fields: %i[notes avatar attachment], label: "Attachments", columns: :one
+    filter_field :title
+    filter_field :state
+    filter_field :active
+    filter_field :quantity
+    filter_field :starts_on
+    filter_field :published_at
+    filter_field :rank_id
+    sortable :title, :quantity, :starts_on
+    default_sort_by :title
+    paginate per_page: 1, max_per_page: 2
+    has_one :insurance,
+      fields: %i[provider rank_id],
+      authorize: ->(_record, _action, _context) { true },
+      tenant_record: ->(record, context) { record.tenant.blank? || record.tenant == context.tenant },
+      field_authorizers: {
+        provider: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } },
+        rank_id: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }
+      },
+      belongs_to_fields: { rank_id: { resource: RanksResource, association: :rank, label: :name, label_read: ->(_record, _context) { true } } }
+    has_many :passengers,
+      fields: %i[name secret],
+      authorize: ->(_record, _action, _context) { true },
+      tenant_record: ->(record, context) { record.tenant.blank? || record.tenant == context.tenant },
+      field_authorizers: {
+        name: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } },
+        secret: { read: ->(_record, _context) { false }, write: ->(_record, _context) { false } }
+      }
+    transition :publish, from: :draft, to: :published, label: "Publish", attribute: :state
+    authorize :publish, ->(_record, _context) { true }
+    bulk_action :publish
+    authorize :create, ->(_record, _context) { true }
+    authorize :update, ->(_record, _context) { true }
+    authorize :export, ->(_record, _context) { true }
+    list :title, :rank_id, :province_id, :recruiter_id, :description, :email, :password, :token, :quantity, :amount, :discount, :active, :starts_on, :opens_at, :published_at, :metadata, :state, :reference_number, :internal_code, :masked_id
+    list_priority :title, :primary
+    list_priority :description, :secondary
+    list_priority :email, :secondary
+    inline_edit :title
+    form :title, :summary, :rank_id, :province_id, :recruiter_id, :remote_recruiter_id, :team_ids, :description, :email, :password, :token, :quantity, :amount, :discount, :active, :starts_on, :opens_at, :published_at, :metadata, :state, :reference_number, :internal_code, :notes, :avatar, :attachment
+    show :title, :summary, :rank_id, :province_id, :recruiter_id, :description, :email, :password, :token, :quantity, :amount, :discount, :active, :starts_on, :opens_at, :published_at, :metadata, :state, :reference_number, :internal_code, :masked_id, :notes, :avatar, :attachment, :label
+    export_profile :scalar_csv, fields: [:title, :description, :email, :password, :token, :quantity, :amount, :discount, :active, :starts_on, :opens_at, :published_at, :metadata, :state, :reference_number, :masked_id]
+    %i[title description email password token quantity amount discount active starts_on opens_at published_at metadata state reference_number masked_id].each { |attribute| ai_field attribute }
+    authorize_field :title, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+    authorize_field :summary, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+    %i[rank_id province_id recruiter_id remote_recruiter_id team_ids].each { |attribute| authorize_field attribute, read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }
+    %i[description email password token quantity amount discount active starts_on opens_at published_at metadata state reference_number].each do |attribute|
+      authorize_field attribute, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+    end
+    %i[notes avatar attachment].each { |attribute| authorize_field attribute, read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }
+    authorize_field :label, read: ->(_record, _context) { true }, write: ->(_record, _context) { false }
+    authorize_field :internal_code, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
+    authorize_field :masked_id, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }, reveal: ->(_record, _context) { false }
+  RUBY
+  File.write(resource_path, resource.sub("        scope.none", "        scope"))
+  policy_path = File.join(host, "app/policies/widget_policy.rb")
+  policy = File.read(policy_path).sub("scope.none", "scope").sub("def create? = false", "def create? = true").sub("def update? = false", "def update? = true")
+  File.write(policy_path, policy)
+
+  run.call(*rails, "generate", "krudmin_ai:resource", "Car")
+  car_resource_path = File.join(host, "app/resources/cars_resource.rb")
+  car_resource = File.read(car_resource_path).sub(/^\s+permit\s*$/, <<~RUBY.chomp)
+    permit :name
+    field :name, :string
+    has_many :passengers,
+      fields: %i[name secret],
+      authorize: ->(_record, _action, _context) { true },
+      tenant_record: ->(record, context) { record.tenant.blank? || record.tenant == context.tenant },
+      field_authorizers: { name: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }, secret: { read: ->(_record, _context) { false }, write: ->(_record, _context) { false } } }
+    has_one :insurance,
+      fields: %i[provider secret],
+      authorize: ->(_record, _action, _context) { true },
+      tenant_record: ->(record, context) { record.tenant.blank? || record.tenant == context.tenant },
+      field_authorizers: { provider: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }, secret: { read: ->(_record, _context) { false }, write: ->(_record, _context) { false } } }
+    has_many :social_accounts,
+      fields: %i[provider handle secret],
+      authorize: ->(_record, _action, _context) { true },
+      tenant_record: ->(record, context) { record.tenant.blank? || record.tenant == context.tenant },
+      field_authorizers: { provider: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }, handle: { read: ->(_record, _context) { true }, write: ->(_record, _context) { true } }, secret: { read: ->(_record, _context) { false }, write: ->(_record, _context) { false } } }
+    authorize :create, ->(_record, _context) { true }
+    authorize :update, ->(_record, _context) { true }
+    authorize_field :name, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
+  RUBY
+  File.write(car_resource_path, car_resource.sub("        scope.none", "        scope"))
+  car_policy_path = File.join(host, "app/policies/car_policy.rb")
+  car_policy = File.read(car_policy_path).sub("scope.none", "scope").sub("def create? = false", "def create? = true").sub("def update? = false", "def update? = true")
+  File.write(car_policy_path, car_policy)
+
+  write_file(host, "test/integration/field_adapters_test.rb", <<~RUBY)
+    require "csv"
+    require "stringio"
+    require "test_helper"
+
+    class FieldAdaptersTest < ActionDispatch::IntegrationTest
+      test "generated audit store scopes history and redacts sensitive diffs" do
+        store = KrudminAI::Audit::ActiveRecordStore.new(model: AuditLog)
+        store.record(KrudminAI::AuditEvent.new(:update, Object.new, "north", [], 7, { secret: "hidden", changed: { title: ["Before", "After"] } }))
+        AuditLog.create!(event_type: "audit_event", actor_identifier: "south", tenant: "south", operation: "update", record_identifier: "8", metadata: { secret: "south" })
+        context = KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: [])
+
+        assert_equal ["7"], store.search(context:, operation: :update).pluck(:record_identifier)
+        assert_equal "[FILTERED]", store.presentation(AuditLog.sole).fetch("metadata").fetch("secret")
+        assert_equal ["Before", "After"], store.presentation(AuditLog.sole).fetch("metadata").fetch("changed").fetch("title")
+      end
+
+      test "generated dashboard widgets retain tenant and field policy boundaries" do
+        allowed = Widget.create!(tenant: "north", title: "Dashboard allowed", summary: "Visible", amount: 12.5)
+        Widget.create!(tenant: "south", title: "Dashboard denied", summary: "Hidden", amount: 99.5)
+        dashboard = Class.new(KrudminAI::Dashboards::Base) do
+          widget :recent,
+            widget_class: KrudminAI::Dashboards::Widgets::Table,
+            resource: WidgetsResource,
+            relation: ->(_context) { Widget.all },
+            visible: ->(_context) { true },
+            columns: %i[title amount],
+            limit: 10,
+            drill_down_filters: { title: "Dashboard" }
+          widget :totals,
+            widget_class: KrudminAI::Dashboards::Widgets::Chart,
+            resource: WidgetsResource,
+            relation: ->(_context) { Widget.all },
+            visible: ->(_context) { true },
+            series: ->(relation) { [{ label: "Allowed", value: relation.sum(:amount) }] }
+        end
+        context = KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: [])
+        results = dashboard.new(context:).render
+
+        recent = results.find { |result| result.name == :recent }
+        totals = results.find { |result| result.name == :totals }
+        assert_equal [{ title: allowed.title, amount: "EUR 12.50" }], recent.rows
+        assert_equal({ filters: { title: "Dashboard" } }, recent.drill_down_params)
+        assert_equal [{ label: "Allowed", value: 12.5 }], totals.value
+      end
+
+      test "generated Car relationships retain invalid rows and reject forged child input" do
+        car = Car.create!(tenant: "north", name: "North car")
+        other_car = Car.create!(tenant: "south", name: "South car")
+
+        patch admin_car_path(car), params: { car: { passengers_attributes: { "0" => { name: "" } } } }
+        assert_response :unprocessable_entity
+        assert_includes response.body, "can&#39;t be blank"
+        assert_select "input[name^='car[passengers_attributes]'][name$='[name]'][value='']"
+
+        patch admin_car_path(car), params: { car: { passengers_attributes: { "0" => { name: "Passenger" } }, insurance_attributes: { provider: "North cover" }, social_accounts_attributes: { "0" => { provider: "github", handle: "north" } } } }
+        assert_response :see_other
+        passenger = car.reload.passengers.sole
+        insurance = car.insurance
+        social_account = car.social_accounts.sole
+
+          patch admin_car_path(car), params: { car: { social_accounts_attributes: { "0" => { provider: "github", handle: "" } } } }
+          assert_response :unprocessable_entity
+          assert_match(/can't be blank/i, response.body)
+          assert_select "input[name^='car[social_accounts_attributes]'][name$='[handle]'][value='']"
+
+        patch admin_car_path(car), params: { car: { passengers_attributes: { "0" => { id: passenger.id, secret: "forged" } } } }
+        assert_response :forbidden
+        assert_nil passenger.reload.secret
+        patch admin_car_path(car), params: { car: { insurance_attributes: { id: insurance.id, secret: "forged" } } }
+        assert_response :forbidden
+        assert_nil insurance.reload.secret
+        patch admin_car_path(car), params: { car: { social_accounts_attributes: { "0" => { id: social_account.id, secret: "forged" } } } }
+        assert_response :forbidden
+        assert_nil social_account.reload.secret
+
+        foreign_passenger = CarPassenger.create!(car: other_car, tenant: "south", name: "Foreign")
+        patch admin_car_path(car), params: { car: { passengers_attributes: { "0" => { id: foreign_passenger.id, name: "Forged" } } } }
+        assert_response :forbidden
+          foreign_insurance = CarInsurance.create!(car: other_car, tenant: "south", provider: "South cover")
+          patch admin_car_path(car), params: { car: { insurance_attributes: { id: foreign_insurance.id, provider: "Forged" } } }
+          assert_response :forbidden
+          foreign_social_account = SocialAccount.create!(car: other_car, tenant: "south", provider: "github", handle: "south")
+          patch admin_car_path(car), params: { car: { social_accounts_attributes: { "0" => { id: foreign_social_account.id, handle: "forged" } } } }
+          assert_response :forbidden
+
+        patch admin_car_path(car), params: { car: { passengers_attributes: { "0" => { id: passenger.id, _destroy: "1" } }, insurance_attributes: { id: insurance.id, _destroy: "1" }, social_accounts_attributes: { "0" => { id: social_account.id, _destroy: "1" } } } }
+        assert_response :see_other
+        assert_empty car.reload.passengers
+        assert_nil car.insurance
+        assert_empty car.social_accounts
+      end
+
+      test "generated resource renders declared and inferred string adapters" do
+        rank = Rank.create!(tenant: "north", name: "Regional")
+        cross_tenant_rank = Rank.create!(tenant: "south", name: "Cross tenant")
+        province = Province.create!(tenant: "north", name: "North Province", available: true)
+        Province.create!(tenant: "north", name: "Policy denied", available: false)
+        recruiter = User.create!(tenant: "north", name: "Visible recruiter", lookup_visible: true)
+        User.create!(tenant: "north", name: "Restricted recruiter", lookup_visible: true)
+        remote_recruiter = User.create!(tenant: "north", name: "Remote recruiter 0", lookup_visible: true)
+        11.times { |index| User.create!(tenant: "north", name: "Remote recruiter \#{index + 1}", lookup_visible: true) }
+        User.create!(tenant: "south", name: "Remote recruiter cross tenant", lookup_visible: true)
+        north_team = Team.create!(tenant: "north", name: "Operations")
+        south_team = Team.create!(tenant: "south", name: "Cross tenant team")
+        widget = Widget.create!(
+          tenant: "north", title: "Declared title", summary: "Inferred summary", description: "A detailed description",
+          email: "operator@example.test", password: "do-not-disclose", token: "hidden-token", quantity: 7,
+          amount: 12.5, discount: 15.5, active: true, starts_on: Date.new(2026, 9, 12), opens_at: "09:05",
+          published_at: Time.utc(2026, 9, 12, 15, 30), metadata: { "source" => "generated-host" },
+          state: "published", reference_number: 42, internal_code: 99, masked_id: "SENSITIVE-42", rank:, province:, recruiter:, remote_recruiter:, team_ids: [north_team.id]
+        )
+        widget.notes = "Rich private notes"
+        widget.avatar.attach(io: StringIO.new("avatar"), filename: "avatar.png", content_type: "image/png")
+        widget.attachment.attach(io: StringIO.new("resume"), filename: "resume.pdf", content_type: "application/pdf")
+        widget.save!
+
+        assert_equal 1, Widget.count
+        assert_equal %i[title rank_id province_id recruiter_id description email password token quantity amount discount active starts_on opens_at published_at metadata state reference_number internal_code masked_id], WidgetsResource.list
+        assert_instance_of KrudminAI::Fields::String, WidgetsResource.field_adapter(:title)
+        assert_instance_of KrudminAI::Fields::String, WidgetsResource.field_adapter(:summary)
+        assert_instance_of KrudminAI::Fields::Text, WidgetsResource.field_adapter(:description)
+        assert_instance_of KrudminAI::Fields::Email, WidgetsResource.field_adapter(:email)
+        assert_instance_of KrudminAI::Fields::Password, WidgetsResource.field_adapter(:password)
+        assert_instance_of KrudminAI::Fields::Hidden, WidgetsResource.field_adapter(:token)
+        assert_instance_of KrudminAI::Fields::Number, WidgetsResource.field_adapter(:quantity)
+        assert_instance_of KrudminAI::Fields::Currency, WidgetsResource.field_adapter(:amount)
+        assert_instance_of KrudminAI::Fields::Percentage, WidgetsResource.field_adapter(:discount)
+        assert_instance_of KrudminAI::Fields::Boolean, WidgetsResource.field_adapter(:active)
+        assert_instance_of KrudminAI::Fields::Date, WidgetsResource.field_adapter(:starts_on)
+        assert_instance_of KrudminAI::Fields::Time, WidgetsResource.field_adapter(:opens_at)
+        assert_instance_of KrudminAI::Fields::DateTime, WidgetsResource.field_adapter(:published_at)
+        assert_instance_of KrudminAI::Fields::Json, WidgetsResource.field_adapter(:metadata)
+        assert_instance_of KrudminAI::Fields::Enum, WidgetsResource.field_adapter(:state)
+        assert_instance_of KrudminAI::Fields::Identifier, WidgetsResource.field_adapter(:reference_number)
+
+        get admin_widgets_path
+        assert_response :success
+        assert_includes response.body, widget.title
+        assert_includes response.body, "EUR 12.50"
+        assert_includes response.body, "15.5%"
+        assert_includes response.body, "REF-0042"
+        assert_select "th.krudmin-ai-priority--primary", text: "Title"
+        assert_select "th.krudmin-ai-priority--secondary", text: "Description"
+        assert_select "form.krudmin-ai-inline-edit input[name='widget[title]']"
+        assert_select "form#krudmin-ai-bulk-actions button", text: "Publish"
+        assert_select "input[type='checkbox'][name='ids[]'][form='krudmin-ai-bulk-actions']"
+
+        patch admin_widget_path(widget), params: { widget: { title: "Edited inline" } }
+        assert_response :see_other
+        assert_equal "Edited inline", widget.reload.title
+        assert_not_includes response.body, "do-not-disclose"
+        assert_not_includes response.body, "hidden-token"
+        assert_not_includes response.body, "INT-0099"
+        assert_not_includes response.body, "SENSITIVE-42"
+
+        Widget.create!(tenant: "north", title: "Zebra widget", summary: "Second", state: "draft", quantity: 2, starts_on: Date.new(2026, 9, 1), published_at: Time.utc(2026, 9, 1), rank:)
+        Widget.create!(tenant: "south", title: "North private", summary: "Excluded", state: "published", quantity: 7, starts_on: Date.new(2026, 9, 12), published_at: Time.utc(2026, 9, 12), rank: cross_tenant_rank)
+        get admin_widgets_path, params: { filters: { title: { operator: "contains", value: "Declared" }, state: { value: "published" }, active: { value: "true" }, quantity: { from: "7", to: "7" }, starts_on: { from: "2026-09-12", to: "2026-09-12" }, published_at: { from: "2026-09-12T00:00", to: "2026-09-12T23:59" }, rank_id: { value: rank.id.to_s } }, per_page: 2 }
+        assert_response :success
+        assert_includes response.body, "Declared title"
+        assert_not_includes response.body, "Zebra widget"
+        assert_not_includes response.body, "North private"
+        assert_select "a[href='\#{admin_widgets_path}']", text: "Reset"
+
+        get admin_widgets_path, params: { sort: "title:desc", page: 1, per_page: 1 }
+        assert_response :success
+        assert_includes response.body, "Zebra widget"
+        assert_select "th[aria-sort='descending'] a", text: "Title"
+        assert_select "nav[aria-label='Pagination']"
+
+        get admin_widgets_path, params: { filters: { quantity: { from: "unsafe", to: "" } } }
+        assert_response :success
+
+        audit_events_before_reveal = KrudminAI.config.audit_provider.events.length
+        denied_reveal = KrudminAI::Fields::Reveal.new(
+          resource: WidgetsResource,
+          context: KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: []),
+          auditor: KrudminAI.config.audit_provider
+        ).call(record: widget, field: :masked_id)
+        assert_equal :forbidden, denied_reveal.outcome
+        assert_equal audit_events_before_reveal, KrudminAI.config.audit_provider.events.length
+        assert_not_includes response.body, "SENSITIVE-42"
+
+        get new_admin_widget_path
+        assert_response :success
+        assert_select "input[type='text'][name='widget[title]']"
+        assert_select "fieldset.krudmin-ai-form-section legend", text: "Identity"
+        assert_select "fieldset.krudmin-ai-form-section--two legend", text: "Details"
+        assert_select "input[type='text'][name='widget[summary]']"
+        assert_select "textarea[name='widget[description]']"
+        assert_select "input[type='email'][name='widget[email]']"
+        assert_select "input[type='password'][name='widget[password]']"
+        assert_select "input[type='hidden'][name='widget[token]']"
+        assert_select "input[type='number'][name='widget[quantity]']"
+        assert_select "input[type='checkbox'][name='widget[active]']"
+        assert_select "input[type='date'][name='widget[starts_on]']"
+        assert_select "input[type='time'][name='widget[opens_at]']"
+        assert_select "input[type='datetime-local'][name='widget[published_at]']"
+        assert_select "select[name='widget[state]']"
+        assert_select "select[name='widget[rank_id]'] option", text: "Regional"
+        assert_select "select[name='widget[province_id]'] option", text: "North Province"
+        assert_select "select[name='widget[recruiter_id]'] option", text: "Visible recruiter"
+        assert_select "input[type='search'][role='combobox']"
+        assert_select "select[multiple][name='widget[team_ids][]'] option", text: "Operations"
+        assert_select "option", text: "Cross tenant team", count: 0
+        assert_select "input[type='search'][value='']"
+        assert_select "option", text: "Cross tenant", count: 0
+        assert_select "option", text: "Policy denied", count: 0
+        assert_select "option", text: "Restricted recruiter", count: 0
+        assert_select "trix-editor"
+        assert_select "input[type='file'][name='widget[avatar]']"
+        assert_select "input[type='file'][name='widget[attachment]']"
+
+        get lookup_field_admin_widgets_path(field_name: :remote_recruiter_id), params: { q: "Remote recruiter" }
+        assert_response :success
+        lookup_payload = JSON.parse(response.body)
+        assert_equal 5, lookup_payload.fetch("results").length
+        assert_equal true, lookup_payload.fetch("more")
+        assert_not_includes lookup_payload.fetch("results").map { |result| result.fetch("label") }, "Remote recruiter cross tenant"
+
+        get lookup_field_admin_widgets_path(field_name: :remote_recruiter_id), params: { q: "R" }
+        assert_response :success
+        assert_equal [], JSON.parse(response.body).fetch("results")
+
+        get admin_widget_path(widget)
+        assert_response :success
+        assert_includes response.body, widget.title
+        assert_includes response.body, widget.summary
+        assert_includes response.body, "A detailed description"
+        assert_includes response.body, "09:05"
+        assert_includes response.body, '{&quot;source&quot;:&quot;generated-host&quot;}'
+        assert_includes response.body, "Rich private notes"
+        assert_includes response.body, "Widget: Declared title"
+        assert_select "a[href='/admin/ranks/\#{rank.id}']", text: "Regional"
+        assert_select "img.krudmin-ai-record-image[alt='Avatar']"
+        assert_select "a", text: "resume.pdf"
+        assert_not_includes response.body, "do-not-disclose"
+        assert_not_includes response.body, "hidden-token"
+        assert_not_includes response.body, "INT-0099"
+
+        draft_widget = Widget.create!(tenant: "north", title: "Draft action", summary: "Action", state: "draft")
+        get admin_widget_path(draft_widget)
+        assert_response :success
+        assert_select "form[action='\#{action_admin_widget_path(draft_widget, action_name: :publish)}'] button", text: "Publish"
+        post action_admin_widget_path(draft_widget, action_name: :publish)
+        assert_response :see_other
+        assert_equal "published", draft_widget.reload.state
+        post action_admin_widget_path(draft_widget, action_name: :publish)
+        assert_response :unprocessable_entity
+
+        bulk_one = Widget.create!(tenant: "north", title: "Bulk one", summary: "Action", state: "draft")
+        bulk_two = Widget.create!(tenant: "north", title: "Bulk two", summary: "Action", state: "draft")
+        post bulk_action_admin_widgets_path(action_name: :publish), params: { ids: [bulk_one.id, bulk_two.id] }
+        assert_response :see_other
+        assert_equal %w[published published], [bulk_one.reload.state, bulk_two.reload.state]
+        audit_events_before_cross_tenant_bulk = KrudminAI.config.audit_provider.events.length
+        post bulk_action_admin_widgets_path(action_name: :publish), params: { ids: [bulk_one.id, other_widget.id] }
+        assert_response :forbidden
+        assert_equal audit_events_before_cross_tenant_bulk, KrudminAI.config.audit_provider.events.length
+
+        get edit_admin_widget_path(widget)
+        assert_response :success
+        assert_select "input[type='search'][value='Remote recruiter 0']"
+        assert_select "input[name='widget[insurance_attributes][provider]']"
+        assert_select "select[name='widget[insurance_attributes][rank_id]'] option", text: "Regional"
+        assert_select "button", text: "Add Passenger"
+
+        patch admin_widget_path(widget), params: { widget: { insurance_attributes: { provider: "North cover", rank_id: rank.id } } }
+        assert_response :see_other
+        assert_equal "North cover", widget.reload.insurance.provider
+        assert_equal rank.id, widget.insurance.rank_id
+
+        audit_events_before_nested_rank_forgery = KrudminAI.config.audit_provider.events.length
+        patch admin_widget_path(widget), params: { widget: { insurance_attributes: { id: widget.insurance.id, provider: "North cover", rank_id: cross_tenant_rank.id } } }
+        assert_response :forbidden
+        assert_equal rank.id, widget.reload.insurance.rank_id
+        assert_equal audit_events_before_nested_rank_forgery, KrudminAI.config.audit_provider.events.length
+
+        other_widget = Widget.create!(tenant: "south", title: "Other", summary: "Other summary")
+        foreign_insurance = Insurance.create!(widget: other_widget, tenant: "south", provider: "South cover")
+        audit_events_before_insurance_forgery = KrudminAI.config.audit_provider.events.length
+        patch admin_widget_path(widget), params: { widget: { insurance_attributes: { id: foreign_insurance.id, provider: "Forged" } } }
+        assert_response :forbidden
+        assert_equal "North cover", widget.reload.insurance.provider
+        assert_equal audit_events_before_insurance_forgery, KrudminAI.config.audit_provider.events.length
+
+        patch admin_widget_path(widget), params: { widget: { insurance_attributes: { id: widget.insurance.id, _destroy: "1" } } }
+        assert_response :see_other
+        assert_nil widget.reload.insurance
+
+        patch admin_widget_path(widget), params: { widget: { team_ids: [north_team.id] } }
+        assert_response :see_other
+        assert_equal [north_team.id], widget.reload.team_ids
+
+        audit_events_before_team_forgery = KrudminAI.config.audit_provider.events.length
+        patch admin_widget_path(widget), params: { widget: { team_ids: [south_team.id] } }
+        assert_response :forbidden
+        assert_equal [north_team.id], widget.reload.team_ids
+        assert_equal audit_events_before_team_forgery, KrudminAI.config.audit_provider.events.length
+
+        patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { name: "Passenger" } } } }
+        assert_response :see_other
+        passenger = widget.reload.passengers.sole
+
+        audit_events_before_passenger_validation = KrudminAI.config.audit_provider.events.length
+        patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { name: "" } } } }
+        assert_response :unprocessable_entity
+        assert_includes response.body, "Name can't be blank"
+        assert_equal audit_events_before_passenger_validation, KrudminAI.config.audit_provider.events.length
+
+        patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { id: passenger.id, secret: "forged" } } } }
+        assert_response :forbidden
+        assert_nil passenger.reload.secret
+
+        foreign_passenger = Passenger.create!(widget: other_widget, tenant: "south", name: "Foreign passenger")
+        audit_events_before_passenger_forgery = KrudminAI.config.audit_provider.events.length
+        patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { id: foreign_passenger.id, name: "Forged" } } } }
+        assert_response :forbidden
+        assert_equal audit_events_before_passenger_forgery, KrudminAI.config.audit_provider.events.length
+
+        patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { id: passenger.id, _destroy: "1" } } } }
+        assert_response :see_other
+        assert_empty widget.reload.passengers
+
+        csv = KrudminAI::DataOperations::Exporter.new(
+          resource: WidgetsResource,
+          context: KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: []),
+          auditor: KrudminAI.config.audit_provider
+        ).call(profile: :scalar_csv, relation: Widget.all).csv
+        row = CSV.parse(csv, headers: true).first
+        assert_equal "EUR 12.50", row["amount"]
+        assert_equal "15.5%", row["discount"]
+        assert_equal "REF-0042", row["reference_number"]
+        assert_not_includes csv, "do-not-disclose"
+        assert_not_includes csv, "hidden-token"
+        assert_not_includes csv, "SENSITIVE-42"
+
+        ai_context = KrudminAI::Ai::ContextBuilder.new(
+          resource: WidgetsResource,
+          context: KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: [])
+        ).build(Widget.all).records.first
+        assert_equal({ "source" => "generated-host" }, ai_context[:metadata])
+        assert_equal "EUR 12.50", ai_context[:amount]
+        assert_nil ai_context[:password]
+        assert_nil ai_context[:token]
+        assert_nil ai_context[:masked_id]
+        assert_nil WidgetsResource.field_adapter(:masked_id).json_value(widget)
+
+        post admin_widgets_path(format: :json), params: {
+          widget: { title: "JSON widget", summary: "JSON summary", amount: "20.00", state: "draft", password: "another-secret", token: "another-token" }
+        }
+        assert_response :created
+        payload = JSON.parse(response.body)
+        assert_equal "20.0", payload.dig("data", "amount").to_s
+        assert_nil payload.dig("data", "password")
+        assert_nil payload.dig("data", "token")
+
+        assert_no_difference("Widget.count") do
+          post admin_widgets_path(format: :json), params: {
+            widget: { title: "Denied widget", summary: "Denied summary", internal_code: "100" }
+          }
+        end
+        assert_response :forbidden
+
+        audit_events_before_forgery = KrudminAI.config.audit_provider.events.length
+        patch admin_widget_path(widget, format: :json), params: { widget: { rank_id: cross_tenant_rank.id } }
+        assert_response :forbidden
+        assert_equal rank.id, widget.reload.rank_id
+        assert_equal audit_events_before_forgery, KrudminAI.config.audit_provider.events.length
+      end
+
+      test "generated resource renders generic controls in Spanish" do
+        Widget.create!(tenant: "north", title: "Miembro visible", summary: "Cobertura localizada", state: "draft")
+
+        I18n.with_locale(:es) do
+          get admin_widgets_path
+
+          assert_response :success
+          assert_select "a", text: "Nuevo widget"
+          assert_select "button", text: "Aplicar filtros"
+          assert_select "a", text: "Restablecer"
+          assert_select "nav[aria-label='Paginación']"
+        end
+      end
+    end
+  RUBY
+
+  write_file(host, "test/system/resource_accessibility_test.rb", <<~RUBY)
+    require "application_system_test_case"
+
+    class ResourceAccessibilityTest < ApplicationSystemTestCase
+      setup do
+        Widget.create!(tenant: "north", title: "Miembro visible", summary: "Interfaz accesible", state: "draft")
+      end
+
+      test "generated resource remains accessible across supported viewports in Spanish" do
+        [[1440, 900], [768, 1024], [390, 844]].each do |width, height|
+          page.current_window.resize_to(width, height)
+          I18n.with_locale(:es) { visit admin_widgets_path }
+
+          assert_selector "main"
+          assert_selector "h1"
+          assert_selector "nav[aria-label='Paginación']"
+          assert_selector "button", text: "Aplicar filtros"
+          assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth"), "Expected no horizontal overflow at \#{width}px"
+          assert page.evaluate_script(<<~JAVASCRIPT), "Expected every visible control to have an accessible name at \#{width}px"
+            [...document.querySelectorAll("button, input:not([type=hidden]), select, textarea")]
+              .filter((control) => control.offsetParent !== null)
+              .every((control) => control.labels.length > 0 || control.getAttribute("aria-label") || control.getAttribute("aria-labelledby") || control.innerText.trim() || control.value)
+          JAVASCRIPT
+
+          focus_target = page.first("a, button, input, select, textarea")
+          page.execute_script("arguments[0].focus()", focus_target)
+          assert page.evaluate_script("document.activeElement === arguments[0]", focus_target)
+          assert_operator page.evaluate_script("parseFloat(getComputedStyle(document.activeElement).outlineWidth)"), :>, 0
+        end
+      end
+    end
+  RUBY
+
+  run.call(*rails, "db:migrate")
+  run.call(*rails, "test", "test/integration/field_adapters_test.rb")
+  run.call(*rails, "test:system", "test/system/resource_accessibility_test.rb")
+end
+
+puts "Generated field-adapter host conformance OK"

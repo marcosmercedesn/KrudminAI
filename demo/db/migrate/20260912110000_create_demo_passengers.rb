@@ -8,6 +8,6 @@ class CreateDemoPassengers < ActiveRecord::Migration[8.1]
       table.timestamps
     end
 
-    add_index :demo_passengers, [:demo_ticket_id, :tenant]
+    add_index :demo_passengers, [ :demo_ticket_id, :tenant ]
   end
 end

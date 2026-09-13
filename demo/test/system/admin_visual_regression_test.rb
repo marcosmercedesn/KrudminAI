@@ -9,7 +9,7 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     DemoTicket.delete_all
     DemoUser.delete_all
 
-    @agent = DemoUser.create!(name: "Morgan Lee", tenant: "northwind", roles: ["support_agent"])
+    @agent = DemoUser.create!(name: "Morgan Lee", tenant: "northwind", roles: [ "support_agent" ])
     @ticket = DemoTicket.create!(
       tenant: "northwind",
       title: "Printer queue needs attention",
@@ -72,7 +72,7 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     click_button "Save ticket"
 
     assert_current_path ticket_path(@ticket)
-    assert_equal ["Added passenger"], @ticket.passengers.reload.pluck(:name)
+    assert_equal [ "Added passenger" ], @ticket.passengers.reload.pluck(:name)
   end
 
   test "supports keyboard filtering and announces validation errors" do

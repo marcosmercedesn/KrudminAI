@@ -1,4 +1,4 @@
-<nav class="krudmin-ai-navigation" aria-label="Main navigation">
+<nav class="krudmin-ai-navigation" aria-label="<%= t("krudmin_ai.main_navigation") %>">
   <% items.each do |item| %>
     <%= link_to item.path_for(self), class: ["krudmin-ai-navigation__item", ("is-active" if item.active?(self))].compact.join(" ") do %>
       <%= krudmin_ai_icon(item.icon, class: "krudmin-ai-navigation__icon") %>

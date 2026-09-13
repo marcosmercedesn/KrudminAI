@@ -2,11 +2,11 @@
 .krudmin-ai-toolbar{ data: { controller: "krudmin-ai-filter-panel" } }
   = button_tag type: "button", class: "krudmin-ai-button", aria: { controls: panel_id, expanded: "false" }, data: { krudmin_ai_filter_panel_target: "trigger", action: "krudmin-ai-filter-panel#toggle" } do
     = krudmin_ai_icon(:sliders_horizontal, class: "krudmin-ai-button__icon")
-    Filters
-  %section.krudmin-ai-filter-panel{ id: panel_id, hidden: true, aria: { label: "Filters" }, data: { krudmin_ai_filter_panel_target: "panel" } }
+    = t("krudmin_ai.filters")
+  %section.krudmin-ai-filter-panel{ id: panel_id, hidden: true, aria: { label: t("krudmin_ai.filters") }, data: { krudmin_ai_filter_panel_target: "panel" } }
     = form_with url: local_assigns.fetch(:url), method: :get, class: "krudmin-ai-filter-grid" do |form|
       = yield form
       .krudmin-ai-form-actions
         = form.button class: "krudmin-ai-button" do
           = krudmin_ai_icon(:filter, class: "krudmin-ai-button__icon")
-          %span Apply filters
+          %span= t("krudmin_ai.apply_filters")

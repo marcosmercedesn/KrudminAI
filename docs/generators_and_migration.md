@@ -1,0 +1,5 @@
+# Generators and Migration
+
+`rails generate krudmin_ai:resource Member --fields name:string rank:enum joined_on:date` generates deterministic typed `permit`, `field`, form/list/show, and field authorization declarations. Supported types are the shipped non-QR adapters. `--associations passengers:has_many:name,seat insurance:has_one:provider` generates nested relationship declarations with deny-by-default child policy and tenant predicates. `--workflows approve:submitted:approved` generates a deny-by-default transition authorization and transition declaration. Rerunning a resource generator preserves one managed route block.
+
+Legacy migration audit returns a machine-readable classification for every recognized item: `automatic`, `assisted`, `manual`, or `blocked`. Scalar `ATTRIBUTE_TYPES` are automatic candidates; `belongs_to`, `has_many`, `has_one`, inline-editing, and bulk metadata are assisted transformations requiring explicit target resource, policy, field authorization, and audit review. State-machine, `BelongsToOne`, polymorphic, and arbitrary-depth nested behavior are blocked where an explicit secure mapping does not exist.

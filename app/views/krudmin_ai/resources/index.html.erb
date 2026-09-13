@@ -2,7 +2,7 @@
   <div class="krudmin-ai-resource-heading">
     <h1><%= resources_label %></h1>
     <% if authorized_action?(:create, resource.model_class.new) %>
-      <%= link_to new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary" do %><%= krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon") %><span>New <%= resource_label %></span><% end %>
+      <%= link_to new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary" do %><%= krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.new", resource: resource_label) %></span><% end %>
     <% end %>
   </div>
 
@@ -12,10 +12,19 @@
 
   <% if models.any? %>
     <% list_fields = resource.list.select { |field| models.any? { |record| field_readable?(field, record) } } %>
+    <% if resource.bulk_actions.any? %>
+      <form id="krudmin-ai-bulk-actions" class="krudmin-ai-bulk-actions" method="post">
+        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+        <% resource.bulk_actions.each do |action_name| %>
+          <% action = resource.action_for(action_name) %>
+          <button type="submit" class="krudmin-ai-button#{action.variant == :default ? "" : " krudmin-ai-button--#{action.variant}"}" formaction="<%= bulk_action_path(action.name) %>" data-turbo-confirm="<%= action.confirmation %>"><%= krudmin_ai_icon(action.icon, class: "krudmin-ai-button__icon") %><span><%= action.label %></span></button>
+        <% end %>
+      </form>
+    <% end %>
     <%= render "krudmin_ai/ui/list_table", resource: resource, records: models, fields: list_fields %>
     <%= render "krudmin_ai/ui/pagination", page: @query_result.page, per_page: @query_result.per_page, records_count: models.length %>
   <% else %>
-    <% create_action = authorized_action?(:create, resource.model_class.new) ? link_to(new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary") { safe_join([krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon"), content_tag(:span, "Create #{resource_label}")]) } : nil %>
-    <%= render "krudmin_ai/ui/empty_state", id: "empty-resource-title", title: "No #{resources_label.downcase} found", action: create_action %>
+    <% create_action = authorized_action?(:create, resource.model_class.new) ? link_to(new_resource_path, class: "krudmin-ai-button krudmin-ai-button--primary") { safe_join([krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon"), content_tag(:span, t("krudmin_ai.create", resource: resource_label))]) } : nil %>
+    <%= render "krudmin_ai/ui/empty_state", id: "empty-resource-title", title: t("krudmin_ai.no_records_found", resources: resources_label.downcase), action: create_action %>
   <% end %>
 </section>

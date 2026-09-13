@@ -1,11 +1,13 @@
 module KrudminAI
   module Resources
     class Filter
-      TYPES = %i[text select date_range].freeze
+      TYPES = %i[text select number_range date_range datetime_range].freeze
       DEFAULT_OPERATORS = {
         text: %i[contains equals starts_with ends_with],
         select: %i[equals],
-        date_range: %i[between]
+        number_range: %i[between],
+        date_range: %i[between],
+        datetime_range: %i[between]
       }.freeze
 
       attr_reader :name, :type, :label, :operators, :options, :handler

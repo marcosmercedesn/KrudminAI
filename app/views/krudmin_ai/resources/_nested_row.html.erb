@@ -3,7 +3,8 @@
   <%= form.hidden_field :_destroy, value: "0", data: { krudmin_ai_nested_fields_target: "destroyInput" } %>
   <% readable_relationship_fields(relationship, form.object).each do |field| %>
     <% writable = relationship_field_writable?(relationship, field, form.object) %>
-    <%= render "krudmin_ai/ui/field", form: form, field: field, writable: writable, access_note_id: "#{relationship.name}-#{field}-access-note", errors: form.object.errors.full_messages_for(field) %>
+    <% adapter = relationship.belongs_to_adapter(field, resource) %>
+    <%= render "krudmin_ai/ui/field", form: form, field: field, adapter: adapter, writable: writable, access_note_id: "#{relationship.name}-#{field}-access-note", errors: form.object.errors.full_messages_for(field) %>
   <% end %>
-  <button class="krudmin-ai-button krudmin-ai-button--danger krudmin-ai-icon-button" type="button" aria-label="Remove <%= relationship.label.singularize %>" title="Remove <%= relationship.label.singularize %>" data-action="krudmin-ai-nested-fields#remove"><%= krudmin_ai_icon(:trash_2) %></button>
+  <button class="krudmin-ai-button krudmin-ai-button--danger krudmin-ai-icon-button" type="button" aria-label="<%= t("krudmin_ai.remove", resource: relationship.label.singularize) %>" title="<%= t("krudmin_ai.remove", resource: relationship.label.singularize) %>" data-action="krudmin-ai-nested-fields#remove"><%= krudmin_ai_icon(:trash_2) %></button>
 </section>

@@ -9,6 +9,6 @@ class DashboardController < ApplicationController
   def refresh
     @dashboard = TicketsDashboard.new(context: access_context, params: request.query_parameters)
     @widgets = @dashboard.render
-    render formats: [:turbo_stream]
+    render formats: [ :turbo_stream ]
   end
 end

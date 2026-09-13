@@ -22,9 +22,14 @@ module KrudminAI
         end
 
         def rows
-          records.map do |record|
-            visible_columns(record).to_h { |field| [field, record.public_send(field)] }
+          records.to_a.map do |record|
+            visible_columns(record).to_h { |field| [ field, value_for(record, field) ] }
           end
+        end
+
+        def value_for(record, field)
+          adapter = resource.field_adapter(field)
+          adapter.is_a?(Fields::BelongsTo) ? adapter.list_value(record, context:) : adapter.list_value(record)
         end
 
         private

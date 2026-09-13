@@ -7,9 +7,9 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     DemoTicket.delete_all
     DemoUser.delete_all
 
-    @north_agent = DemoUser.create!(name: "Morgan Lee", tenant: "northwind", roles: ["support_agent"])
-    @north_manager = DemoUser.create!(name: "Avery Patel", tenant: "northwind", roles: ["manager"])
-    @south_agent = DemoUser.create!(name: "Jordan Kim", tenant: "southwind", roles: ["support_agent"])
+    @north_agent = DemoUser.create!(name: "Morgan Lee", tenant: "northwind", roles: [ "support_agent" ])
+    @north_manager = DemoUser.create!(name: "Avery Patel", tenant: "northwind", roles: [ "manager" ])
+    @south_agent = DemoUser.create!(name: "Jordan Kim", tenant: "southwind", roles: [ "support_agent" ])
     @north_ticket = DemoTicket.create!(tenant: "northwind", title: "Northwind export", state: "open", priority: "high", assignee: @north_agent.name)
     @south_ticket = DemoTicket.create!(tenant: "southwind", title: "Southwind inventory", state: "open", priority: "urgent", assignee: @south_agent.name)
   end
@@ -224,8 +224,8 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
 
     ticket = DemoTicket.order(:created_at).last
     assert_redirected_to ticket_path(ticket)
-    assert_equal ["Diego Ruiz", "Samira Chen"], ticket.passengers.order(:name).pluck(:name)
-    assert_equal ["northwind"], ticket.passengers.distinct.pluck(:tenant)
+    assert_equal [ "Diego Ruiz", "Samira Chen" ], ticket.passengers.order(:name).pluck(:name)
+    assert_equal [ "northwind" ], ticket.passengers.distinct.pluck(:tenant)
     assert_equal ticket.passengers.pluck(:id).sort, DemoAuditEvent.order(:created_at).last.metadata[:affected_child_references][:passengers].sort
   end
 
@@ -264,7 +264,7 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to ticket_path(@north_ticket)
-    assert_equal ["Added passenger"], @north_ticket.passengers.reload.pluck(:name)
+    assert_equal [ "Added passenger" ], @north_ticket.passengers.reload.pluck(:name)
     assert_equal "update", DemoAuditEvent.order(:created_at).last.operation
     assert_includes DemoAuditEvent.order(:created_at).last.metadata[:affected_child_references][:passengers], existing.id.to_s
   end

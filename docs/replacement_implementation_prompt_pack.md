@@ -4,20 +4,26 @@ This is the execution prompt pack for delivering KrudminAI as a modern functiona
 
 ## Use
 
-Send one prompt at a time, in order. Do not skip a dependency or relabel a partial feature as complete because the companion demo passes. Every task must update focused tests, the affected docs, and [capability_registry.json](capability_registry.json).
+Run the program in numerical order without waiting for a user to select or approve each prompt. Do not skip a dependency or relabel a partial feature as independently proven because the companion demo passes. Every task must update focused tests, the affected docs, and [capability_registry.json](capability_registry.json). QR-code fields are explicitly out of scope for this replacement program.
+
+## Delivery And Evidence Phases
+
+P1 through P12 are autonomous delivery prompts. Complete each prompt's runtime contract, focused engine tests, documentation, and any prompt-local generated-host request proof, then immediately begin the next eligible prompt. Do not block an earlier prompt on cross-cutting browser evidence, release-lane history, or a full independent host scenario that requires capabilities from later prompts; record those obligations as deferred P13 release evidence instead.
+
+P13 is the evidence-consolidation prompt. It must prove the completed supported capability set in an independent generated host, including browser/accessibility behavior and release evidence. Deferred evidence does not authorize a beta or replacement-parity claim before P13 passes, but it also does not stop sequential implementation work.
 
 ## Single-Prompt Autonomous Execution
 
-Use the prompt below to start the whole program without manually issuing `P1`, `P2`, and later prompts. The agent must continue through eligible tasks in order and use the parity ledger as its durable resume point after a VS Code timeout, context limit, or deliberate pause. An interrupted run is not a completed task.
+Use the prompt below to start the whole program without manually issuing `P1`, `P2`, and later prompts. The agent must continue through eligible tasks in order and use [classic_parity_ledger.json](classic_parity_ledger.json) as its durable resume point after a VS Code timeout, context limit, or deliberate pause. An interrupted run is not a completed task.
 
 ```text
 Implement the complete program in docs/replacement_implementation_prompt_pack.md autonomously, starting with P0 and continuing through each next eligible prompt in numerical order.
 
-Do not wait for me to select the next prompt. After a prompt meets every acceptance criterion, update the parity ledger, capability registry, tests, and documentation, then immediately begin the next eligible prompt. Do not skip P1 through P6: field adapters, scalar/date/number formatting, local association lookup, remote large-dataset lookup, and relationship completion are mandatory replacement work.
+Do not wait for me to select the next prompt. After a prompt meets its delivery acceptance criterion, update the parity ledger, capability registry, tests, and documentation, then immediately begin the next eligible prompt. Record deferred P13 evidence instead of stopping. Do not skip P1 through P6: field adapters, scalar/date/number formatting, local association lookup, remote large-dataset lookup, and relationship completion are mandatory replacement work.
 
 Maintain a durable progress record in the parity ledger. For every prompt, record: current state, implementation files, tests run and exact results, independent generated-host evidence, browser/accessibility evidence, unresolved risks, and the next concrete unfinished step. On a timeout, context limit, or restart, read that record and resume the first unfinished acceptance criterion without asking me to restate prior requirements.
 
-Work in small validated vertical slices inside each prompt. Never claim a prompt, feature, beta gate, or replacement parity is complete based only on code existence, engine tests, or companion-demo evidence. Mark it independently proven only after the evidence required by the prompt exists.
+Work in small validated vertical slices inside each prompt. A delivery prompt can be complete when its runtime and prompt-local proof pass, while its registry status remains `implemented` rather than `independently_proven` until P13 completes deferred evidence. Never claim a beta gate or replacement parity based only on code existence, engine tests, or companion-demo evidence.
 
 If a real product decision is required, investigate the local Krudmin reference and current docs, choose the safest reversible default when the manifesto permits it, record the decision and rationale, and continue. Stop only when a decision cannot be safely made from the manifesto or would change a documented security invariant; report the exact decision, options, consequences, and blocked acceptance criterion.
 
@@ -34,7 +40,7 @@ Execution requirements:
 - Treat /Users/mamerced/projects/krudmin as a behavioral reference only. Do not copy jQuery, Select2, global JavaScript patterns, or Classic's implicit authorization.
 - Preserve authentication by default; tenant scope then policy scope then filters, sort, and pagination; deny-by-default authorization; and read-only AI absent explicit traced approval.
 - Implement one small vertical slice. Before the first edit, state a falsifiable local hypothesis and the focused check that could disprove it. Run that check immediately after the edit.
-- A capability is complete only with engine tests, independent generated-host request evidence, required browser/accessibility evidence, documentation, and a truthful capability-registry status.
+- Mark delivery capabilities `implemented` after their runtime contract, focused tests, documentation, and prompt-local proof pass. Reserve `independently_proven` for P13 after its independent-host and required browser/accessibility evidence passes.
 - Do not change the beta outcome from hold or make replacement-parity claims without the documented evidence.
 - Report changed files, commands and results, remaining gaps, and the next numbered prompt.
 ```
@@ -44,7 +50,7 @@ Execution requirements:
 ```text
 Implement P0 from docs/replacement_implementation_prompt_pack.md.
 
-Create the authoritative, machine-readable Krudmin Classic parity ledger. Inventory every public Classic capability: resource metadata, all field types, associations, search, sorting, pagination, CRUD responses, actions, workflows, bulk actions, inline editing, dashboards, audit UI, navigation, themes, generators, and migration behavior. Compare each against KrudminAI as implemented, partial, missing, or independently proven.
+Create the authoritative, machine-readable Krudmin Classic parity ledger. Inventory every supported Classic capability: resource metadata, supported field types, associations, search, sorting, pagination, CRUD responses, actions, workflows, bulk actions, inline editing, dashboards, audit UI, navigation, themes, generators, and migration behavior. QR-code fields are a documented exclusion. Compare each against KrudminAI as implemented, partial, missing, or independently proven.
 
 Add a verifier that rejects inconsistent ledger and capability-registry claims. Update docs so no document says field adapters, typed generic rendering, or replacement parity already exist. Do not implement runtime features in this task.
 
@@ -70,7 +76,7 @@ Implement P2 from docs/replacement_implementation_prompt_pack.md.
 
 Extend the field adapter system with string, text, email, password, hidden, number, decimal, currency, percentage, boolean, date, time, datetime, JSON, enum, and identifier adapters. Use native accessible controls first. Define locale/time-zone parsing and display semantics, precision and currency formatting, enum option contracts, JSON validation/presentation, and password non-disclosure.
 
-Acceptance: a generated host proves every adapter in form, list, show, JSON, CSV export, filters where applicable, and AI context. Tests cover invalid values, time zones, formatting, hidden/password redaction, and denied read/write fields.
+Acceptance: a generated host proves every adapter in form, list, show, JSON, CSV export, and AI context. Each applicable adapter exposes a typed filter definition for P7; P7 owns filter controls and query behavior. Tests cover invalid values, time zones, formatting, hidden/password redaction, and denied read/write fields. Independent browser/accessibility evidence for the complete adapter surface is consolidated in P13 after P8 presentation and P7 discovery behavior exist.
 ```
 
 ## P3: Sensitive, Rich, and Media Field Adapters
@@ -78,9 +84,9 @@ Acceptance: a generated host proves every adapter in form, list, show, JSON, CSV
 ```text
 Implement P3 from docs/replacement_implementation_prompt_pack.md.
 
-Add masked/reveal-controlled, rich-text, file, image, QR-code, and computed-display adapters. Use explicit Action Text and Active Storage host contracts; do not assume a host has either dependency. Separate reveal authorization from ordinary read authorization and audit every reveal. Ensure sensitive values cannot leak through JSON, CSV, audit diffs, logs, or AI context.
+Add masked/reveal-controlled, rich-text, file, image, and computed-display adapters. Use explicit Action Text and Active Storage host contracts; do not assume a host has either dependency. Separate reveal authorization from ordinary read authorization and audit every reveal. Ensure sensitive values cannot leak through JSON, CSV, audit diffs, logs, or AI context.
 
-Acceptance: a Member-style generated resource safely renders a profile image, attachment, QR code, rich notes, computed label, and masked identifier; unauthorized reveal and all indirect disclosure paths are tested.
+Acceptance: a Member-style generated resource safely renders a profile image, attachment, rich notes, computed label, and masked identifier; unauthorized reveal and all indirect disclosure paths are tested.
 ```
 
 ## P4: Local Belongs-To Lookup
@@ -178,7 +184,7 @@ Acceptance: browser/request tests prove job recovery, duplicate prevention, sens
 ```text
 Implement P13 from docs/replacement_implementation_prompt_pack.md.
 
-Create an independently generated Rails host that proves the complete replacement capability with sanitized fixtures: members, ranks, provinces, users, teams, photos/files, QR and masked IDs, local and remote relationships, social accounts, statuses, workflows, advanced search, dashboards, audit history, import/export, and approved AI flows. Add Spanish locale coverage and browser/accessibility proof at desktop, tablet, and mobile widths. Resolve root lint and establish remote CI history for supported Rails/Ruby lanes.
+Create an independently generated Rails host that proves the complete supported replacement capability with sanitized fixtures: members, ranks, provinces, users, teams, photos/files, masked IDs, local and remote relationships, social accounts, statuses, workflows, advanced search, dashboards, audit history, import/export, and approved AI flows. Add Spanish locale coverage and browser/accessibility proof at desktop, tablet, and mobile widths. Resolve root lint and establish remote CI history for supported Rails/Ruby lanes.
 
 Acceptance: each parity-ledger item has engine plus independent-host evidence; the registry only promotes proven features; beta/1.0 decisions remain evidence-based and are changed only through explicit approval.
 ```

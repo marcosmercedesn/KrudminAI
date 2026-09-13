@@ -76,10 +76,10 @@ module KrudminAI
           pin "krudmin_ai/controllers/navigation_controller", to: "krudmin_ai/controllers/navigation_controller.js"
           pin "krudmin_ai/controllers/nested_fields_controller", to: "krudmin_ai/controllers/nested_fields_controller.js"
           pin "krudmin_ai/controllers/theme_controller", to: "krudmin_ai/controllers/theme_controller.js"
+          pin "krudmin_ai/controllers/remote_belongs_to_controller", to: "krudmin_ai/controllers/remote_belongs_to_controller.js"
           pin "krudmin_ai/theme_mode", to: "krudmin_ai/theme_mode.js"
         RUBY
       end
-
     end
   end
 end

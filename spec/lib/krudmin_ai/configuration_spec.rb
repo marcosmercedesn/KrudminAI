@@ -13,8 +13,8 @@ RSpec.describe KrudminAI::Configuration do
     configuration.navigation_item(label: "Orders", resource: orders, route: :orders_path)
     configuration.navigation_item(label: "Reports", resource: reports, route: :reports_path)
 
-    expect(configuration.navigation_items.map(&:display_label)).to eq(["Orders", "Reports"])
-    expect(configuration.navigation_items.map(&:icon)).to eq([:shopping_cart, :chart_no_axes_combined])
+    expect(configuration.navigation_items.map(&:display_label)).to eq([ "Orders", "Reports" ])
+    expect(configuration.navigation_items.map(&:icon)).to eq([ :shopping_cart, :chart_no_axes_combined ])
   end
 
   let(:authentication_provider) { KrudminAI::Providers::TestAdapters::Authentication.new(Object.new) }
@@ -39,6 +39,18 @@ RSpec.describe KrudminAI::Configuration do
 
     expect { configuration.validate_providers! }
       .to raise_error(KrudminAI::ProviderConfigurationError, "authentication_provider must be configured")
+  end
+
+  it "keeps durable operation and AI trace stores as explicit host integrations" do
+    configuration = described_class.new
+    operation_store = Object.new
+    trace_store = Object.new
+
+    configuration.operation_store = operation_store
+    configuration.ai_trace_store = trace_store
+
+    expect(configuration.operation_store).to equal(operation_store)
+    expect(configuration.ai_trace_store).to equal(trace_store)
   end
 
   it "rejects malformed implementations for every provider contract" do

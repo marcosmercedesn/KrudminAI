@@ -38,17 +38,17 @@ module KrudminAI
 
         complete(:success, response.output, [], scoped_context, prompt_template, response.action_references)
       rescue AuthenticationRequired, TenantRequired, AuthorizationDenied, ScopeViolation
-        complete(:forbidden, nil, [error(:forbidden, "AI context access was denied")], nil, prompt_template, [])
+        complete(:forbidden, nil, [ error(:forbidden, "AI context access was denied") ], nil, prompt_template, [])
       rescue ApprovalRequired
-        complete(:approval_required, nil, [error(:approval_required, "An explicit approval policy is required")], nil, prompt_template, [])
+        complete(:approval_required, nil, [ error(:approval_required, "An explicit approval policy is required") ], nil, prompt_template, [])
       rescue UnsafeToolCall
-        complete(:unsafe_tool_call, nil, [error(:unsafe_tool_call, "The requested tool call is not permitted")], nil, prompt_template, [])
+        complete(:unsafe_tool_call, nil, [ error(:unsafe_tool_call, "The requested tool call is not permitted") ], nil, prompt_template, [])
       rescue Resources::ConfigurationError
-        complete(:configuration_error, nil, [error(:configuration_error, "AI context is not configured")], nil, prompt_template, [])
+        complete(:configuration_error, nil, [ error(:configuration_error, "AI context is not configured") ], nil, prompt_template, [])
       rescue ArgumentError
-        complete(:invalid_request, nil, [error(:invalid_request, "Unsupported AI request")], nil, prompt_template, [])
+        complete(:invalid_request, nil, [ error(:invalid_request, "Unsupported AI request") ], nil, prompt_template, [])
       rescue StandardError
-        complete(:provider_failed, nil, [error(:provider_failed, "The AI provider is temporarily unavailable")], nil, prompt_template, [])
+        complete(:provider_failed, nil, [ error(:provider_failed, "The AI provider is temporarily unavailable") ], nil, prompt_template, [])
       end
 
       private

@@ -2,7 +2,21 @@
   <% fields.each do |field| %>
     <div class="krudmin-ai-record-detail">
       <dt><%= resource.model_class.human_attribute_name(field) %></dt>
-      <dd><%= record.public_send(field).presence || "Not provided" %></dd>
+      <% adapter = resource.field_adapter(field) %>
+      <% belongs_to = adapter.is_a?(KrudminAI::Fields::BelongsTo) %>
+      <% value = belongs_to ? adapter.show_value(record, context: krudmin_ai_access_context) : adapter.show_value(record) %>
+      <% association_link = belongs_to && adapter.association_link(record, krudmin_ai_access_context) %>
+      <dd>
+        <% if adapter.is_a?(KrudminAI::Fields::Image) && (raw_value = adapter.value(record)).respond_to?(:attached?) && raw_value.attached? %>
+          <%= image_tag raw_value, alt: resource.model_class.human_attribute_name(field), class: "krudmin-ai-record-image" %>
+        <% elsif adapter.is_a?(KrudminAI::Fields::File) && (raw_value = adapter.value(record)).respond_to?(:attached?) && raw_value.attached? %>
+          <%= link_to value, url_for(raw_value) %>
+        <% elsif association_link %>
+          <%= link_to value, association_link %>
+        <% else %>
+          <%= adapter.blank?(value) ? t("krudmin_ai.not_provided") : value %>
+        <% end %>
+      </dd>
     </div>
   <% end %>
 </dl>
