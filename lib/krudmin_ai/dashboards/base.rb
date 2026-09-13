@@ -1,9 +1,11 @@
 module KrudminAI
   module Dashboards
-    WidgetDefinition = Data.define(:name, :label, :widget_class, :resource, :relation, :visible, :query_params, :drill_down_filters, :options)
-    WidgetResult = Data.define(:name, :label, :resource, :state, :value, :columns, :rows, :drill_down_params, :error)
+    WidgetDefinition = Data.define(:name, :label, :icon, :color, :widget_class, :resource, :relation, :visible, :query_params, :drill_down_filters, :options)
+    WidgetResult = Data.define(:name, :label, :icon, :color, :resource, :state, :value, :columns, :rows, :drill_down_params, :error)
 
     class Base
+      WIDGET_COLORS = %i[blue teal green amber orange red].freeze
+
       class << self
         attr_reader :dashboard_label, :widget_definitions
 
@@ -19,11 +21,13 @@ module KrudminAI
           @dashboard_label = value.to_s
         end
 
-        def widget(name, widget_class:, resource:, relation:, visible: nil, label: nil, query_params: {}, drill_down_filters: {}, **options)
+        def widget(name, widget_class:, resource:, relation:, visible: nil, label: nil, icon: nil, color: :blue, query_params: {}, drill_down_filters: {}, **options)
           normalized_name = name.to_sym
           widget_definitions[normalized_name] = WidgetDefinition.new(
             normalized_name,
             label || normalized_name.to_s.tr("_", " ").capitalize,
+            icon&.to_sym,
+            normalize_widget_color(color),
             widget_class,
             resource,
             relation,
@@ -32,6 +36,15 @@ module KrudminAI
             drill_down_filters.freeze,
             options.freeze
           )
+        end
+
+        private
+
+        def normalize_widget_color(color)
+          normalized_color = color&.to_sym
+          return normalized_color if WIDGET_COLORS.include?(normalized_color)
+
+          raise ArgumentError, "Unsupported dashboard widget color: #{color.inspect}. Choose one of: #{WIDGET_COLORS.join(", ")}."
         end
       end
 
@@ -57,7 +70,7 @@ module KrudminAI
       def render_widget(definition, loading:)
         return unless visible?(definition)
 
-        return WidgetResult.new(definition.name, definition.label, definition.resource, :loading, nil, [], [], drill_down_params(definition), nil) if loading
+        return WidgetResult.new(definition.name, definition.label, definition.icon, definition.color, definition.resource, :loading, nil, [], [], drill_down_params(definition), nil) if loading
 
         widget = definition.widget_class.new(
           resource: definition.resource,
@@ -70,7 +83,7 @@ module KrudminAI
       rescue AuthorizationDenied, ScopeViolation
         nil
       rescue StandardError => error
-        WidgetResult.new(definition.name, definition.label, definition.resource, :error, nil, [], [], drill_down_params(definition), error)
+        WidgetResult.new(definition.name, definition.label, definition.icon, definition.color, definition.resource, :error, nil, [], [], drill_down_params(definition), error)
       end
 
       def result_for(definition, widget)
@@ -81,11 +94,11 @@ module KrudminAI
             widget.visible_columns(record).to_h { |field| [ field, widget.value_for(record, field) ] }
           end
           state = rows.empty? ? :empty : :ready
-          WidgetResult.new(definition.name, definition.label, definition.resource, state, nil, columns, rows, drill_down_params(definition), nil)
+          WidgetResult.new(definition.name, definition.label, definition.icon, definition.color, definition.resource, state, nil, columns, rows, drill_down_params(definition), nil)
         else
           value = widget.value
           state = value.respond_to?(:empty?) ? (value.empty? ? :empty : :ready) : (value == 0 ? :empty : :ready)
-          WidgetResult.new(definition.name, definition.label, definition.resource, state, value, [], [], drill_down_params(definition), nil)
+          WidgetResult.new(definition.name, definition.label, definition.icon, definition.color, definition.resource, state, value, [], [], drill_down_params(definition), nil)
         end
       end
 

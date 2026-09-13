@@ -38,6 +38,10 @@ end
 - The default disclosure is keyboard-accessible, opens automatically for an active child, and closes the mobile drawer after a destination is selected. Do not recreate those behaviors with host JavaScript.
 - Do not place a group inside another group. For deeper information architecture, use a resource index, dashboard, or explicitly designed host interface.
 
+## Dashboard Widgets
+
+Read `dashboard_widgets.md` before configuring dashboard widgets. Declare each widget's Lucide icon with `icon: :icon_name` and semantic color with `color: :blue`, `:teal`, `:green`, `:amber`, `:orange`, or `:red`; the rendered `WidgetResult` exposes them as `widget.icon` and `widget.color`. Host templates should render `krudmin_ai_icon(widget.icon || widget.resource.icon)` so widgets without an explicit icon retain the resource default.
+
 ## Delivery Loop
 
 1. State the smallest behavior change and the owning resource.

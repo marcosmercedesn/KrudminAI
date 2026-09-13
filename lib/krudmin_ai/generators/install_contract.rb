@@ -27,6 +27,7 @@ module KrudminAI
         writer.write("docs/krudmin_ai/architecture.md", template("docs/architecture.md"))
         writer.write("docs/krudmin_ai/provider_contracts.md", template("docs/provider_contracts.md"))
         writer.write("docs/krudmin_ai/coding_agent_workflow.md", template("docs/coding_agent_workflow.md"))
+        writer.write("docs/krudmin_ai/dashboard_widgets.md", template("docs/dashboard_widgets.md"))
         writer.write("docs/krudmin_ai/member_administration_blueprint.md", template("docs/member_administration_blueprint.md"))
         writer.write("docs/krudmin_ai/member_administration_tasks.md", template("docs/member_administration_tasks.md"))
         manifest.install

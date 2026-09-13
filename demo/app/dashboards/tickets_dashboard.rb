@@ -7,6 +7,8 @@ class TicketsDashboard < KrudminAI::Dashboards::Base
     relation: ->(_context) { DemoTicket.all },
     visible: ->(_context) { true },
     label: "Visible tickets",
+    icon: :tickets,
+    color: :blue,
     drill_down_filters: {}
   widget :open_queue,
     widget_class: KrudminAI::Dashboards::Widgets::Count,
@@ -14,6 +16,8 @@ class TicketsDashboard < KrudminAI::Dashboards::Base
     relation: ->(_context) { DemoTicket.all },
     visible: ->(_context) { true },
     label: "Open queue",
+    icon: :inbox,
+    color: :teal,
     query_params: { filters: { state: "open" } },
     drill_down_filters: { state: "open" }
   widget :recent_tickets,
@@ -31,6 +35,8 @@ class TicketsDashboard < KrudminAI::Dashboards::Base
     relation: ->(_context) { DemoTicket.all },
     visible: ->(context) { context.roles.include?(:manager) },
     label: "Manager queue",
+    icon: :user_check,
+    color: :amber,
     query_params: { filters: { state: "assigned" } },
     drill_down_filters: { state: "assigned" }
 end

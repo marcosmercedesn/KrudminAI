@@ -30,12 +30,35 @@ class OperationsDashboard < KrudminAI::Dashboards::Base
     resource: TicketsResource,
     relation: ->(_context) { Ticket.all },
     visible: ->(context) { context.roles.include?(:support_agent) },
+    icon: :inbox,
     query_params: { filters: { state: "open" } },
     drill_down_filters: { state: "open" }
 end
 ```
 
 `Dashboard#render` returns normalized widget results with `ready`, `empty`, `error`, or explicit `loading` state. Policy and scope denials hide the affected widget. Unexpected errors return an error state without exposing the exception. A host refresh action can render the same results as a Turbo Stream replacement.
+
+## Widget Icons
+
+Set `icon:` to an optional Lucide identifier using Ruby symbol notation. The normalized symbol is exposed as `widget.icon` on every rendered widget result. A host dashboard template can retain the resource-level default when a widget does not specify an icon:
+
+```erb
+<%= krudmin_ai_icon(widget.icon || widget.resource.icon) %>
+```
+
+Keep icons in trusted dashboard definitions, never request parameters.
+
+## Widget Colors
+
+Set `color:` to `:blue`, `:teal`, `:green`, `:amber`, `:orange`, or `:red` to expose a semantic display color as `widget.color`; the default is `:blue`. Unsupported values raise a configuration error while the dashboard class loads. Host templates own their color tokens and can map the allowlisted value into a class:
+
+```erb
+<span class="metric-icon metric-icon--<%= widget.color %>">
+  <%= krudmin_ai_icon(widget.icon || widget.resource.icon) %>
+</span>
+```
+
+Use a subtle tinted surface, matching border, and stronger accent edge for each semantic color so the content remains readable. Do not interpolate color values from request parameters or user input.
 
 Table widget rows are serialized only through each resource's field read policies. Read-denied columns and values are absent. Drill-down filters are limited to the target resource's declared filters; the target resource URL must continue through `ResourceController`, which reapplies tenant, policy, archive, sort, and pagination rules.
 

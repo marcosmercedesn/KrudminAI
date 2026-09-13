@@ -34,6 +34,8 @@ module KrudminAI
               resource: #{resource.camelize}Resource,
               relation: ->(_context) { #{resource.classify}.all },
               visible: ->(_context) { false },
+              icon: :table_2,
+              color: :blue,
               columns: [],
               limit: 10
           end

@@ -145,6 +145,8 @@ RSpec.describe "dashboard widgets" do
         resource: configured_resource,
         relation: ->(_context) { configured_relation },
         visible: ->(access_context) { access_context.roles.include?(:manager) },
+        icon: "list_todo",
+        color: "teal",
         columns: %i[name amount],
         limit: 10,
         drill_down_filters: { name: "North", amount: "ignored" }
@@ -157,7 +159,23 @@ RSpec.describe "dashboard widgets" do
 
     result = dashboard.new(context:).render
 
-    expect(result).to contain_exactly(have_attributes(name: :recent, state: :ready, columns: [ :name ], rows: [ { name: "North allowed" } ], drill_down_params: { filters: { name: "North" } }))
+    expect(result).to contain_exactly(have_attributes(name: :recent, icon: :list_todo, color: :teal, state: :ready, columns: [ :name ], rows: [ { name: "North allowed" } ], drill_down_params: { filters: { name: "North" } }))
+  end
+
+  it "rejects an unsupported widget color" do
+    configured_resource = resource
+    configured_relation = relation
+
+    expect do
+      Class.new(KrudminAI::Dashboards::Base) do
+        widget :invalid_color,
+          widget_class: KrudminAI::Dashboards::Widgets::Count,
+          resource: configured_resource,
+          relation: ->(_context) { configured_relation },
+          visible: ->(_access_context) { true },
+          color: :purple
+      end
+    end.to raise_error(ArgumentError, /Unsupported dashboard widget color/)
   end
 
   it "represents loading, empty, and unexpected widget errors without broadening data access" do

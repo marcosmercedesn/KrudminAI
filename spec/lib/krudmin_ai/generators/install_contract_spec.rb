@@ -22,6 +22,7 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/architecture.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/provider_contracts.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/coding_agent_workflow.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/dashboard_widgets.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_blueprint.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_tasks.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/capability_registry.json"))
@@ -37,6 +38,7 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File.read(application_file)).to eq("class Order < ApplicationRecord; end\n")
     expect(File).not_to exist(File.join(destination_root, "config/initializers/krudmin_ai.rb"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/README.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/dashboard_widgets.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_tasks.md"))
   end
 

@@ -685,12 +685,46 @@ form.button_to {
   margin-bottom: 1.5rem;
 }
 .metric-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  --metric-accent: var(--accent);
+  --metric-border: var(--border);
+  --metric-tint: var(--surface);
+  background: var(--metric-tint);
+  border: 1px solid var(--metric-border);
+  border-top: 3px solid var(--metric-accent);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   min-height: 11rem;
   padding: 1.35rem;
+}
+.metric-card--blue {
+  --metric-accent: #2167d4;
+  --metric-border: #bcd3ff;
+  --metric-tint: #f5f8ff;
+}
+.metric-card--teal {
+  --metric-accent: #087b78;
+  --metric-border: #a9dfdc;
+  --metric-tint: #f1fbfa;
+}
+.metric-card--green {
+  --metric-accent: #16865a;
+  --metric-border: #b5e5cc;
+  --metric-tint: #f2fbf6;
+}
+.metric-card--amber {
+  --metric-accent: #b76a08;
+  --metric-border: #f1d092;
+  --metric-tint: #fff9ed;
+}
+.metric-card--orange {
+  --metric-accent: #c65a12;
+  --metric-border: #f5c5a0;
+  --metric-tint: #fff6f0;
+}
+.metric-card--red {
+  --metric-accent: #ba2944;
+  --metric-border: #efbdc7;
+  --metric-tint: #fff5f7;
 }
 .metric-card-header {
   align-items: center;
@@ -720,6 +754,18 @@ form.button_to {
 .metric-icon--green {
   background: #d9f5e6;
   color: #16865a;
+}
+.metric-icon--teal {
+  background: #d8f3f1;
+  color: #087b78;
+}
+.metric-icon--orange {
+  background: #ffe3d0;
+  color: #c65a12;
+}
+.metric-icon--red {
+  background: #f9dce2;
+  color: #ba2944;
 }
 .metric-card p {
   color: var(--muted);
@@ -850,6 +896,48 @@ form.button_to {
 :root[data-theme="dark"] .metric-icon--green {
   background: #173f30;
   color: #8be7bc;
+}
+:root[data-theme="dark"] .metric-card--blue {
+  --metric-accent: #79acff;
+  --metric-border: #315586;
+  --metric-tint: #1d2d46;
+}
+:root[data-theme="dark"] .metric-card--teal {
+  --metric-accent: #66d6d0;
+  --metric-border: #276663;
+  --metric-tint: #1a3436;
+}
+:root[data-theme="dark"] .metric-card--green {
+  --metric-accent: #83dcb2;
+  --metric-border: #2e7253;
+  --metric-tint: #1b382c;
+}
+:root[data-theme="dark"] .metric-card--amber {
+  --metric-accent: #ffcf72;
+  --metric-border: #75572a;
+  --metric-tint: #40321b;
+}
+:root[data-theme="dark"] .metric-card--orange {
+  --metric-accent: #ffb47b;
+  --metric-border: #77482e;
+  --metric-tint: #42291f;
+}
+:root[data-theme="dark"] .metric-card--red {
+  --metric-accent: #ff9db0;
+  --metric-border: #7d3b4a;
+  --metric-tint: #41232b;
+}
+:root[data-theme="dark"] .metric-icon--teal {
+  background: #194947;
+  color: #7ee4df;
+}
+:root[data-theme="dark"] .metric-icon--orange {
+  background: #54301f;
+  color: #ffc39a;
+}
+:root[data-theme="dark"] .metric-icon--red {
+  background: #522b35;
+  color: #ffb5c3;
 }
 :root[data-theme="dark"] .validation-summary {
   background: #49232d;

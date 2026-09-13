@@ -317,7 +317,8 @@
       "guarantees": [
         "tenant scope before policy scope",
         "no precomputed aggregate input",
-        "table widgets use sorting and bounded pagination"
+        "table widgets use sorting and bounded pagination",
+        "widget definitions can expose optional trusted Lucide icon metadata and allowlisted blue, teal, green, amber, orange, or red color metadata to host dashboard templates"
       ]
     },
     {

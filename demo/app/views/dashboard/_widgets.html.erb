@@ -1,7 +1,7 @@
 <div class="metric-grid">
   <% widgets.reject { |widget| widget.rows.any? }.each do |widget| %>
-    <section class="metric-card dashboard-widget--<%= widget.name %>">
-      <div class="metric-card-header"><p><%= widget.label %></p><span class="metric-icon metric-icon--blue"><%= krudmin_ai_icon(widget.resource.icon) %></span></div>
+    <section class="metric-card metric-card--<%= widget.color %> dashboard-widget--<%= widget.name %>">
+      <div class="metric-card-header"><p><%= widget.label %></p><span class="metric-icon metric-icon--<%= widget.color %>"><%= krudmin_ai_icon(widget.icon || widget.resource.icon) %></span></div>
       <% if widget.state == :loading %><strong aria-live="polite">Loading</strong><% elsif widget.state == :error %><strong role="alert">Unavailable</strong><% elsif widget.state == :empty %><strong>0</strong><% else %><strong><%= widget.value %></strong><% end %>
       <% unless widget.drill_down_params.empty? %><%= link_to "View records", public_send("#{widget.resource.route_key}_path", widget.drill_down_params), class: "text-action" %><% end %>
     </section>
