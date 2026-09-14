@@ -18,7 +18,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.integer "record_id", null: false
     t.string "record_type", null: false
     t.datetime "updated_at", null: false
-    t.index ["record_type", "record_id", "name"], name: "index_action_text_rich_texts_uniqueness", unique: true
+    t.index [ "record_type", "record_id", "name" ], name: "index_action_text_rich_texts_uniqueness", unique: true
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -27,8 +27,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "name", null: false
     t.integer "record_id", null: false
     t.string "record_type", null: false
-    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
-    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+    t.index [ "blob_id" ], name: "index_active_storage_attachments_on_blob_id"
+    t.index [ "record_type", "record_id", "name", "blob_id" ], name: "index_active_storage_attachments_uniqueness", unique: true
   end
 
   create_table "active_storage_blobs", force: :cascade do |t|
@@ -40,7 +40,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "key", null: false
     t.text "metadata"
     t.string "service_name", null: false
-    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+    t.index [ "key" ], name: "index_active_storage_blobs_on_key", unique: true
   end
 
   create_table "demo_asset_profiles", force: :cascade do |t|
@@ -51,7 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "rack_position"
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["demo_asset_id"], name: "index_demo_asset_profiles_on_demo_asset_id", unique: true
+    t.index [ "demo_asset_id" ], name: "index_demo_asset_profiles_on_demo_asset_id", unique: true
   end
 
   create_table "demo_assets", force: :cascade do |t|
@@ -74,9 +74,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
     t.decimal "uptime_target", precision: 5, scale: 2
-    t.index ["demo_location_id"], name: "index_demo_assets_on_demo_location_id"
-    t.index ["demo_vendor_id"], name: "index_demo_assets_on_demo_vendor_id"
-    t.index ["tenant", "asset_tag"], name: "index_demo_assets_on_tenant_and_asset_tag", unique: true
+    t.index [ "demo_location_id" ], name: "index_demo_assets_on_demo_location_id"
+    t.index [ "demo_vendor_id" ], name: "index_demo_assets_on_demo_vendor_id"
+    t.index [ "tenant", "asset_tag" ], name: "index_demo_assets_on_tenant_and_asset_tag", unique: true
   end
 
   create_table "demo_audit_events", force: :cascade do |t|
@@ -89,7 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "record_type"
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "created_at"], name: "index_demo_audit_events_on_tenant_and_created_at"
+    t.index [ "tenant", "created_at" ], name: "index_demo_audit_events_on_tenant_and_created_at"
   end
 
   create_table "demo_locations", force: :cascade do |t|
@@ -100,7 +100,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "tenant", null: false
     t.string "timezone", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "name"], name: "index_demo_locations_on_tenant_and_name", unique: true
+    t.index [ "tenant", "name" ], name: "index_demo_locations_on_tenant_and_name", unique: true
   end
 
   create_table "demo_maintenance_tasks", force: :cascade do |t|
@@ -112,8 +112,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "tenant", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["demo_asset_id", "tenant"], name: "index_demo_maintenance_tasks_on_demo_asset_id_and_tenant"
-    t.index ["demo_asset_id"], name: "index_demo_maintenance_tasks_on_demo_asset_id"
+    t.index [ "demo_asset_id", "tenant" ], name: "index_demo_maintenance_tasks_on_demo_asset_id_and_tenant"
+    t.index [ "demo_asset_id" ], name: "index_demo_maintenance_tasks_on_demo_asset_id"
   end
 
   create_table "demo_passengers", force: :cascade do |t|
@@ -123,8 +123,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.integer "position", default: 0, null: false
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["demo_ticket_id", "tenant"], name: "index_demo_passengers_on_demo_ticket_id_and_tenant"
-    t.index ["demo_ticket_id"], name: "index_demo_passengers_on_demo_ticket_id"
+    t.index [ "demo_ticket_id", "tenant" ], name: "index_demo_passengers_on_demo_ticket_id_and_tenant"
+    t.index [ "demo_ticket_id" ], name: "index_demo_passengers_on_demo_ticket_id"
   end
 
   create_table "demo_tickets", force: :cascade do |t|
@@ -137,8 +137,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "tenant", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "archived_at"], name: "index_demo_tickets_on_tenant_and_archived_at"
-    t.index ["tenant", "state"], name: "index_demo_tickets_on_tenant_and_state"
+    t.index [ "tenant", "archived_at" ], name: "index_demo_tickets_on_tenant_and_archived_at"
+    t.index [ "tenant", "state" ], name: "index_demo_tickets_on_tenant_and_state"
   end
 
   create_table "demo_users", force: :cascade do |t|
@@ -147,7 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.text "roles", null: false
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "name"], name: "index_demo_users_on_tenant_and_name", unique: true
+    t.index [ "tenant", "name" ], name: "index_demo_users_on_tenant_and_name", unique: true
   end
 
   create_table "demo_vendors", force: :cascade do |t|
@@ -158,7 +158,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_12_131500) do
     t.string "support_email"
     t.string "tenant", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant", "name"], name: "index_demo_vendors_on_tenant_and_name", unique: true
+    t.index [ "tenant", "name" ], name: "index_demo_vendors_on_tenant_and_name", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
