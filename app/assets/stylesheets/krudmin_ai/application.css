@@ -542,6 +542,7 @@
   display: grid;
   gap: var(--krudmin-ai-space-2);
   max-width: 48rem;
+  scroll-margin-top: var(--krudmin-ai-space-6);
 }
 .krudmin-ai-field label {
   color: var(--krudmin-ai-text-muted);
@@ -583,7 +584,20 @@
 }
 .krudmin-ai-field-error {
   color: var(--krudmin-ai-danger);
+  display: grid;
+  gap: var(--krudmin-ai-space-1);
   margin: 0;
+}
+.krudmin-ai-field-error[hidden] {
+  display: none;
+}
+.krudmin-ai-field.is-invalid > input:not([type="checkbox"]):not([type="hidden"]),
+.krudmin-ai-field.is-invalid > select,
+.krudmin-ai-field.is-invalid > textarea {
+  border-color: var(--krudmin-ai-danger);
+}
+.krudmin-ai-validation-summary a {
+  color: inherit;
 }
 .krudmin-ai-input,
 .krudmin-ai-select,

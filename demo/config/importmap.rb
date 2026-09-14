@@ -6,6 +6,8 @@ pin "krudmin_ai/controllers/filter_panel_controller", to: "krudmin_ai/controller
 pin "krudmin_ai/controllers/navigation_controller", to: "krudmin_ai/controllers/navigation_controller.js"
 pin "krudmin_ai/controllers/nested_fields_controller", to: "krudmin_ai/controllers/nested_fields_controller.js"
 pin "krudmin_ai/controllers/remote_belongs_to_controller", to: "krudmin_ai/controllers/remote_belongs_to_controller.js"
+pin "krudmin_ai/controllers/form_validation_controller", to: "krudmin_ai/controllers/form_validation_controller.js"
+pin "krudmin_ai/validation/rules", to: "krudmin_ai/validation/rules.js"
 pin "krudmin_ai/controllers/theme_controller", to: "krudmin_ai/controllers/theme_controller.js"
 pin "krudmin_ai/theme_mode", to: "krudmin_ai/theme_mode.js"
 pin "@hotwired/stimulus", to: "stimulus.min.js"

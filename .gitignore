@@ -11,3 +11,7 @@
 *.log
 *.sqlite3-wal
 *.pid
+
+# Browser test artifacts, regenerated per run and reviewed locally rather than approved as snapshots
+/demo/tmp/visual_regression/
+/demo/tmp/screenshots/

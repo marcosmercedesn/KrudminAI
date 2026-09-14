@@ -21,8 +21,8 @@ module KrudminAI
         record.public_send(attribute)
       end
 
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.text_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.text_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
 
       def list_value(record)
@@ -53,6 +53,16 @@ module KrudminAI
         nil
       end
 
+      # Type-level constraints this adapter already enforces in parameter/validate_submission.
+      def validation_constraints
+        {}
+      end
+
+      # Adapters without a user-editable control never project client rules.
+      def validation_projectable?
+        true
+      end
+
       def parameter(value)
         value
       end
@@ -64,8 +74,30 @@ module KrudminAI
         value.respond_to?(:blank?) ? value.blank? : value.nil? || value == ""
       end
 
-      def control_options(writable:, errors:, access_note_id:, class_name:)
-        { class: class_name, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id } }
+      # Native constraints the rendered control can express. Overridden per control family
+      # because minlength/pattern and min/max/step are not interchangeable.
+      def native_validation_attributes(rules)
+        length_attributes(rules).merge(rules[:pattern] ? { pattern: rules[:pattern] } : {})
+      end
+
+      def control_options(writable:, errors:, access_note_id:, class_name:, error_id: nil, rules: {})
+        described_by = [ (access_note_id unless writable), error_id ].compact.join(" ")
+        native = writable ? native_validation_attributes(rules) : {}
+        aria = { invalid: errors.any?, describedby: described_by.empty? ? nil : described_by }
+        aria[:required] = true if native[:required]
+
+        { class: class_name, disabled: !writable, aria: }.merge(native)
+      end
+
+      def length_attributes(rules)
+        attributes = required_attributes(rules)
+        attributes[:minlength] = rules[:minimum] || rules[:is] if rules[:minimum] || rules[:is]
+        attributes[:maxlength] = rules[:maximum] || rules[:is] if rules[:maximum] || rules[:is]
+        attributes
+      end
+
+      def required_attributes(rules)
+        rules[:required] ? { required: true } : {}
       end
     end
   end

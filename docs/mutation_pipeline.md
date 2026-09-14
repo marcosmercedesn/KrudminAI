@@ -18,6 +18,8 @@ response = KrudminAI::MutationResponseAdapter.for(result, format: request.format
 
 For declared direct `has_many` relationships, the pipeline validates every existing child ID through the parent association and evaluates the relationship's child tenant and action predicates before assigning nested attributes. New child rows receive the parent tenant before validation. Active Record saves parent and children atomically; invalid children retain nested errors on the parent form. Audit events include affected child IDs. See [nested_relationships.md](nested_relationships.md).
 
+The pipeline is the authoritative validation boundary. Client-side validation projects a narrower subset of the same rules into the browser to report problems earlier, and never changes what the pipeline accepts or rejects. See [client_side_validation.md](client_side_validation.md).
+
 The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. `ResourceController` sends every mutation through `MutationResponseAdapter`: HTML success returns a `303` redirect; JSON returns `{ data, errors, outcome }` with `201` for creates and mapped error statuses; Turbo Stream renders an operation-specific success or error stream and uses `Turbo-Location` after success.
 
 ## Audit Recovery And Retention

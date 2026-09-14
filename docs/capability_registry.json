@@ -287,6 +287,25 @@
       "evidence_gap": "An independently generated Rails host must prove a menu of at least ten authorized resources and default-shell index, new, edit, and show states across light, dark, and system modes at 1440px, 768px, and 390px with accessibility and reduced-motion assertions; screen-reader review and portable pixel-diff baselines remain pending."
     },
     {
+      "name": "client_side_form_validation",
+      "status": "companion_evidence",
+      "guarantees": [
+        "client rules derive from model validators, column metadata, and adapter type semantics through a single server-side projection",
+        "a projected rule is never broader than its server counterpart; unrepresentable rules are dropped rather than approximated",
+        "uniqueness, custom validators, and validators carrying if/unless/on conditions remain server-only",
+        "regular expressions project only when fully string-anchored, so line-anchored and Ruby-only patterns are dropped",
+        "rule projection respects field read and write decisions and withholds every rule for password, hidden, and computed adapters",
+        "belongs-to fields project requiredness without publishing their authorized identifier collection",
+        "messages are generated through Rails i18n on the server and are never authored in JavaScript",
+        "native constraint attributes are emitted per control family and only for writable fields",
+        "each field owns a stable error node and a merged aria-describedby, with row-scoped identifiers for nested editors",
+        "a blocked submission stops in the browser, populates an anchored summary, and scrolls to and focuses the first field needing attention honoring reduced motion",
+        "nested rows project the child model's validators through the relationship's own field authorizers",
+        "the mutation pipeline remains authoritative and behavior without JavaScript is unchanged"
+      ],
+      "evidence_gap": "An independently generated Rails host must prove blocked submission, focus and scroll recovery, nested and inline validation, and the JavaScript-disabled server re-render path; asynchronous uniqueness validation is deliberately out of scope."
+    },
+    {
       "name": "generator_contracts",
       "status": "companion_evidence",
       "generators": [

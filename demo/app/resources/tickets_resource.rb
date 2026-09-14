@@ -10,6 +10,7 @@ class TicketsResource < KrudminAI::Resources::Base
   label "ticket"
   plural_label "tickets"
   list :title, :state, :priority, :assignee
+  inline_edit :priority
   form :title, :description, :state, :priority, :assignee
   show :title, :description, :state, :priority, :assignee
   preload :passengers

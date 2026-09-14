@@ -3,9 +3,10 @@ require "krudmin_ai/fields/adapter"
 module KrudminAI
   module Fields
     class RichText < Adapter
-      def form_control(form, writable:, errors:, access_note_id:)
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
         require_rich_text!
-        form.rich_text_area(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
+        described_by = [ (access_note_id unless writable), error_id ].compact.join(" ")
+        form.rich_text_area(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: described_by.empty? ? nil : described_by })
       end
 
       def list_value(record) = plain_text(value(record))
@@ -31,10 +32,12 @@ module KrudminAI
     end
 
     class File < Adapter
-      def form_control(form, writable:, errors:, access_note_id:)
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
         require_attachment!
-        form.file_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+        form.file_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
+
+      def native_validation_attributes(rules) = required_attributes(rules)
 
       def list_value(record) = filename(value(record))
       alias show_value list_value
@@ -66,7 +69,7 @@ module KrudminAI
         calculator.call(record)
       end
 
-      def form_control(_form, writable:, errors:, access_note_id:)
+      def form_control(_form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
         raise Resources::ConfigurationError, "Computed field #{attribute} cannot be writable" if writable
 
         ""
@@ -75,6 +78,8 @@ module KrudminAI
       def parameter(_value)
         raise ArgumentError, "#{attribute} is computed and cannot be assigned"
       end
+
+      def validation_projectable? = false
     end
   end
 end

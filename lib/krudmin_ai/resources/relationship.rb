@@ -62,6 +62,20 @@ module KrudminAI
         adapter_class.new(resource:, attribute:, options: definition.fetch(:options, {}))
       end
 
+      # An undeclared nested field still renders a text control, so form rendering and rule
+      # projection need an adapter even where field_adapter has nothing declared.
+      def form_adapter(attribute, resource)
+        field_adapter(attribute, resource) || Fields::String.new(resource:, attribute:, options: {})
+      end
+
+      def validation_rules(attribute, record, context, resource)
+        Validations::Introspector.call(
+          model_class: record.class,
+          adapter: form_adapter(attribute, resource),
+          attribute:, record:, context:, authorizer: self
+        )
+      end
+
       private
 
       def authorize_field_decision(attribute, decision, record, context)

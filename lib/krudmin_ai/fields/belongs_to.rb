@@ -3,9 +3,11 @@ require "krudmin_ai/fields/adapter"
 module KrudminAI
   module Fields
     class BelongsTo < Adapter
-      def form_control(form, writable:, errors:, access_note_id:, context:, authorization_provider: nil)
-        form.select(attribute, options_for(context, authorization_provider:), { include_blank: options.fetch(:include_blank, true) }, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-select"))
+      def form_control(form, writable:, errors:, access_note_id:, context:, authorization_provider: nil, rules: {}, error_id: nil)
+        form.select(attribute, options_for(context, authorization_provider:), { include_blank: options.fetch(:include_blank, true) }, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-select"))
       end
+
+      def native_validation_attributes(rules) = required_attributes(rules)
 
       def list_value(record, context: nil) = label_for(association_value(record), context)
       alias show_value list_value
@@ -21,6 +23,12 @@ module KrudminAI
       end
 
       def filter_definition = { type: :select, options: ->(context) { options_for(context) } }
+
+      # Allowed identifiers stay out of the projection because the rendered select is already
+      # limited to the authorized collection.
+      def validation_constraints
+        options.fetch(:include_blank, true) ? {} : { required: true }
+      end
 
       def validate_submission(_record, submitted_value, context, authorization_provider: nil)
         return if blank?(submitted_value) && options.fetch(:include_blank, true)

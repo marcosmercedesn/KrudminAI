@@ -34,3 +34,9 @@ es:
     delete: "Eliminar %{resource}"
     filters: "Filtros"
     resource_form: "Formulario de recurso"
+    validation:
+      email: "%{attribute} debe ser una dirección de correo válida"
+      date: "%{attribute} debe ser una fecha ISO 8601"
+      time: "%{attribute} debe ser una hora ISO 8601"
+      datetime: "%{attribute} debe ser una fecha y hora ISO 8601"
+      json: "%{attribute} debe ser JSON válido"

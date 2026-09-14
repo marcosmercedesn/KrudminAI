@@ -1,11 +1,19 @@
 <section class="krudmin-ai-form-shell" aria-label="<%= model.persisted? ? t("krudmin_ai.edit", resource: resource_label) : t("krudmin_ai.new", resource: resource_label) %>">
-  <%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-form-grid" do |form| %>
-    <% if model.errors.any? %>
-      <section class="validation-summary krudmin-ai-validation-summary" role="alert" aria-labelledby="validation-summary-title">
-        <h2 id="validation-summary-title"><%= t("krudmin_ai.validation_error", resource: resource_label.capitalize) %></h2>
-        <ul><% model.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
-      </section>
-    <% end %>
+  <%= form_with model: model, url: model.persisted? ? resource_path(model) : collection_path, class: "krudmin-ai-form-grid", data: { controller: "krudmin-ai-form-validation" } do |form| %>
+    <section class="validation-summary krudmin-ai-validation-summary" role="alert" aria-labelledby="validation-summary-title" data-krudmin-ai-form-validation-target="summary" <%= "hidden" unless model.errors.any? %>>
+      <h2 id="validation-summary-title"><%= t("krudmin_ai.validation_error", resource: resource_label.capitalize) %></h2>
+      <ul data-krudmin-ai-form-validation-target="summaryList">
+        <% model.errors.each do |error| %>
+          <li>
+            <% if resource.form.include?(error.attribute) && field_readable?(error.attribute) %>
+              <a href="#<%= form.field_id(error.attribute) %>"><%= model.errors.full_message(error.attribute, error.message) %></a>
+            <% else %>
+              <%= model.errors.full_message(error.attribute, error.message) %>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
 
     <% rendered_relationships = [] %>
     <% sections = resource.form_sections.values %>
@@ -27,7 +35,7 @@
               <%= render rel.singular? ? "krudmin_ai/resources/has_one" : "krudmin_ai/resources/has_many", form: form, relationship: rel %>
             <% elsif field_readable?(field) %>
               <% writable = field_writable?(field) %>
-              <%= render "krudmin_ai/ui/field", form: form, field: field, adapter: resource.field_adapter(field), writable: writable, access_note_id: "#{field}-access-note", errors: model.errors.full_messages_for(field) %>
+              <%= render "krudmin_ai/ui/field", form: form, field: field, adapter: resource.field_adapter(field), writable: writable, rules: krudmin_ai_validation_rules(field), errors: model.errors.full_messages_for(field) %>
             <% end %>
           <% end %>
         </fieldset>

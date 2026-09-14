@@ -9,20 +9,25 @@ module KrudminAI
     class Text < Adapter
       def filter_definition = { type: :text, operators: %i[contains equals starts_with ends_with] }
 
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.text_area(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-textarea"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.text_area(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-textarea"))
       end
+
+      # A textarea does not support pattern.
+      def native_validation_attributes(rules) = length_attributes(rules)
     end
 
     class Email < String
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.email_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.email_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
+
+      def validation_constraints = { type: :email }
     end
 
     class Password < String
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.password_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.password_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
 
       def list_value(_record) = "[FILTERED]"
@@ -31,10 +36,11 @@ module KrudminAI
       def export_value(_record) = nil
       def ai_value(_record) = nil
       def serializable? = false
+      def validation_projectable? = false
     end
 
     class Hidden < Adapter
-      def form_control(form, writable:, errors:, access_note_id:)
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
         form.hidden_field(attribute, disabled: !writable, aria: { invalid: errors.any?, describedby: writable ? nil : access_note_id })
       end
 
@@ -44,13 +50,14 @@ module KrudminAI
       def export_value(_record) = nil
       def ai_value(_record) = nil
       def serializable? = false
+      def validation_projectable? = false
     end
 
     class Number < Adapter
       def filter_definition = { type: :number_range, operators: [ :between ] }
 
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.number_field(attribute, step: options.fetch(:step, 1), **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.number_field(attribute, step: options.fetch(:step, 1), **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -58,6 +65,10 @@ module KrudminAI
 
         Integer(value, exception: false) || raise(ArgumentError, "#{attribute} must be a number")
       end
+
+      def validation_constraints = { numeric: true, only_integer: true, step: options.fetch(:step, 1) }
+
+      def native_validation_attributes(rules) = numeric_attributes(rules)
 
       def list_value(record) = formatted(value(record))
       alias show_value list_value
@@ -72,11 +83,22 @@ module KrudminAI
 
         number.to_i.to_s.rjust(options.fetch(:padding, 0), "0").prepend(options.fetch(:prefix, "").to_s)
       end
+
+      # HTML min/max are inclusive, so an exclusive bound is left to the rule engine.
+      def numeric_attributes(rules)
+        attributes = required_attributes(rules)
+        minimum = rules[:greater_than_or_equal_to] || rules[:greater_than]
+        maximum = rules[:less_than_or_equal_to] || rules[:less_than]
+        attributes[:min] = minimum if minimum
+        attributes[:max] = maximum if maximum
+        attributes[:step] = rules[:step] if rules[:step]
+        attributes
+      end
     end
 
     class Decimal < Number
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.number_field(attribute, step: options.fetch(:step, "0.01"), **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.number_field(attribute, step: options.fetch(:step, "0.01"), **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -86,6 +108,8 @@ module KrudminAI
       rescue ArgumentError, TypeError
         raise ArgumentError, "#{attribute} must be a decimal"
       end
+
+      def validation_constraints = { numeric: true, step: options.fetch(:step, "0.01") }
 
       def list_value(record)
         number = value(record)
@@ -119,9 +143,11 @@ module KrudminAI
     class Boolean < Adapter
       def filter_definition = { type: :select, options: [ [ "Yes", "true" ], [ "No", "false" ] ] }
 
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.check_box(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-checkbox"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.check_box(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-checkbox"))
       end
+
+      def native_validation_attributes(rules) = required_attributes(rules)
 
       def parameter(value)
         return nil if blank?(value)
@@ -136,9 +162,11 @@ module KrudminAI
     class Date < Adapter
       def filter_definition = { type: :date_range, operators: [ :between ] }
 
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.date_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.date_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
+
+      def native_validation_attributes(rules) = required_attributes(rules)
 
       def parameter(value)
         return nil if blank?(value)
@@ -147,12 +175,16 @@ module KrudminAI
       rescue ArgumentError
         raise ArgumentError, "#{attribute} must be an ISO 8601 date"
       end
+
+      def validation_constraints = { type: :date }
     end
 
     class Time < Adapter
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.time_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.time_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
+
+      def native_validation_attributes(rules) = required_attributes(rules)
 
       def parameter(value)
         return nil if blank?(value)
@@ -165,6 +197,8 @@ module KrudminAI
           raise ArgumentError, "#{attribute} must be an ISO 8601 time"
         end
       end
+
+      def validation_constraints = { type: :time }
 
       def list_value(record) = formatted(value(record))
       alias show_value list_value
@@ -181,8 +215,8 @@ module KrudminAI
     class DateTime < Date
       def filter_definition = { type: :datetime_range, operators: [ :between ] }
 
-      def form_control(form, writable:, errors:, access_note_id:)
-        form.datetime_local_field(attribute, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-input"))
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
+        form.datetime_local_field(attribute, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-input"))
       end
 
       def parameter(value)
@@ -197,6 +231,8 @@ module KrudminAI
         raise ArgumentError, "#{attribute} must be an ISO 8601 datetime"
       end
 
+      def validation_constraints = { type: :datetime }
+
       def list_value(record)
         datetime = value(record)
         return if datetime.nil?
@@ -209,12 +245,12 @@ module KrudminAI
     end
 
     class Json < Text
-      def form_control(form, writable:, errors:, access_note_id:)
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
         json = value(form.object)
         form.text_area(
           attribute,
           value: json.nil? ? nil : JSON.generate(json),
-          **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-textarea")
+          **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-textarea")
         )
       end
 
@@ -225,6 +261,8 @@ module KrudminAI
       rescue JSON::ParserError
         raise ArgumentError, "#{attribute} must be valid JSON"
       end
+
+      def validation_constraints = { type: :json }
 
       def list_value(record)
         json = value(record)
@@ -239,19 +277,27 @@ module KrudminAI
     class Enum < Adapter
       def filter_definition = { type: :select, options: enum_options }
 
-      def form_control(form, writable:, errors:, access_note_id:)
+      def form_control(form, writable:, errors:, access_note_id:, rules: {}, error_id: nil)
         select_options = {}
         include_blank_opt = options.fetch(:include_blank, true)
         select_options[:include_blank] = include_blank_opt if include_blank_opt
 
-        form.select(attribute, enum_options, select_options, **control_options(writable:, errors:, access_note_id:, class_name: "krudmin-ai-select"))
+        form.select(attribute, enum_options, select_options, **control_options(writable:, errors:, access_note_id:, error_id:, rules:, class_name: "krudmin-ai-select"))
       end
+
+      def native_validation_attributes(rules) = required_attributes(rules)
 
       def parameter(value)
         return nil if blank?(value) && options.fetch(:allow_blank, true)
 
         candidate = value.to_s
         enum_values.include?(candidate) ? candidate : raise(ArgumentError, "#{attribute} is not an allowed option")
+      end
+
+      def validation_constraints
+        constraints = { one_of: enum_values }
+        constraints[:required] = true unless options.fetch(:allow_blank, true)
+        constraints
       end
 
       private

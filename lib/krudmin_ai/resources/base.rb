@@ -2,6 +2,7 @@ require "krudmin_ai/resources/action"
 require "krudmin_ai/resources/filter"
 require "krudmin_ai/data_operations/profile"
 require "krudmin_ai/fields/registry"
+require "krudmin_ai/validations/introspector"
 
 module KrudminAI
   module Resources
@@ -166,6 +167,10 @@ module KrudminAI
 
         def field_filter_definition(attribute)
           field_adapter(attribute).filter_definition
+        end
+
+        def validation_rules(attribute, record, context)
+          Validations::Introspector.call(model_class:, adapter: field_adapter(attribute), attribute:, record:, context:, authorizer: self)
         end
 
         def field_readable?(attribute, record, context)

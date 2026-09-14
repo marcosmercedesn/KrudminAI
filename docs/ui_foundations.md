@@ -16,7 +16,7 @@ Engine-owned resource pages compose partial components instead of requiring host
 | --- | --- | --- |
 | `ui/status` | `state`, `message` | `error` announces with `role="alert"`; other states announce with `role="status"`. |
 | `ui/empty_state` | `title` | Optional `id` and `action`; retains an authorized creation affordance when available. |
-| `ui/field` | `form`, `field`, `writable`, `access_note_id`, `errors` | Transitional generic scalar control that renders labels, invalid state, disabled/explained authorization denial, and field errors. It is not a type-specific field adapter. |
+| `ui/field` | `form`, `field`, `writable`, `errors` | Renders labels, invalid state, disabled/explained authorization denial, and a stable per-field error node. Optional `adapter`, `rules`, and `compact` locals select the typed control, carry the client validation rule payload, and hide the visible label for inline editing. |
 | `ui/filter_form` | implicit resource-controller context | Renders only declared filters and preserves normal GET query behavior. |
 | `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges. |
 | `ui/pagination` | `page`, `per_page`, `total_count` | Renders First/Previous, a bounded numbered-page window, ellipses, Next/Last, and direct page entry. `pagination_path` carries only the resource controller's allowlisted query parameters. |
@@ -37,6 +37,8 @@ krudmin_ai_icon(TicketsResource.icon, class: "resource-icon")
 The engine `krudmin-ai-navigation` controller provides responsive navigation: wide screens offer a collapsible rail whose state persists in local storage under `krudmin-ai-sidebar-collapsed`; screens at or below `70rem` use a closed-by-default overlay drawer. The drawer closes when the user chooses navigation, presses Escape, or selects the backdrop. Its open state is intentionally not persisted. The icon-only toggle always has an `aria-label`, an `aria-controls` relation, and an `aria-expanded` value synchronized with the visible navigation state.
 
 The companion resource screens use semantic operational states for empty results, validation errors, success notices, errors, loading (`aria-busy`), and disabled controls. Empty results retain a clear create action, validation errors are announced with a summary and invalid field state, and ticket state badges retain their written state label so that meaning does not rely on color. Resource tables scroll inside their own wrapper on narrow screens rather than expanding the document width. Pagination controls preserve declared filters and use explicit current-page text; a next-page control appears only when the current bounded result page is full.
+
+The validation summary and each field's error node are always present in the document, hidden while the form is clean, so server-rendered and client-generated messages share one presentation. The `krudmin-ai-form-validation` controller reports problems before submission and, when a submission is blocked, scrolls to and focuses the first field needing attention while honoring `prefers-reduced-motion`. See [client_side_validation.md](client_side_validation.md).
 
 ## Tokens And Themes
 

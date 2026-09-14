@@ -70,6 +70,7 @@ export default class extends Controller {
     if (!result) return
     this.valueTarget.value = result.id
     this.inputTarget.value = result.label
+    this.valueTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this.render([], `${result.label} selected`)
   }
 

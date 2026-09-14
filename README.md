@@ -244,6 +244,7 @@ git diff --check
 - [Provider contracts](docs/provider_contracts.md)
 - [Query access pipeline](docs/resource_query_pipeline.md)
 - [Field adapters](docs/field_adapters.md)
+- [Client-side validation](docs/client_side_validation.md)
 - [Actions and bulk operations](docs/actions_and_bulk_operations.md)
 - [Data operations](docs/data_operations.md)
 - [Dashboards and audit](docs/dashboards_and_audit.md)

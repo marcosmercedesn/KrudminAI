@@ -11,7 +11,7 @@ module KrudminAI
             :resource_action_path, :pagination_path, :filter_current_value, :filter_options, :relationship_records,
             :readable_relationship_display_fields, :krudmin_ai_access_context, :krudmin_ai_authorization_provider,
               :remote_lookup_field_path, :reset_filters_path, :sort_path, :sort_direction, :sort_active?, :bulk_action_path,
-              :page_title
+              :page_title, :krudmin_ai_validation_rules, :krudmin_ai_relationship_validation_rules
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy restore perform_action]
@@ -210,6 +210,14 @@ module KrudminAI
 
     def field_writable?(field, record = model)
       resource.field_writable?(field, record, access_context)
+    end
+
+    def krudmin_ai_validation_rules(field, record = model)
+      resource.validation_rules(field, record, access_context)
+    end
+
+    def krudmin_ai_relationship_validation_rules(relationship, field, record)
+      relationship.validation_rules(field, record, access_context, resource)
     end
 
     def readable_fields(fields, record = model)
