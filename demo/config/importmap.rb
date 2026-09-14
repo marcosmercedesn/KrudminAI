@@ -1,4 +1,5 @@
 pin "demo", to: "demo.js"
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
 pin "krudmin_ai", to: "krudmin_ai/index.js"
 pin "trix"
 pin "@rails/actiontext", to: "actiontext.esm.js"

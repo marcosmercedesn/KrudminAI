@@ -80,7 +80,11 @@ module KrudminAI
       notice = "#{records.length} #{resources_label.downcase} updated and audited."
       respond_to do |format|
         format.html { redirect_to collection_path, status: :see_other, notice: }
-        format.turbo_stream { render_bulk_stream("action_success", notice:, location: collection_path) }
+        format.turbo_stream do
+          next redirect_to(collection_path, status: :see_other, notice:) unless stream_response_requested?
+
+          render_bulk_stream("action_success", notice:, location: collection_path)
+        end
         format.json { render json: { outcome: "success", data: records.map { |record| serialize_json_record(record) } } }
       end
     rescue AuthenticationRequired, TenantRequired, AuthorizationDenied, ScopeViolation
@@ -420,8 +424,7 @@ module KrudminAI
 
     def render_html_mutation(response, result, operation)
       if response.payload[:redirect]
-        destination = %i[destroy archive].include?(operation) ? collection_path : resource_path(model)
-        return redirect_to(destination, status: response.status, notice: "#{resource_label} #{operation}d and audited.")
+        return redirect_to(mutation_destination(operation), status: response.status, notice: "#{resource_label} #{operation}d and audited.")
       end
 
       flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")
@@ -431,9 +434,21 @@ module KrudminAI
       )
     end
 
+    def mutation_destination(operation)
+      %i[destroy archive].include?(operation) ? collection_path : resource_path(model)
+    end
+
+    # A Turbo browser advertises the stream format on every submission, so streaming is opt-in:
+    # a form that wants an in-place update says so, and everything else redirects and navigates.
+    def stream_response_requested?
+      params[:krudmin_ai_stream].present?
+    end
+
     def render_turbo_mutation(response, result, operation)
       if response.payload[:outcome] == :success
-        self.response.set_header("Turbo-Location", %i[destroy archive].include?(operation) ? collection_path : resource_path(model))
+        return redirect_to(mutation_destination(operation), status: :see_other, notice: "#{resource_label} #{operation}d and audited.") unless stream_response_requested?
+
+        self.response.set_header("Turbo-Location", mutation_destination(operation))
         flash.now[:notice] = "#{resource_label} #{operation}d and audited."
       else
         flash.now[:alert] = result.errors.map { |error| error[:detail] }.join(" ")

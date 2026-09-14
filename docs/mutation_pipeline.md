@@ -32,11 +32,13 @@ The pipeline is the authoritative validation boundary. Client-side validation pr
 | tenant_required, forbidden | 403 | 403 | 403 |
 | configuration_error, audit_failed, persistence_failed | 500 | 500 | 500 |
 
-Every successful non-GET HTML mutation answers 303, including bulk actions, because Turbo repeats the request on a 302. Successful Turbo Stream mutations carry a `Turbo-Location` header pointing at the collection for `destroy` and `archive` and at the record for every other operation; failed responses carry no location.
+Every successful non-GET HTML mutation answers 303, including bulk actions, because Turbo repeats the request on a 302.
 
-Bulk actions answer all three formats. Success replaces the flash and reports the affected count; a rejected or unauthorized bulk action reports through the requested format rather than always answering JSON.
+A Turbo browser advertises `text/vnd.turbo-stream.html` on every form submission, so the stream format alone cannot mean "update in place". Streaming is therefore opt-in: a form that wants an in-place update submits `krudmin_ai_stream=1`, and every other successful mutation redirects with 303 so Turbo navigates. The engine's inline editor is the one built-in form that opts in, which keeps the list in place while a full-page form still lands on the record.
 
-A browser running Turbo advertises `text/vnd.turbo-stream.html` on every form submission, so a full-page form receives the stream response rather than the HTML redirect. The stream only replaces the flash, and `Turbo-Location` does not instruct Turbo to navigate, so the browser stays on the form after a successful save. Post-mutation navigation for Turbo-enabled hosts is unresolved; the companion app does not load Turbo, so its browser suite does not exercise this path.
+A successful stream response carries a `Turbo-Location` header pointing at the collection for `destroy` and `archive` and at the record for every other operation. Failures always stream when the client asked for a stream, so a rejected form re-renders in place with 422 and carries no location.
+
+Bulk actions answer all three formats under the same rule, and a rejected or unauthorized bulk action reports through the requested format rather than always answering JSON.
 
 
 The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. `ResourceController` sends every mutation through `MutationResponseAdapter`: HTML success returns a `303` redirect; JSON returns `{ data, errors, outcome }` with `201` for creates and mapped error statuses; Turbo Stream renders an operation-specific success or error stream and uses `Turbo-Location` after success.

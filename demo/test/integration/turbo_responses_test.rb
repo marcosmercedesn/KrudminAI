@@ -43,10 +43,20 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_redirected_to ticket_path(@ticket)
   end
 
-  test "an update answered as a turbo stream replaces the flash and points at the record" do
+  test "an update answered as a turbo stream redirects unless the form asked to stream" do
     sign_in(@manager)
 
     patch ticket_path(@ticket), params: { demo_ticket: { priority: "urgent" } }, as: :turbo_stream
+
+    assert_response :see_other
+    assert_redirected_to ticket_path(@ticket)
+    assert_equal "urgent", @ticket.reload.priority
+  end
+
+  test "a form that opts into streaming keeps the browser in place and points at the record" do
+    sign_in(@manager)
+
+    patch ticket_path(@ticket), params: { demo_ticket: { priority: "urgent" }, krudmin_ai_stream: "1" }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -55,10 +65,10 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "urgent", @ticket.reload.priority
   end
 
-  test "an archive answered as a turbo stream points at the collection rather than the record" do
+  test "an archive that opts into streaming points at the collection rather than the record" do
     sign_in(@manager)
 
-    delete ticket_path(@ticket), as: :turbo_stream
+    delete ticket_path(@ticket), params: { krudmin_ai_stream: "1" }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -66,11 +76,11 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert @ticket.reload.archived_at
   end
 
-  test "a restore answered as a turbo stream points back at the record" do
+  test "a restore that opts into streaming points back at the record" do
     sign_in(@manager)
     delete ticket_path(@ticket)
 
-    patch restore_ticket_path(@ticket), as: :turbo_stream
+    patch restore_ticket_path(@ticket), params: { krudmin_ai_stream: "1" }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -91,12 +101,16 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "Printer queue", @ticket.reload.title
   end
 
-  test "an inline edit submits to the record and is answered as a turbo stream" do
+  test "an inline edit opts into streaming so the list stays in place" do
     sign_in(@manager)
 
-    patch ticket_path(@ticket), params: { demo_ticket: { priority: "low" } }, as: :turbo_stream
+    get tickets_path
+    assert_select "form.krudmin-ai-inline-edit input[name=?][value=?]", "krudmin_ai_stream", "1"
+
+    patch ticket_path(@ticket), params: { demo_ticket: { priority: "low" }, krudmin_ai_stream: "1" }, as: :turbo_stream
 
     assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_equal ticket_path(@ticket), response.headers.fetch("Turbo-Location")
     assert_equal "low", @ticket.reload.priority
   end
@@ -137,10 +151,20 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "open", foreign.reload.state
   end
 
-  test "a bulk action answered as a turbo stream replaces the flash and points at the collection" do
+  test "a bulk action answered as a turbo stream redirects unless the form asked to stream" do
     sign_in(@manager)
 
     post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ] }, as: :turbo_stream
+
+    assert_response :see_other
+    assert_redirected_to tickets_path
+    assert_equal "resolved", @ticket.reload.state
+  end
+
+  test "a bulk action that opts into streaming replaces the flash and points at the collection" do
+    sign_in(@manager)
+
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ], krudmin_ai_stream: "1" }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
