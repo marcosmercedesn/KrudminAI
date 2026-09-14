@@ -59,7 +59,7 @@ class TicketsResource < KrudminAI::Resources::Base
   authorize(:assign_to_me) { |record, context| DemoTicketPolicy.new(context.actor, record).assign_to_me? }
   authorize(:resolve) { |record, context| DemoTicketPolicy.new(context.actor, record).resolve? }
 
-  action :assign_to_me, label: "Assign to me", writes: [ :assignee ] do |record, context|
+  action :assign_to_me, label: "Assign to me", writes: [ :assignee ], confirmation: "Assign this ticket to yourself?" do |record, context|
     record.assignee = context.actor.name
     true
   end

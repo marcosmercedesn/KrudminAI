@@ -17,7 +17,7 @@
         <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
         <% resource.bulk_actions.each do |action_name| %>
           <% action = resource.action_for(action_name) %>
-          <button type="submit" class="krudmin-ai-button#{action.variant == :default ? "" : " krudmin-ai-button--#{action.variant}"}" formaction="<%= bulk_action_path(action.name) %>" data-turbo-confirm="<%= action.confirmation %>"><%= krudmin_ai_icon(action.icon, class: "krudmin-ai-button__icon") %><span><%= action.label %></span></button>
+          <button type="submit" class="<%= class_names("krudmin-ai-button", "krudmin-ai-button--#{action.variant}" => action.variant != :default) %>" formaction="<%= bulk_action_path(action.name) %>" <%= tag.attributes(data: { turbo_confirm: action.confirmation }) %>><%= krudmin_ai_icon(action.icon, class: "krudmin-ai-button__icon") %><span><%= action.label %></span></button>
         <% end %>
       </form>
     <% end %>

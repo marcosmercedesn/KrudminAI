@@ -34,6 +34,10 @@ The pipeline is the authoritative validation boundary. Client-side validation pr
 
 Every successful non-GET HTML mutation answers 303, including bulk actions, because Turbo repeats the request on a 302. Successful Turbo Stream mutations carry a `Turbo-Location` header pointing at the collection for `destroy` and `archive` and at the record for every other operation; failed responses carry no location.
 
+Bulk actions answer all three formats. Success replaces the flash and reports the affected count; a rejected or unauthorized bulk action reports through the requested format rather than always answering JSON.
+
+A browser running Turbo advertises `text/vnd.turbo-stream.html` on every form submission, so a full-page form receives the stream response rather than the HTML redirect. The stream only replaces the flash, and `Turbo-Location` does not instruct Turbo to navigate, so the browser stays on the form after a successful save. Post-mutation navigation for Turbo-enabled hosts is unresolved; the companion app does not load Turbo, so its browser suite does not exercise this path.
+
 
 The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. `ResourceController` sends every mutation through `MutationResponseAdapter`: HTML success returns a `303` redirect; JSON returns `{ data, errors, outcome }` with `201` for creates and mapped error statuses; Turbo Stream renders an operation-specific success or error stream and uses `Turbo-Location` after success.
 

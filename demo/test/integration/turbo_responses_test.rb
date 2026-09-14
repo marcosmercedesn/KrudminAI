@@ -137,6 +137,65 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "open", foreign.reload.state
   end
 
+  test "a bulk action answered as a turbo stream replaces the flash and points at the collection" do
+    sign_in(@manager)
+
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ] }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_equal tickets_path, response.headers.fetch("Turbo-Location")
+    assert_includes response.body, "krudmin-ai-flash"
+    assert_equal "resolved", @ticket.reload.state
+  end
+
+  test "a rejected bulk action reports through each format rather than always answering JSON" do
+    sign_in(@manager)
+    @ticket.update!(state: "resolved")
+
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ] }
+    assert_response :see_other
+    assert_redirected_to tickets_path
+
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ] }, as: :turbo_stream
+    assert_response :unprocessable_entity
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "krudmin-ai-flash"
+
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ] }, as: :json
+    assert_response :unprocessable_entity
+    assert_equal "application/json", response.media_type
+  end
+
+  test "a bulk action denied outside the tenant answers the requested format" do
+    sign_in(@manager)
+    foreign = DemoTicket.create!(tenant: "southwind", title: "Foreign", state: "open", priority: "normal", assignee: "Jordan Kim")
+
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id, foreign.id ] }, as: :turbo_stream
+
+    assert_response :forbidden
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "krudmin-ai-flash"
+  end
+
+  test "a bulk action button carries its variant class and confirmation" do
+    sign_in(@manager)
+
+    get tickets_path
+
+    assert_select "form#krudmin-ai-bulk-actions button.krudmin-ai-button", text: "Resolve"
+    assert_select "button[class*='krudmin-ai-button#']", 0
+  end
+
+  test "a confirmation is declared only for the actions that ask for one" do
+    sign_in(@manager)
+
+    get ticket_path(@ticket)
+
+    assert_select "button[data-turbo-confirm=?]", "Assign this ticket to yourself?", text: "Assign to me"
+    assert_select "button[data-turbo-confirm]", { count: 1 }, "Only a declared confirmation should emit the attribute"
+  end
+
   private
 
   def sign_in(user)

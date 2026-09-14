@@ -77,14 +77,18 @@ module KrudminAI
       results = records.map { |record| mutation_pipeline.call(operation: action.name, record:) }
       return render_bulk_failure(results) unless results.all?(&:success?)
 
+      notice = "#{records.length} #{resources_label.downcase} updated and audited."
       respond_to do |format|
-        format.html { redirect_to collection_path, status: :see_other, notice: "#{records.length} #{resources_label.downcase} updated and audited." }
+        format.html { redirect_to collection_path, status: :see_other, notice: }
+        format.turbo_stream { render_bulk_stream("action_success", notice:, location: collection_path) }
         format.json { render json: { outcome: "success", data: records.map { |record| serialize_json_record(record) } } }
       end
     rescue AuthenticationRequired, TenantRequired, AuthorizationDenied, ScopeViolation
+      message = "You are not authorized to perform this action"
       respond_to do |format|
         format.html { head :forbidden }
-        format.json { render json: { outcome: "forbidden", errors: [ { code: "forbidden", detail: "You are not authorized to perform this action" } ] }, status: :forbidden }
+        format.turbo_stream { render_bulk_stream("action_error", alert: message, status: :forbidden) }
+        format.json { render json: { outcome: "forbidden", errors: [ { code: "forbidden", detail: message } ] }, status: :forbidden }
       end
     end
 
@@ -397,7 +401,21 @@ module KrudminAI
 
     def render_bulk_failure(results)
       result = results.find { |candidate| !candidate.success? }
-      render json: { outcome: result.outcome, errors: result.errors }, status: :unprocessable_entity
+      message = result.errors.filter_map { |error| error[:detail] }.join(" ")
+
+      respond_to do |format|
+        format.html { redirect_to collection_path, status: :see_other, alert: message.presence || "The bulk action could not be completed." }
+        format.turbo_stream { render_bulk_stream("action_error", alert: message, status: :unprocessable_entity) }
+        format.json { render json: { outcome: result.outcome, errors: result.errors }, status: :unprocessable_entity }
+      end
+    end
+
+    # Bulk mutations share the single-record action streams because both only replace the flash.
+    def render_bulk_stream(template, notice: nil, alert: nil, location: nil, status: :ok)
+      flash.now[:notice] = notice if notice
+      flash.now[:alert] = alert if alert
+      response.set_header("Turbo-Location", location) if location
+      render template: "krudmin_ai/mutations/#{template}", formats: [ :turbo_stream ], status:
     end
 
     def render_html_mutation(response, result, operation)
