@@ -37,4 +37,38 @@ RSpec.describe KrudminAI::MutationResponseAdapter do
     expect(described_class.for(result, format: :turbo_stream).payload.fetch(:template))
       .to eq("krudmin_ai/mutations/create_success")
   end
+
+  it "redirects with see-other for every successful HTML mutation so Turbo does not repeat the request" do
+    %i[create update destroy archive restore].each do |operation|
+      result = KrudminAI::MutationResult.new(operation, :success, { id: 7 }, [], :event)
+
+      expect(described_class.for(result, format: :html)).to have_attributes(status: 303)
+    end
+  end
+
+  it "answers a successful Turbo Stream mutation with 200 and the operation's template" do
+    %i[create update destroy archive restore].each do |operation|
+      result = KrudminAI::MutationResult.new(operation, :success, { id: 7 }, [], :event)
+      response = described_class.for(result, format: :turbo_stream)
+
+      expect(response.status).to eq(200)
+      expect(response.payload.fetch(:template)).to eq("krudmin_ai/mutations/#{operation}_success")
+    end
+  end
+
+  it "answers a rejected Turbo Stream mutation with the operation's error template" do
+    %i[create update destroy archive restore].each do |operation|
+      result = KrudminAI::MutationResult.new(operation, :invalid, nil, [ { code: :invalid, detail: "bad" } ], nil)
+      response = described_class.for(result, format: :turbo_stream)
+
+      expect(response.status).to eq(422)
+      expect(response.payload.fetch(:template)).to eq("krudmin_ai/mutations/#{operation}_error")
+    end
+  end
+
+  it "rejects a format it cannot render rather than guessing one" do
+    result = KrudminAI::MutationResult.new(:update, :success, { id: 7 }, [], :event)
+
+    expect { described_class.for(result, format: :xml) }.to raise_error(ArgumentError, /Unsupported response format/)
+  end
 end

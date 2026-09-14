@@ -303,7 +303,7 @@
         "nested rows project the child model's validators through the relationship's own field authorizers",
         "the mutation pipeline remains authoritative and behavior without JavaScript is unchanged"
       ],
-      "evidence_gap": "An independently generated Rails host must prove blocked submission, focus and scroll recovery, nested and inline validation, and the JavaScript-disabled server re-render path; asynchronous uniqueness validation is deliberately out of scope."
+      "evidence_gap": "Companion browser evidence covers blocked submission, focus and scroll recovery, nested and inline validation, and the JavaScript-disabled server re-render path. Asynchronous uniqueness validation is deliberately out of scope."
     },
     {
       "name": "generator_contracts",

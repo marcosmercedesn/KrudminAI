@@ -64,6 +64,7 @@ class TicketsResource < KrudminAI::Resources::Base
     true
   end
   transition :resolve, from: %i[open assigned], to: :resolved, label: "Resolve"
+  bulk_action :resolve
 
   ai_field :title
   ai_field :state

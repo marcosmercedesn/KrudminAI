@@ -4,6 +4,7 @@ Rails.application.routes.draw do
   resources :tickets do
     patch :restore, on: :member
     post "actions/:action_name", on: :member, to: "tickets#perform_action", as: :action
+    post "bulk_actions/:action_name", on: :collection, to: "tickets#perform_bulk_action", as: :bulk_action
   end
   resources :locations
   resources :vendors

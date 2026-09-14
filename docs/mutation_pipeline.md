@@ -20,6 +20,21 @@ For declared direct `has_many` relationships, the pipeline validates every exist
 
 The pipeline is the authoritative validation boundary. Client-side validation projects a narrower subset of the same rules into the browser to report problems earlier, and never changes what the pipeline accepts or rejects. See [client_side_validation.md](client_side_validation.md).
 
+## Response Contract
+
+`KrudminAI::MutationResponseAdapter` renders `html`, `json`, and `turbo_stream`, and rejects any other format rather than guessing one.
+
+| Outcome | HTML | JSON | Turbo Stream |
+| --- | --- | --- | --- |
+| success | 303 redirect | 200, or 201 for create | 200 with the operation's success stream |
+| invalid | 422 re-render | 422 | 422 with the operation's error stream |
+| unauthenticated | 401 | 401 | 401 |
+| tenant_required, forbidden | 403 | 403 | 403 |
+| configuration_error, audit_failed, persistence_failed | 500 | 500 | 500 |
+
+Every successful non-GET HTML mutation answers 303, including bulk actions, because Turbo repeats the request on a 302. Successful Turbo Stream mutations carry a `Turbo-Location` header pointing at the collection for `destroy` and `archive` and at the record for every other operation; failed responses carry no location.
+
+
 The normalized result uses `success`, `unauthenticated`, `tenant_required`, `forbidden`, `invalid`, `configuration_error`, `audit_failed`, and `persistence_failed` outcomes. `ResourceController` sends every mutation through `MutationResponseAdapter`: HTML success returns a `303` redirect; JSON returns `{ data, errors, outcome }` with `201` for creates and mapped error statuses; Turbo Stream renders an operation-specific success or error stream and uses `Turbo-Location` after success.
 
 ## Audit Recovery And Retention
