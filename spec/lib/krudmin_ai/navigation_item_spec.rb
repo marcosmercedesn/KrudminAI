@@ -30,6 +30,22 @@ RSpec.describe KrudminAI::NavigationItem do
     expect(item.icon).to eq(:file_text)
   end
 
+  it "resolves a named resource lazily so host initializers never autoload during boot" do
+    stub_const("LazyOrdersResource", resource)
+    item = described_class.new(resource: "LazyOrdersResource", route: :orders_path)
+
+    expect(item.resource).to eq(LazyOrdersResource)
+    expect(item.display_label).to eq("Orders")
+    expect(item.icon).to eq(:shopping_cart)
+  end
+
+  it "does not resolve a named resource until it is asked for" do
+    item = described_class.new(resource: "MissingResource", route: :orders_path)
+
+    expect(item.route).to eq(:orders_path)
+    expect { item.resource }.to raise_error(NameError)
+  end
+
   it "evaluates visibility with the same access context supplied by the controller" do
     context = Struct.new(:roles).new([ :manager ])
     item = described_class.new(label: "Admin", route: :admin_path, visible: ->(access_context) { access_context.roles.include?(:manager) })

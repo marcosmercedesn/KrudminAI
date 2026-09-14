@@ -66,8 +66,9 @@ module KrudminAI
             #
             # Register visible navigation using host route helpers. A resource supplies its
             # plural label and configured icon, while the visibility predicate receives the
-            # same access context used by resource requests.
-            # config.navigation_item resource: OrdersResource, route: :orders_path,
+            # same access context used by resource requests. Name the resource rather than
+            # referencing the constant: initializers run before the application autoloader.
+            # config.navigation_item resource: "OrdersResource", route: :orders_path,
             #   visible: ->(context) { OrderPolicy.new(context.actor, Order).index? }
           end
         RUBY

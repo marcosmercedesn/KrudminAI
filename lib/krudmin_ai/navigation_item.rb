@@ -1,6 +1,8 @@
+require "active_support/core_ext/string/inflections"
+
 module KrudminAI
   class NavigationItem
-    attr_reader :label, :route, :resource, :visibility, :active
+    attr_reader :label, :route, :visibility, :active
 
     def initialize(label: nil, route:, icon: nil, resource: nil, visible: nil, active: nil)
       raise ArgumentError, "A navigation route is required" unless route
@@ -12,6 +14,14 @@ module KrudminAI
       @resource = resource
       @visibility = visible || ->(_context) { true }
       @active = active
+    end
+
+    # Host initializers run before the application autoloader is ready, so a resource may be
+    # named instead of referenced. Naming it also survives development reloads.
+    def resource
+      return @resource unless @resource.is_a?(::String) || @resource.is_a?(::Symbol)
+
+      @resource.to_s.constantize
     end
 
     def display_label

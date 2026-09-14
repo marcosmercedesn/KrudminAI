@@ -177,13 +177,14 @@ module KrudminAI
         <<~RUBY.rstrip
           KrudminAI.configure do |config|
             config.navigation_item(
-              resource: #{plural_constant_name}Resource,
+              resource: "#{plural_constant_name}Resource",
               route: :#{namespace}_#{plural_file_name}_path,
               visible: ->(context) do
+                resource = "#{plural_constant_name}Resource".constantize
                 config.authorization_provider.authorize?(
                   action: :index,
-                  record: #{plural_constant_name}Resource.model_class,
-                  resource: #{plural_constant_name}Resource,
+                  record: resource.model_class,
+                  resource:,
                   context:
                 ) == true
               end

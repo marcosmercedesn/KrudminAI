@@ -25,7 +25,7 @@ RSpec.describe KrudminAI::Generators::ResourceContract do
     expect(controller).to include("< KrudminAI::ResourceController", "resource OrdersResource")
     expect(policy).to include("def create? = false", "scope.none")
     expect(routes).to include("namespace :admin", "resources :orders", "exports/:profile", "imports/:profile", "actions/:action_name", "perform_action")
-    expect(navigation).to include("resource: OrdersResource", "route: :admin_orders_path", "action: :index", "KRUDMIN_AI_ORDERS_NAVIGATION")
+    expect(navigation).to include("resource: \"OrdersResource\"", "route: :admin_orders_path", "action: :index", "KRUDMIN_AI_ORDERS_NAVIGATION")
     expect(File).to exist(File.join(destination_root, "test/integration/admin/orders_test.rb"))
   end
 

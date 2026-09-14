@@ -69,12 +69,12 @@ The current release decision remains [hold](beta_release_decision.md) until that
 
 The engine layout derives a document title from the resource controller: collection actions use the plural resource label, `new`/`create` use the localized new-resource label, `edit`/`update` use the localized edit-resource label, and `show` uses the singular label. Every default title is suffixed with `KrudminAI`. A host view can intentionally override the title with `content_for(:title)`.
 
-Register navigation through `KrudminAI.configure`. Each item has a host route helper or route callable, an optional label and icon, an optional resource, a visibility predicate, and an optional active-state predicate. Resource-backed items use the resource's plural model label and its `icon`; all other items fall back to `:file_text`. A `navigation_group` contains navigation items and renders as an accessible disclosure control. A group is hidden unless its own visibility predicate returns exactly `true` and at least one child is visible. Active children open their group. The visibility predicate receives the same `AccessContext` constructed for the request, so the host can apply the same policy decision to the affordance and endpoint. Visibility and custom active predicates must return exactly `true`; nil, other values, and exceptions fail closed (hidden or inactive).
+Register navigation through `KrudminAI.configure`. Each item has a host route helper or route callable, an optional label and icon, an optional resource, a visibility predicate, and an optional active-state predicate. Name a resource with a string rather than referencing the constant: `config/initializers` run before the application autoloader is ready, and a named resource also survives development reloads. Resource-backed items use the resource's plural model label and its `icon`; all other items fall back to `:file_text`. A `navigation_group` contains navigation items and renders as an accessible disclosure control. A group is hidden unless its own visibility predicate returns exactly `true` and at least one child is visible. Active children open their group. The visibility predicate receives the same `AccessContext` constructed for the request, so the host can apply the same policy decision to the affordance and endpoint. Visibility and custom active predicates must return exactly `true`; nil, other values, and exceptions fail closed (hidden or inactive).
 
 ```ruby
 KrudminAI.configure do |config|
   config.navigation_item(
-    resource: OrdersResource,
+    resource: "OrdersResource",
     route: :orders_path,
     visible: ->(context) { OrderPolicy.new(context.actor, Order).index? }
   )
