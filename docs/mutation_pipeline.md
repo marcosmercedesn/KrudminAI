@@ -40,6 +40,8 @@ A successful stream response carries a `Turbo-Location` header pointing at the c
 
 Mutation streams update the contents of `#krudmin-ai-flash` rather than replacing the element, so the target survives and a host layout keeps its own flash container. A host that renders engine resources under its own layout must provide that element for stream feedback to appear.
 
+The reasoning and rejected alternatives are recorded in [decisions/0001-turbo-mutation-response-contract.md](decisions/0001-turbo-mutation-response-contract.md).
+
 Bulk actions answer all three formats under the same rule, and a rejected or unauthorized bulk action reports through the requested format rather than always answering JSON.
 
 
