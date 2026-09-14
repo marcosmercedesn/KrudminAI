@@ -78,7 +78,7 @@ module KrudminAI
       return render_bulk_failure(results) unless results.all?(&:success?)
 
       respond_to do |format|
-        format.html { redirect_to collection_path, notice: "#{records.length} #{resources_label.downcase} updated and audited." }
+        format.html { redirect_to collection_path, status: :see_other, notice: "#{records.length} #{resources_label.downcase} updated and audited." }
         format.json { render json: { outcome: "success", data: records.map { |record| serialize_json_record(record) } } }
       end
     rescue AuthenticationRequired, TenantRequired, AuthorizationDenied, ScopeViolation
@@ -165,7 +165,11 @@ module KrudminAI
       sort_active?(attribute) && params[:sort].to_s.end_with?(":asc") ? :desc : :asc
     end
 
+    # An unpermitted sort parameter is ignored by the query pipeline, so the table must not
+    # advertise it as the active sort.
     def sort_active?(attribute)
+      return false unless resource.sortable_attributes.include?(attribute.to_sym)
+
       params[:sort].to_s.split(":", 2).first == attribute.to_s
     end
 

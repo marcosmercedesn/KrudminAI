@@ -18,7 +18,15 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
   abort "Unable to create generated host" unless system(*rails, "new", host, "--skip-bundle", "--skip-test", "--quiet")
 
   gemfile = File.join(host, "Gemfile")
-  File.write(gemfile, File.read(gemfile).concat("\ngem \"krudmin_ai\", path: \"#{root}\"\n"))
+  # --skip-test omits the browser test gems the generated system test needs.
+  File.write(gemfile, File.read(gemfile).concat(<<~RUBY))
+
+    gem "krudmin_ai", path: "#{root}"
+    group :test do
+      gem "capybara"
+      gem "selenium-webdriver"
+    end
+  RUBY
   run = ->(*arguments) { abort "Generated host command failed: #{arguments.join(' ')}" unless system(*arguments, chdir: host) }
   run.call(RbConfig.ruby, "-S", "bundle", "install")
   write_file(host, "config/initializers/krudmin_ai.rb", <<~RUBY)
@@ -30,6 +38,15 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
       config.notification_provider = KrudminAI::Providers::TestAdapters::Notification.new
     end
   RUBY
+  # --skip-bundle prevents rails new from installing the Hotwire setup, so the host has no
+  # import map and the engine's Stimulus controllers cannot resolve.
+  run.call(*rails, "importmap:install")
+  run.call(*rails, "turbo:install")
+  run.call(*rails, "stimulus:install")
+  # The install generator owns the import-map block; without it the host loads no engine JS.
+  # It runs after the initializer because booting the app validates the providers, and it
+  # leaves the existing initializer in place.
+  run.call(*rails, "generate", "krudmin_ai:install")
   run.call(*rails, "action_text:install")
 
   write_file(host, "app/models/widget.rb", <<~RUBY)
@@ -67,7 +84,7 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
   write_file(host, "app/models/car_passenger.rb", "class CarPassenger < ApplicationRecord; belongs_to :car; validates :name, presence: true; end\n")
   write_file(host, "app/models/car_insurance.rb", "class CarInsurance < ApplicationRecord; belongs_to :car; end\n")
   write_file(host, "app/models/social_account.rb", "class SocialAccount < ApplicationRecord; belongs_to :car; validates :handle, presence: true; end\n")
-  write_file(host, "app/models/audit_log.rb", "class AuditLog < ApplicationRecord; serialize :metadata, coder: JSON, type: Hash; end\n")
+  write_file(host, "app/models/audit_log.rb", "class AuditLog < ApplicationRecord; end\n")
   write_file(host, "db/migrate/20260912000000_create_widgets.rb", <<~RUBY)
     class CreateWidgets < ActiveRecord::Migration[8.1]
       def change
@@ -370,6 +387,9 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
     authorize_field :internal_code, read: ->(_record, _context) { false }, write: ->(_record, _context) { false }
     authorize_field :masked_id, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }, reveal: ->(_record, _context) { false }
   RUBY
+  # The generated resource declares its own sort defaults after this block, so they are
+  # replaced rather than shadowed by an earlier declaration.
+  resource = resource.sub(/^\s+sortable :created_at\n\s+default_sort_by :created_at, direction: :desc\n/, "")
   File.write(resource_path, resource.sub("        scope.none", "        scope"))
   policy_path = File.join(host, "app/policies/widget_policy.rb")
   policy = File.read(policy_path).sub("scope.none", "scope").sub("def create? = false", "def create? = true").sub("def update? = false", "def update? = true")
@@ -417,8 +437,10 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
         context = KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: [])
 
         assert_equal ["7"], store.search(context:, operation: :update).pluck(:record_identifier)
-        assert_equal "[FILTERED]", store.presentation(AuditLog.sole).fetch("metadata").fetch("secret")
-        assert_equal ["Before", "After"], store.presentation(AuditLog.sole).fetch("metadata").fetch("changed").fetch("title")
+        recorded = AuditLog.find_by!(record_identifier: "7")
+        references = store.presentation(recorded).fetch("metadata").fetch("affected_child_references")
+        assert_equal "[FILTERED]", references.fetch("secret")
+        assert_equal ["Before", "After"], references.fetch("changed").fetch("title")
       end
 
       test "generated dashboard widgets retain tenant and field policy boundaries" do
@@ -467,7 +489,7 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
 
           patch admin_car_path(car), params: { car: { social_accounts_attributes: { "0" => { provider: "github", handle: "" } } } }
           assert_response :unprocessable_entity
-          assert_match(/can't be blank/i, response.body)
+          assert_includes response.body, "can&#39;t be blank"
           assert_select "input[name^='car[social_accounts_attributes]'][name$='[handle]'][value='']"
 
         patch admin_car_path(car), params: { car: { passengers_attributes: { "0" => { id: passenger.id, secret: "forged" } } } }
@@ -560,6 +582,7 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
         assert_not_includes response.body, "INT-0099"
         assert_not_includes response.body, "SENSITIVE-42"
 
+        widget.update!(title: "Declared title")
         Widget.create!(tenant: "north", title: "Zebra widget", summary: "Second", state: "draft", quantity: 2, starts_on: Date.new(2026, 9, 1), published_at: Time.utc(2026, 9, 1), rank:)
         Widget.create!(tenant: "south", title: "North private", summary: "Excluded", state: "published", quantity: 7, starts_on: Date.new(2026, 9, 12), published_at: Time.utc(2026, 9, 12), rank: cross_tenant_rank)
         get admin_widgets_path, params: { filters: { title: { operator: "contains", value: "Declared" }, state: { value: "published" }, active: { value: "true" }, quantity: { from: "7", to: "7" }, starts_on: { from: "2026-09-12", to: "2026-09-12" }, published_at: { from: "2026-09-12T00:00", to: "2026-09-12T23:59" }, rank_id: { value: rank.id.to_s } }, per_page: 2 }
@@ -661,9 +684,11 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
         assert_response :see_other
         assert_equal %w[published published], [bulk_one.reload.state, bulk_two.reload.state]
         audit_events_before_cross_tenant_bulk = KrudminAI.config.audit_provider.events.length
-        post bulk_action_admin_widgets_path(action_name: :publish), params: { ids: [bulk_one.id, other_widget.id] }
+        cross_tenant_widget = Widget.create!(tenant: "south", title: "Cross tenant bulk", summary: "Excluded", state: "draft")
+        post bulk_action_admin_widgets_path(action_name: :publish), params: { ids: [bulk_one.id, cross_tenant_widget.id] }
         assert_response :forbidden
         assert_equal audit_events_before_cross_tenant_bulk, KrudminAI.config.audit_provider.events.length
+        assert_equal "draft", cross_tenant_widget.reload.state
 
         get edit_admin_widget_path(widget)
         assert_response :success
@@ -712,7 +737,7 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
         audit_events_before_passenger_validation = KrudminAI.config.audit_provider.events.length
         patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { name: "" } } } }
         assert_response :unprocessable_entity
-        assert_includes response.body, "Name can't be blank"
+        assert_includes response.body, "Name can&#39;t be blank"
         assert_equal audit_events_before_passenger_validation, KrudminAI.config.audit_provider.events.length
 
         patch admin_widget_path(widget), params: { widget: { passengers_attributes: { "0" => { id: passenger.id, secret: "forged" } } } }
@@ -733,7 +758,7 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
           resource: WidgetsResource,
           context: KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: []),
           auditor: KrudminAI.config.audit_provider
-        ).call(profile: :scalar_csv, relation: Widget.all).csv
+        ).call(profile: :scalar_csv, relation: Widget.where(id: widget.id)).csv
         row = CSV.parse(csv, headers: true).first
         assert_equal "EUR 12.50", row["amount"]
         assert_equal "15.5%", row["discount"]
@@ -745,7 +770,7 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
         ai_context = KrudminAI::Ai::ContextBuilder.new(
           resource: WidgetsResource,
           context: KrudminAI::AccessContext.new(actor: Object.new, tenant: "north", roles: [])
-        ).build(Widget.all).records.first
+        ).build(Widget.where(id: widget.id)).records.first
         assert_equal({ "source" => "generated-host" }, ai_context[:metadata])
         assert_equal "EUR 12.50", ai_context[:amount]
         assert_nil ai_context[:password]
@@ -779,15 +804,18 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
       test "generated resource renders generic controls in Spanish" do
         Widget.create!(tenant: "north", title: "Miembro visible", summary: "Cobertura localizada", state: "draft")
 
-        I18n.with_locale(:es) do
-          get admin_widgets_path
+        # The request resets the locale, so the default is switched rather than wrapped.
+        original_locale = I18n.default_locale
+        I18n.default_locale = :es
+        get admin_widgets_path
 
-          assert_response :success
-          assert_select "a", text: "Nuevo widget"
-          assert_select "button", text: "Aplicar filtros"
-          assert_select "a", text: "Restablecer"
-          assert_select "nav[aria-label='Paginación']"
-        end
+        assert_response :success
+        assert_select "a", text: "Nuevo Widget"
+        assert_select "button", text: "Aplicar filtros"
+        assert_select "a", text: "Restablecer"
+        assert_select "nav[aria-label='Paginación']"
+      ensure
+        I18n.default_locale = original_locale
       end
     end
   RUBY
@@ -798,16 +826,21 @@ Dir.mktmpdir("krudmin_ai_field_adapters") do |directory|
     class ResourceAccessibilityTest < ApplicationSystemTestCase
       setup do
         Widget.create!(tenant: "north", title: "Miembro visible", summary: "Interfaz accesible", state: "draft")
+        @original_locale = I18n.default_locale
+        I18n.default_locale = :es
       end
+
+      teardown { I18n.default_locale = @original_locale }
 
       test "generated resource remains accessible across supported viewports in Spanish" do
         [[1440, 900], [768, 1024], [390, 844]].each do |width, height|
           page.current_window.resize_to(width, height)
-          I18n.with_locale(:es) { visit admin_widgets_path }
+          visit admin_widgets_path
 
           assert_selector "main"
           assert_selector "h1"
           assert_selector "nav[aria-label='Paginación']"
+          click_button "Filtros"
           assert_selector "button", text: "Aplicar filtros"
           assert page.evaluate_script("document.documentElement.scrollWidth <= window.innerWidth"), "Expected no horizontal overflow at \#{width}px"
           assert page.evaluate_script(<<~JAVASCRIPT), "Expected every visible control to have an accessible name at \#{width}px"

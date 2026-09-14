@@ -79,6 +79,9 @@
   color: var(--krudmin-ai-text);
   font-family: "Avenir Next", Avenir, "Helvetica Neue", sans-serif;
   line-height: 1.5;
+  /* A grid item defaults to min-width:auto, so wide tables would stretch the shell instead
+     of scrolling inside their own wrapper. */
+  min-inline-size: 0;
   min-height: 100vh;
   padding: clamp(1.25rem, 3vw, 2.5rem);
 }
@@ -460,6 +463,9 @@
 .krudmin-ai-filter-panel.is-open {
   max-block-size: 32rem;
   opacity: 1;
+  /* Narrow viewports stack the filter grid past the cap, so the panel scrolls instead of
+     clipping its own apply and reset actions. */
+  overflow-y: auto;
   padding-block: clamp(1rem, 2vw, 1.5rem);
   transform: translateY(0);
 }

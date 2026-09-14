@@ -1,3 +1,4 @@
+require "active_support/core_ext/object/blank"
 require "krudmin_ai/resources/action"
 require "krudmin_ai/resources/filter"
 require "krudmin_ai/data_operations/profile"
@@ -449,10 +450,14 @@ module KrudminAI
             relation.where(attribute => value)
           when :number_range, :date_range, :datetime_range
             bounds = value.to_h
-            scoped_relation = relation
-            scoped_relation = scoped_relation.where("#{quoted_attribute} >= ?", bounds[:from] || bounds["from"]) if (bounds[:from] || bounds["from"]).present?
-            scoped_relation = scoped_relation.where("#{quoted_attribute} <= ?", bounds[:to] || bounds["to"]).present?
-            scoped_relation
+            lower = bounds[:from] || bounds["from"]
+            upper = bounds[:to] || bounds["to"]
+            # A range condition lets Rails cast each bound through the attribute type; raw
+            # string comparisons fall back to text affinity and silently exclude rows.
+            return relation if lower.blank? && upper.blank?
+            return relation.where(attribute => lower..upper) if lower.present? && upper.present?
+
+            lower.present? ? relation.where(attribute => lower..) : relation.where(attribute => ..upper)
           else
             relation
           end

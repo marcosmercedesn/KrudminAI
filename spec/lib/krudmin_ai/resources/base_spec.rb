@@ -120,4 +120,48 @@ RSpec.describe KrudminAI::Resources::Base do
       Class.new(described_class) { field :token, :hidden; inline_edit :token }
     end.to raise_error(ArgumentError, "Inline editing is not supported for token")
   end
+
+  describe "range field filters" do
+    let(:relation) do
+      Class.new do
+        attr_reader :conditions
+
+        def initialize(conditions = [])
+          @conditions = conditions
+        end
+
+        def where(condition)
+          self.class.new(conditions + [ condition ])
+        end
+      end.new
+    end
+
+    let(:resource) do
+      model = Class.new do
+        define_singleton_method(:connection) { Struct.new(:noop).new.tap { |c| def c.quote_column_name(name) = "\"#{name}\"" } }
+      end
+      Class.new(described_class) { model model }
+    end
+
+    def filter(bounds)
+      resource.send(:apply_field_filter, relation, :quantity, :number_range, bounds, :between)
+    end
+
+    it "builds a bounded range so each bound is cast through the attribute type" do
+      expect(filter({ from: "2", to: "9" }).conditions).to eq([ { quantity: "2".."9" } ])
+    end
+
+    it "builds beginless and endless ranges for a single bound" do
+      expect(filter({ to: "9" }).conditions).to eq([ { quantity: .."9" } ])
+      expect(filter({ from: "2" }).conditions).to eq([ { quantity: "2".. } ])
+    end
+
+    it "returns the untouched relation when no bound is supplied" do
+      expect(filter({ from: "", to: "" }).conditions).to be_empty
+    end
+
+    it "keeps returning a relation so later filters can chain" do
+      expect(filter({ from: "2", to: "9" })).to respond_to(:where)
+    end
+  end
 end
