@@ -53,10 +53,10 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "urgent", @ticket.reload.priority
   end
 
-  test "a form that opts into streaming keeps the browser in place and points at the record" do
+  test "a form inside an engine inline frame keeps the browser in place and points at the record" do
     sign_in(@manager)
 
-    patch ticket_path(@ticket), params: { demo_ticket: { priority: "urgent" }, krudmin_ai_stream: "1" }, as: :turbo_stream
+    patch ticket_path(@ticket), params: { demo_ticket: { priority: "urgent" } }, headers: inline_frame_headers, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -65,10 +65,19 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "urgent", @ticket.reload.priority
   end
 
-  test "an archive that opts into streaming points at the collection rather than the record" do
+  test "a host frame that is not an engine inline frame still redirects" do
     sign_in(@manager)
 
-    delete ticket_path(@ticket), params: { krudmin_ai_stream: "1" }, as: :turbo_stream
+    patch ticket_path(@ticket), params: { demo_ticket: { priority: "urgent" } }, headers: { "Turbo-Frame" => "host-modal" }, as: :turbo_stream
+
+    assert_response :see_other
+    assert_redirected_to ticket_path(@ticket)
+  end
+
+  test "an archive inside an inline frame points at the collection rather than the record" do
+    sign_in(@manager)
+
+    delete ticket_path(@ticket), headers: inline_frame_headers, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -76,11 +85,11 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert @ticket.reload.archived_at
   end
 
-  test "a restore that opts into streaming points back at the record" do
+  test "a restore inside an inline frame points back at the record" do
     sign_in(@manager)
     delete ticket_path(@ticket)
 
-    patch restore_ticket_path(@ticket), params: { krudmin_ai_stream: "1" }, as: :turbo_stream
+    patch restore_ticket_path(@ticket), headers: inline_frame_headers, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -101,13 +110,13 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "Printer queue", @ticket.reload.title
   end
 
-  test "an inline edit opts into streaming so the list stays in place" do
+  test "an inline edit renders inside an engine frame so the list stays in place" do
     sign_in(@manager)
 
     get tickets_path
-    assert_select "form.krudmin-ai-inline-edit input[name=?][value=?]", "krudmin_ai_stream", "1"
+    assert_select "turbo-frame#krudmin-ai-inline-#{@ticket.id}-priority form.krudmin-ai-inline-edit"
 
-    patch ticket_path(@ticket), params: { demo_ticket: { priority: "low" }, krudmin_ai_stream: "1" }, as: :turbo_stream
+    patch ticket_path(@ticket), params: { demo_ticket: { priority: "low" } }, headers: inline_frame_headers, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -161,10 +170,10 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
     assert_equal "resolved", @ticket.reload.state
   end
 
-  test "a bulk action that opts into streaming replaces the flash and points at the collection" do
+  test "a bulk action inside an inline frame replaces the flash and points at the collection" do
     sign_in(@manager)
 
-    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ], krudmin_ai_stream: "1" }, as: :turbo_stream
+    post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @ticket.id ] }, headers: inline_frame_headers, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -221,6 +230,10 @@ class TurboResponsesTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def inline_frame_headers
+    { "Turbo-Frame" => "krudmin-ai-inline-#{@ticket.id}-priority" }
+  end
 
   def sign_in(user)
     post session_path, params: { demo_user_id: user.id }

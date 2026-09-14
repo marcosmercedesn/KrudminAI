@@ -1,5 +1,7 @@
 module KrudminAI
   class ResourceController < ActionController::Base
+    INLINE_FRAME_PREFIX = "krudmin-ai-inline-".freeze
+
     helper KrudminAI::IconHelper
     class_attribute :resource_class, instance_accessor: false
     layout "krudmin_ai/application"
@@ -438,10 +440,11 @@ module KrudminAI
       %i[destroy archive].include?(operation) ? collection_path : resource_path(model)
     end
 
-    # A Turbo browser advertises the stream format on every submission, so streaming is opt-in:
-    # a form that wants an in-place update says so, and everything else redirects and navigates.
+    # A Turbo browser advertises the stream format on every submission, so streaming is opt-in.
+    # The frame prefix is engine-owned: a host frame wrapping engine content must not silently
+    # turn a full-page form into an in-place update.
     def stream_response_requested?
-      params[:krudmin_ai_stream].present?
+      turbo_frame_request_id.to_s.start_with?(INLINE_FRAME_PREFIX)
     end
 
     def render_turbo_mutation(response, result, operation)

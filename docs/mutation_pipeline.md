@@ -34,9 +34,11 @@ The pipeline is the authoritative validation boundary. Client-side validation pr
 
 Every successful non-GET HTML mutation answers 303, including bulk actions, because Turbo repeats the request on a 302.
 
-A Turbo browser advertises `text/vnd.turbo-stream.html` on every form submission, so the stream format alone cannot mean "update in place". Streaming is therefore opt-in: a form that wants an in-place update submits `krudmin_ai_stream=1`, and every other successful mutation redirects with 303 so Turbo navigates. The engine's inline editor is the one built-in form that opts in, which keeps the list in place while a full-page form still lands on the record.
+A Turbo browser advertises `text/vnd.turbo-stream.html` on every form submission, so the stream format alone cannot mean "update in place". Streaming is therefore opt-in: a submission originating inside an engine inline frame, whose id starts with `krudmin-ai-inline-`, receives the stream, and every other successful mutation redirects with 303 so Turbo navigates. The prefix is deliberately engine-owned, so a host frame wrapping engine content never silently turns a full-page form into an in-place update. The engine's inline editor is the one built-in form inside such a frame, which keeps the list in place while a full-page form still lands on the record.
 
 A successful stream response carries a `Turbo-Location` header pointing at the collection for `destroy` and `archive` and at the record for every other operation. Failures always stream when the client asked for a stream, so a rejected form re-renders in place with 422 and carries no location.
+
+Mutation streams update the contents of `#krudmin-ai-flash` rather than replacing the element, so the target survives and a host layout keeps its own flash container. A host that renders engine resources under its own layout must provide that element for stream feedback to appear.
 
 Bulk actions answer all three formats under the same rule, and a rejected or unauthorized bulk action reports through the requested format rather than always answering JSON.
 

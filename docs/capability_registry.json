@@ -269,7 +269,7 @@
       "status": "companion_evidence",
       "guarantees": [
         "no jQuery runtime dependency",
-        "successful mutations redirect with see-other so Turbo navigates, and Turbo Stream responses are opt-in per form for in-place updates",
+        "successful mutations redirect with see-other so Turbo navigates, and Turbo Stream responses are opt-in through engine-owned inline frames",
         "light, dark, and system theme modes",
         "inline Lucide SVG icons with resource-level icon configuration",
         "engine default admin shell with host-configured flat or nested navigation, access-context-filtered children, and fail-closed visibility or active predicates",

@@ -173,14 +173,14 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
   test "Turbo Stream mutation responses use success and validation templates" do
     sign_in(@north_agent)
 
-    post tickets_path, params: { demo_ticket: ticket_attributes, krudmin_ai_stream: "1" }, as: :turbo_stream
+    post tickets_path, params: { demo_ticket: ticket_attributes }, headers: { "Turbo-Frame" => "krudmin-ai-inline-new-title" }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_equal ticket_path(DemoTicket.order(:created_at).last), response.headers.fetch("Turbo-Location")
     assert_includes response.body, "krudmin-ai-flash"
 
-    post tickets_path, params: { demo_ticket: ticket_attributes.merge(title: ""), krudmin_ai_stream: "1" }, as: :turbo_stream
+    post tickets_path, params: { demo_ticket: ticket_attributes.merge(title: "") }, headers: { "Turbo-Frame" => "krudmin-ai-inline-new-title" }, as: :turbo_stream
 
     assert_response :unprocessable_entity
     assert_equal "text/vnd.turbo-stream.html", response.media_type
@@ -450,7 +450,7 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_equal "resolve", DemoAuditEvent.order(:created_at).last.operation
 
     @north_ticket.update!(state: "assigned")
-    post action_ticket_path(@north_ticket, action_name: "resolve"), params: { krudmin_ai_stream: "1" }, as: :turbo_stream
+    post action_ticket_path(@north_ticket, action_name: "resolve"), headers: { "Turbo-Frame" => "krudmin-ai-inline-#{@north_ticket.id}-state" }, as: :turbo_stream
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type

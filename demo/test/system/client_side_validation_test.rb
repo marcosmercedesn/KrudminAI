@@ -109,6 +109,21 @@ class ClientSideValidationTest < ApplicationSystemTestCase
     assert_equal "normal", ticket.reload.priority
   end
 
+  test "a successful inline edit keeps the list in place and reports through the flash" do
+    ticket = DemoTicket.create!(tenant: "northwind", title: "Inline", state: "open", priority: "normal", assignee: @agent.name)
+    sign_in
+    await_controller "form.krudmin-ai-inline-edit"
+
+    within "form.krudmin-ai-inline-edit" do
+      fill_in "Priority", with: "urgent"
+      click_button "Save ticket"
+    end
+
+    assert_selector "#krudmin-ai-flash", text: "ticket updated and audited."
+    assert_current_path tickets_path
+    assert_equal "urgent", ticket.reload.priority
+  end
+
   private
 
   def sign_in
