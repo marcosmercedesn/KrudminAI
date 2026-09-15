@@ -1,6 +1,7 @@
 en:
   krudmin_ai:
     navigation_empty: "No admin sections are configured."
+    breadcrumbs: "Breadcrumb"
     page_title: "%{resource} | KrudminAI"
     new: "New %{resource}"
     edit: "Edit %{resource}"

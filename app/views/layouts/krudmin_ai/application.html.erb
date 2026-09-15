@@ -31,6 +31,7 @@
           <%= render "krudmin_ai/ui/status", state: :success, message: flash[:notice] if flash[:notice] %>
           <%= render "krudmin_ai/ui/status", state: :error, message: flash[:alert] if flash[:alert] %>
         </div>
+        <%= render "krudmin_ai/ui/breadcrumbs" %>
         <%= yield %>
       </main>
     </div>

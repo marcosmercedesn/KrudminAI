@@ -1,0 +1,13 @@
+<nav class="krudmin-ai-breadcrumbs" aria-label="<%= t("krudmin_ai.breadcrumbs") %>">
+  <ol>
+    <% krudmin_ai_breadcrumbs.each do |item| %>
+      <li<% if item[:current] %> aria-current="page"<% end %>>
+        <% if item[:current] %>
+          <span><%= item[:label] %></span>
+        <% else %>
+          <%= link_to item[:label], item[:path] %>
+        <% end %>
+      </li>
+    <% end %>
+  </ol>
+</nav>

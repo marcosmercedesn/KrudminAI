@@ -50,7 +50,11 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     sign_in
 
     click_link @ticket.title
+    assert_selector "nav.krudmin-ai-breadcrumbs a", text: "Tickets"
+    assert_selector "nav.krudmin-ai-breadcrumbs[aria-label='Breadcrumb']"
+    assert_selector "nav.krudmin-ai-breadcrumbs [aria-current='page']", text: @ticket.title
     click_link "Edit"
+    assert_selector "nav.krudmin-ai-breadcrumbs [aria-current='page']", text: "Edit ticket"
     fill_in "Title", with: "Printer queue restored"
     click_button "Save ticket"
 

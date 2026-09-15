@@ -60,6 +60,7 @@
           <% if flash[:notice] %><p class="notice" role="status"><%= flash[:notice] %></p><% end %>
           <% if flash[:alert] %><p class="alert" role="alert"><%= flash[:alert] %></p><% end %>
         </div>
+        <%= render "krudmin_ai/ui/breadcrumbs" if respond_to?(:krudmin_ai_breadcrumbs) %>
         <%= yield %>
       </main>
     </div>

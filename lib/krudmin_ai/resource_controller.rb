@@ -14,6 +14,7 @@ module KrudminAI
             :readable_relationship_display_fields, :krudmin_ai_access_context, :krudmin_ai_authorization_provider,
               :remote_lookup_field_path, :reset_filters_path, :sort_path, :sort_direction, :sort_active?, :bulk_action_path,
               :page_title, :krudmin_ai_validation_rules, :krudmin_ai_relationship_validation_rules
+            helper_method :krudmin_ai_breadcrumbs
 
     before_action :authenticate_resource_request
     before_action :load_model, only: %i[show edit update destroy restore perform_action]
@@ -204,6 +205,35 @@ module KrudminAI
       end
 
       t("krudmin_ai.page_title", resource: resource_title)
+    end
+
+    def krudmin_ai_breadcrumbs
+      items = []
+
+      case action_name
+      when "index"
+        items << { label: breadcrumb_label(resources_label), current: true }
+      when "new", "create"
+        items << { label: breadcrumb_label(resources_label), path: collection_path }
+        items << { label: breadcrumb_label(t("krudmin_ai.new", resource: resource_label)), current: true }
+      when "show", "edit", "update"
+        items << { label: breadcrumb_label(resources_label), path: collection_path }
+        items << { label: breadcrumb_label(resource_breadcrumb_label), path: resource_path }
+        items << { label: breadcrumb_label(t("krudmin_ai.edit", resource: resource_label)), current: true } if %w[edit update].include?(action_name)
+        items.last[:current] = true if action_name == "show"
+      end
+
+      items
+    end
+
+    def resource_breadcrumb_label
+      readable_fields(resource.show).lazy.map { |field| resource.field_adapter(field).show_value(model) }.find(&:present?) || resource_label
+    rescue StandardError
+      resource_label
+    end
+
+    def breadcrumb_label(label)
+      label.to_s.sub(/\A./) { |character| character.upcase }
     end
 
     def authorized_action?(action, record = model)
