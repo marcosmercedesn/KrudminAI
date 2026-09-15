@@ -31,7 +31,7 @@ The pipeline always applies tenant scope, policy scope, provider scope, archive 
 
 ## Typed Filters
 
-`filter` declarations render secure generic controls as well as registering their query handler. `:text` filters support `contains`, `equals`, `starts_with`, and `ends_with` by default; `:select` filters use an explicit static or context-aware option collection; and `:date_range` filters submit bounded `from` and `to` values. A handler with four parameters receives the allowlisted operator as its fourth value. Existing three-parameter handlers continue receiving a scalar value.
+`filter_field :attribute` declares a model-backed filter from the resource field adapter. The reusable `Resources::Filter` abstraction owns its type, operators, parameter handling, SQL predicate, and case behavior, so resources do not reimplement field queries. `:text` filters support `contains`, `equals`, `starts_with`, and `ends_with` by default; those operators compare case-insensitively. `:select` filters use an explicit static or context-aware option collection; and `:date_range` filters submit bounded `from` and `to` values. Use a custom `filter` block only for domain-specific query logic that is not a direct model-field filter. A handler with four parameters receives the allowlisted operator as its fourth value. Existing three-parameter handlers continue receiving a scalar value.
 
 ## Eager Loading
 

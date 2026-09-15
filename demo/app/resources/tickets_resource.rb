@@ -34,13 +34,7 @@ class TicketsResource < KrudminAI::Resources::Base
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoTicketPolicy::Scope.new(context.actor, relation).resolve }
   tenant_record { |record, context| record.tenant == context.tenant }
-  filter :title, label: "Title", operators: %i[contains equals starts_with] do |relation, value, _context, operator|
-    case operator
-    when :equals then relation.where(title: value)
-    when :starts_with then relation.where("title LIKE ?", "#{value}%")
-    else relation.where("title LIKE ?", "%#{value}%")
-    end
-  end
+  filter_field :title, label: "Title"
   filter :state, type: :select, label: "State", options: DemoTicket::STATES do |relation, value, _context|
     value.present? ? relation.where(state: value) : relation
   end

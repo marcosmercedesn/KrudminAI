@@ -144,7 +144,7 @@ RSpec.describe KrudminAI::Resources::Base do
     end
 
     def filter(bounds)
-      resource.send(:apply_field_filter, relation, :quantity, :number_range, bounds, :between)
+      KrudminAI::Resources::Filter.apply_field_filter(relation, resource.model_class, :quantity, :number_range, bounds, :between)
     end
 
     it "builds a bounded range so each bound is cast through the attribute type" do
@@ -162,6 +162,38 @@ RSpec.describe KrudminAI::Resources::Base do
 
     it "keeps returning a relation so later filters can chain" do
       expect(filter({ from: "2", to: "9" })).to respond_to(:where)
+    end
+  end
+
+  describe "text field filters" do
+    let(:relation) do
+      Class.new do
+        attr_reader :conditions
+
+        def initialize(conditions = [])
+          @conditions = conditions
+        end
+
+        def where(condition, value = nil)
+          self.class.new(conditions + [ value ? [ condition, value ] : condition ])
+        end
+      end.new
+    end
+
+    let(:resource) do
+      model = Class.new do
+        define_singleton_method(:connection) { Struct.new(:noop).new.tap { |c| def c.quote_column_name(name) = "\"#{name}\"" } }
+      end
+      Class.new(described_class) { model model }
+    end
+
+    it "uses lower-case SQL comparisons for every text operator" do
+      expect(KrudminAI::Resources::Filter.apply_field_filter(relation, resource.model_class, :name, :text, "North%", :equals).conditions).to eq([
+        [ 'LOWER("name") LIKE LOWER(?)', "North\\%" ]
+      ])
+      expect(KrudminAI::Resources::Filter.apply_field_filter(relation, resource.model_class, :name, :text, "North", :contains).conditions).to eq([
+        [ 'LOWER("name") LIKE LOWER(?)', "%North%" ]
+      ])
     end
   end
 end

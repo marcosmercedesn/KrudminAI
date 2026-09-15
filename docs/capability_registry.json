@@ -279,6 +279,7 @@
         "resource pages render route-aware accessible breadcrumbs with readable record labels and aria-current on the current page",
         "documented engine components for status, empty, field, filter, table, pagination, and record-detail states",
         "typed text, select, and date-range filters with allowlisted operators and generic relationship detail tables filtered through child field-read policy",
+        "filter_field declarations delegate model-field query semantics to the reusable Filter abstraction, whose generic text operators compare case-insensitively",
         "generic resource pages use field-policy-aware components for empty, validation-error, disabled, notice, alert, and text-labelled status treatments",
         "pagination retains only allowlisted resource query parameters",
         "deterministic authenticated companion screenshots across light/dark desktop, tablet, and mobile states with heading, icon, and overflow assertions",

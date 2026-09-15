@@ -1,4 +1,5 @@
 require "active_support/core_ext/object/blank"
+require "active_record"
 require "krudmin_ai/resources/action"
 require "krudmin_ai/resources/filter"
 require "krudmin_ai/data_operations/profile"
@@ -374,7 +375,11 @@ module KrudminAI
             operators: adapter_definition[:operators],
             options: adapter_definition[:options]
           ) do |relation, value, _context, operator|
-            apply_field_filter(relation, attribute.to_sym, adapter_definition.fetch(:type), value, operator)
+            Filter.handler_for_field(
+              model_class: model_class,
+              attribute: attribute.to_sym,
+              type: adapter_definition.fetch(:type)
+            ).call(relation, value, nil, operator)
           end
         end
 
@@ -431,36 +436,6 @@ module KrudminAI
           field_authorizers.dig(attribute.to_sym, decision)&.call(record, context) == true
         rescue StandardError
           false
-        end
-
-        def apply_field_filter(relation, attribute, type, value, operator)
-          quoted_attribute = model_class.connection.quote_column_name(attribute)
-
-          case type.to_sym
-          when :text
-            escaped_value = ActiveRecord::Base.sanitize_sql_like(value.to_s)
-            predicate = case operator
-            when :equals then value.to_s
-            when :starts_with then "#{escaped_value}%"
-            when :ends_with then "%#{escaped_value}"
-            else "%#{escaped_value}%"
-            end
-            operator == :equals ? relation.where(attribute => predicate) : relation.where("#{quoted_attribute} LIKE ?", predicate)
-          when :select
-            relation.where(attribute => value)
-          when :number_range, :date_range, :datetime_range
-            bounds = value.to_h
-            lower = bounds[:from] || bounds["from"]
-            upper = bounds[:to] || bounds["to"]
-            # A range condition lets Rails cast each bound through the attribute type; raw
-            # string comparisons fall back to text affinity and silently exclude rows.
-            return relation if lower.blank? && upper.blank?
-            return relation.where(attribute => lower..upper) if lower.present? && upper.present?
-
-            lower.present? ? relation.where(attribute => lower..) : relation.where(attribute => ..upper)
-          else
-            relation
-          end
         end
 
         def inline_editable_adapter?(adapter)

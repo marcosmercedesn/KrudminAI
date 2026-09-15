@@ -45,6 +45,16 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "dashboard-widgets"
   end
 
+  test "ticket text filters ignore case" do
+    sign_in(@north_agent)
+
+    get tickets_path, params: { filters: { title: { operator: "contains", value: "NORTHWIND" } } }
+
+    assert_response :success
+    assert_includes response.body, @north_ticket.title
+    assert_not_includes response.body, @south_ticket.title
+  end
+
   test "dashboard widgets respect role visibility, safe drill-downs, and table pagination" do
     6.times { |index| DemoTicket.create!(tenant: "northwind", title: "North ticket #{index}", state: "open", priority: "normal", assignee: @north_agent.name) }
     sign_in(@north_agent)

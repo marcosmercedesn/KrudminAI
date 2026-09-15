@@ -14,9 +14,7 @@ class LocationsResource < KrudminAI::Resources::Base
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoOperationsPolicy::Scope.new(context.actor, relation).resolve }
   tenant_record { |record, context| record.tenant == context.tenant }
-  filter :name, label: "Location", operators: %i[contains equals starts_with] do |relation, value, _context, operator|
-    operator == :equals ? relation.where(name: value) : relation.where("name LIKE ?", operator == :starts_with ? "#{value}%" : "%#{value}%")
-  end
+  filter_field :name, label: "Location"
   sortable :name, :region
   default_sort_by :name
   paginate per_page: 20, max_per_page: 50

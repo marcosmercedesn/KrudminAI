@@ -53,9 +53,7 @@ class AssetsResource < KrudminAI::Resources::Base
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoOperationsPolicy::Scope.new(context.actor, relation).resolve }
   tenant_record { |record, context| record.tenant == context.tenant }
-  filter :name, label: "Asset", operators: %i[contains equals starts_with] do |relation, value, _context, operator|
-    operator == :equals ? relation.where(name: value) : relation.where("name LIKE ?", operator == :starts_with ? "#{value}%" : "%#{value}%")
-  end
+  filter_field :name, label: "Asset"
   filter :lifecycle, type: :select, label: "Lifecycle", options: DemoAsset::LIFECYCLES do |relation, value, _context|
     value.present? ? relation.where(lifecycle: value) : relation
   end

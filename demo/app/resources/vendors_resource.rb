@@ -16,9 +16,7 @@ class VendorsResource < KrudminAI::Resources::Base
   tenant_scope { |relation, context| relation.where(tenant: context.tenant) }
   policy_scope { |relation, context| DemoOperationsPolicy::Scope.new(context.actor, relation).resolve }
   tenant_record { |record, context| record.tenant == context.tenant }
-  filter :name, label: "Vendor", operators: %i[contains equals starts_with] do |relation, value, _context, operator|
-    operator == :equals ? relation.where(name: value) : relation.where("name LIKE ?", operator == :starts_with ? "#{value}%" : "%#{value}%")
-  end
+  filter_field :name, label: "Vendor"
   filter :service_tier, type: :select, label: "Service tier", options: DemoVendor::SERVICE_TIERS do |relation, value, _context|
     value.present? ? relation.where(service_tier: value) : relation
   end
