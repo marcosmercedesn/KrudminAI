@@ -23,6 +23,8 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
       priority: "high",
       assignee: @agent.name
     )
+    @active_location = DemoLocation.create!(tenant: "northwind", name: "East hub", region: "East", timezone: "America/New_York", active: true)
+    @inactive_location = DemoLocation.create!(tenant: "northwind", name: "West hub", region: "West", timezone: "America/Phoenix", active: false)
   end
 
   test "captures authenticated resource and dashboard screens in each theme" do
@@ -60,6 +62,18 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
 
     assert_current_path ticket_path(@ticket)
     assert_text "Printer queue restored"
+  end
+
+  test "presents boolean values as localized badges" do
+    sign_in
+
+    visit locations_path
+
+    assert_selector ".krudmin-ai-boolean-badge--true", text: "Yes"
+    assert_selector ".krudmin-ai-boolean-badge--false", text: "No"
+
+    visit location_path(@active_location)
+    assert_selector ".krudmin-ai-boolean-badge--true", text: "Yes"
   end
 
   test "adds and removes passengers through the nested editor" do

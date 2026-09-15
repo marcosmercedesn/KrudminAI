@@ -13,6 +13,8 @@
           <%= link_to value, url_for(raw_value) %>
         <% elsif association_link %>
           <%= link_to value, association_link %>
+        <% elsif adapter.is_a?(KrudminAI::Fields::Boolean) %>
+          <%= render "krudmin_ai/ui/boolean_badge", value: value %>
         <% else %>
           <%= adapter.blank?(value) ? t("krudmin_ai.not_provided") : value %>
         <% end %>

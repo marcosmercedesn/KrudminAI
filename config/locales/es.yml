@@ -2,6 +2,9 @@ es:
   krudmin_ai:
     navigation_empty: "No hay secciones administrativas configuradas."
     breadcrumbs: "Migas de pan"
+    boolean:
+      "true": "Sí"
+      "false": "No"
     page_title: "%{resource} | KrudminAI"
     new: "Nuevo %{resource}"
     edit: "Editar %{resource}"

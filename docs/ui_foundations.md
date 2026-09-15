@@ -18,9 +18,9 @@ Engine-owned resource pages compose partial components instead of requiring host
 | `ui/empty_state` | `title` | Optional `id` and `action`; retains an authorized creation affordance when available. |
 | `ui/field` | `form`, `field`, `writable`, `errors` | Renders labels, invalid state, disabled/explained authorization denial, and a stable per-field error node. Optional `adapter`, `rules`, and `compact` locals select the typed control, carry the client validation rule payload, and hide the visible label for inline editing. |
 | `ui/filter_form` | implicit resource-controller context | Renders only declared filters and preserves normal GET query behavior. |
-| `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges. |
+| `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges and boolean values use localized green/red badges. |
 | `ui/pagination` | `page`, `per_page`, `total_count` | Renders First/Previous, a bounded numbered-page window, ellipses, Next/Last, and direct page entry. `pagination_path` carries only the resource controller's allowlisted query parameters. |
-| `ui/record_details` | `resource`, `record`, `fields` | Renders only readable show fields and represents blank values as text. |
+| `ui/record_details` | `resource`, `record`, `fields` | Renders only readable show fields, represents blank values as text, and presents booleans as localized green/red badges. |
 
 The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials remain available for host-composed interfaces. Engine-owned default index, form, and show templates consume a resource's `list`, `form`, and `show` metadata and normal Rails controls for permitted scalar fields. This is not yet type-aware: the generic form currently renders a text control and details render raw values. The field adapter foundation must replace that behavior before KrudminAI can claim field parity. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, disabled control treatment, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
 

@@ -766,6 +766,25 @@
   font-weight: 650;
   padding: 0.2rem 0.5rem;
 }
+.krudmin-ai-boolean-badge {
+  border: 1px solid;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 0.2rem 0.55rem;
+}
+.krudmin-ai-boolean-badge--true {
+  background: color-mix(in srgb, var(--krudmin-ai-success) 14%, var(--krudmin-ai-surface));
+  border-color: var(--krudmin-ai-success);
+  color: var(--krudmin-ai-success-strong);
+}
+.krudmin-ai-boolean-badge--false {
+  background: color-mix(in srgb, var(--krudmin-ai-danger) 12%, var(--krudmin-ai-surface));
+  border-color: var(--krudmin-ai-danger);
+  color: var(--krudmin-ai-danger);
+}
 .krudmin-ai-pagination {
   align-items: center;
   display: flex;

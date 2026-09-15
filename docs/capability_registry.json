@@ -285,7 +285,8 @@
         "deterministic authenticated companion screenshots across light/dark desktop, tablet, and mobile states with heading, icon, and overflow assertions",
         "Selenium headless Chrome companion suite runs in CI with screenshot artifact upload and a zero-retry flake budget",
         "visible focus, named form controls, minimum touch-target, and reduced-motion support",
-        "semantic action button variants distinguish neutral, create, edit, save, and destructive controls, with default labelled actions paired with Lucide icons"
+        "semantic action button variants distinguish neutral, create, edit, save, and destructive controls, with default labelled actions paired with Lucide icons",
+        "boolean list and detail values render localized green/red badges with Sí/No translations in Spanish"
       ],
       "evidence_gap": "An independently generated Rails host must prove a menu of at least ten authorized resources and default-shell index, new, edit, and show states across light, dark, and system modes at 1440px, 768px, and 390px with accessibility and reduced-motion assertions; screen-reader review and portable pixel-diff baselines remain pending."
     },
