@@ -18,11 +18,12 @@ Engine-owned resource pages compose partial components instead of requiring host
 | `ui/empty_state` | `title` | Optional `id` and `action`; retains an authorized creation affordance when available. |
 | `ui/field` | `form`, `field`, `writable`, `errors` | Renders labels, invalid state, disabled/explained authorization denial, and a stable per-field error node. Optional `adapter`, `rules`, and `compact` locals select the typed control, carry the client validation rule payload, and hide the visible label for inline editing. |
 | `ui/filter_form` | implicit resource-controller context | Renders only declared filters and preserves normal GET query behavior. |
-| `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges and boolean values use localized green/red badges. |
+| `ui/list_table` | `resource`, `records`, `fields` | Renders only field-readable values; `state` values have visible text badges and boolean values use green check/red X icons with localized accessible labels. |
 | `ui/pagination` | `page`, `per_page`, `total_count` | Renders First/Previous, a bounded numbered-page window, ellipses, Next/Last, and direct page entry. `pagination_path` carries only the resource controller's allowlisted query parameters. |
-| `ui/record_details` | `resource`, `record`, `fields` | Renders only readable show fields, represents blank values as text, and presents booleans as localized green/red badges. |
+| `ui/record_details` | `resource`, `record`, `fields` | Renders only readable show fields, represents blank values as text, and presents booleans as green check/red X icons with localized accessible labels. |
 
 The `ui/filter_panel`, `ui/resource_table`, and `ui/form_shell` partials remain available for host-composed interfaces. Engine-owned default index, form, and show templates consume a resource's `list`, `form`, and `show` metadata and normal Rails controls for permitted scalar fields. This is not yet type-aware: the generic form currently renders a text control and details render raw values. The field adapter foundation must replace that behavior before KrudminAI can claim field parity. Their CSS uses semantic tokens, responsive grid/table constraints, visible keyboard focus, disabled control treatment, and reduced-motion fallback. The filter controller maintains `hidden` and `aria-expanded`, then focuses the first panel control when opened.
+Relationship detail tables render readable boolean values with the same icon and accessible label as resource lists and details, including false values that would otherwise be mistaken for blanks.
 
 KrudminAI uses `lucide-rails` for inline SVG icons. Resources configure an icon with a Lucide identifier, using Ruby symbol notation; the default is `:file_text`. Render resource and action icons with `krudmin_ai_icon`, which normalizes underscores to Lucide's dashed icon names and marks decorative icons as hidden from assistive technology.
 
@@ -44,7 +45,10 @@ The validation summary and each field's error node are always present in the doc
 
 `krudmin_ai/application.css` publishes semantic canvas, surface, raised-surface, text, muted-text, border, accent, edit, success, focus, danger, radius, spacing, shadow, and transition tokens. Light values are the default; `data-theme="dark"` supplies dark values; system mode uses `prefers-color-scheme` unless `data-theme-mode` is explicitly light or dark. Components use these semantic tokens rather than literal component-specific colors.
 
+The engine bundles the Open Sans Latin variable font under its SIL Open Font License; the admin shell makes no third-party font request. Host scripts outside the Latin subset use the system fallback. Both the engine and companion use a light, elevated sidebar with spaced navigation and a distinct active indicator, and the companion dashboard uses compact neutral metric panels with hover elevation. Form sections and nested editors remain semantic `fieldset` groups, but their legends are visually hidden in favor of headings inside the raised card; screen readers still receive each group label.
+
 Buttons use a semantic action contract: the neutral default is for cancellation, filtering, pagination, and non-mutating controls; `--primary` is for creating a resource; `--edit` is for editing; `--save` is for persisting form changes; and `--danger` is for destructive actions. Color supports the written label and never carries the action meaning by itself.
+Their sizing and states follow the [Bootstrap 5.3 button reference](https://getbootstrap.com/docs/5.3/components/buttons/): regular-weight text, a 6px radius, solid blue primary and green save, and outline neutral, blue edit, and red danger variants. Hover fills outline buttons; pressed states have inset shading, disabled controls remain visibly subdued, and the engine retains a high-contrast keyboard focus outline. Demo-only action buttons follow the same sizing and blue primary treatment without adding Bootstrap as a runtime dependency.
 
 Engine-owned default actions pair their labels with decorative Lucide icons: plus for create/add, pencil for edit, save for persistence, x for cancel, filter controls for filtering, directional arrows for pagination, and trash for deletion. Icon-only destructive controls retain an accessible name through their `aria-label` and `title`.
 
@@ -66,6 +70,7 @@ The current release decision remains [hold](beta_release_decision.md) until that
 ## Engine Admin Shell
 
 `KrudminAI::ResourceController` uses the engine-owned `krudmin_ai/application` layout by default. The layout loads engine CSS and the `krudmin_ai` import-map entrypoint, renders only navigation items registered by the host, and provides a persistent desktop rail, a mobile drawer, and the light/dark/system selector. A host that needs a bespoke presentation can retain the resource controller and declare its own Rails `layout` in the host controller.
+Set `config.brand_name = "Acme Operations"` in the host's `KrudminAI.configure` block to replace the sidebar name and its accessible home label. The default is `KrudminAI`; the companion sidebar uses the same setting and derives its letter mark from the configured name. No layout override is needed to change the name.
 
 The engine layout derives a document title from the resource controller: collection actions use the plural resource label, `new`/`create` use the localized new-resource label, `edit`/`update` use the localized edit-resource label, and `show` uses the singular label. Every default title is suffixed with `KrudminAI`. A host view can intentionally override the title with `content_for(:title)`.
 

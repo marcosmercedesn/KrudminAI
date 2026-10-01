@@ -64,6 +64,9 @@ module KrudminAI
             # config.audit_provider = HostAuditProvider.new
             # config.notification_provider = HostNotificationProvider.new
             #
+            # Optional: replace the default sidebar name with your company name.
+            # config.brand_name = "Acme Operations"
+            #
             # Register visible navigation using host route helpers. A resource supplies its
             # plural label and configured icon, while the visibility predicate receives the
             # same access context used by resource requests. Name the resource rather than

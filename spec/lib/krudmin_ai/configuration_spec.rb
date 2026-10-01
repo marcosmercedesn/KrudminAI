@@ -5,6 +5,14 @@ require "krudmin_ai/providers"
 require "krudmin_ai/resources/base"
 
 RSpec.describe KrudminAI::Configuration do
+  it "defaults the sidebar brand and allows the host to customize it" do
+    configuration = described_class.new
+
+    expect(configuration.brand_name).to eq("KrudminAI")
+    configuration.brand_name = "Acme Operations"
+    expect(configuration.brand_name).to eq("Acme Operations")
+  end
+
   it "registers multiple resource-backed navigation items", :aggregate_failures do
     orders = Class.new(KrudminAI::Resources::Base) { icon :shopping_cart }
     reports = Class.new(KrudminAI::Resources::Base) { icon :chart_no_axes_combined }

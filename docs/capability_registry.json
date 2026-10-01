@@ -277,7 +277,7 @@
         "successful mutations redirect with see-other so Turbo navigates, and Turbo Stream responses are opt-in through engine-owned inline frames",
         "light, dark, and system theme modes",
         "inline Lucide SVG icons with resource-level icon configuration",
-        "engine default admin shell with host-configured flat or nested navigation, access-context-filtered children, and fail-closed visibility or active predicates",
+        "engine default admin shell with configurable sidebar brand name, host-configured flat or nested navigation, access-context-filtered children, and fail-closed visibility or active predicates",
         "install generator manages all engine import-map pins without overwriting host pins",
         "desktop rail collapse persists locally; mobile drawer starts closed and closes on navigation, backdrop, or Escape with synchronized accessible toggle state",
         "resource-backed document titles derive from localized action labels and resource labels, while views can override the default with content_for(:title)",
@@ -291,7 +291,7 @@
         "Selenium headless Chrome companion suite runs in CI with screenshot artifact upload and a zero-retry flake budget",
         "visible focus, named form controls, minimum touch-target, and reduced-motion support",
         "semantic action button variants distinguish neutral, create, edit, save, and destructive controls, with default labelled actions paired with Lucide icons",
-        "boolean list and detail values render localized green/red badges with Sí/No translations in Spanish"
+        "boolean list and detail values render green check/red X icons with localized accessible Yes/No labels"
       ],
       "evidence_gap": "An independently generated Rails host must prove a menu of at least ten authorized resources and default-shell index, new, edit, and show states across light, dark, and system modes at 1440px, 768px, and 390px with accessibility and reduced-motion assertions; screen-reader review and portable pixel-diff baselines remain pending."
     },

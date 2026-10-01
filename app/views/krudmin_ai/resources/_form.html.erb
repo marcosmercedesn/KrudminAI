@@ -28,7 +28,7 @@
         <%= render rel.singular? ? "krudmin_ai/resources/has_one" : "krudmin_ai/resources/has_many", form: form, relationship: rel %>
       <% else %>
         <fieldset class="krudmin-ai-form-section krudmin-ai-form-section--<%= section.fetch(:columns, :one) %>">
-          <% if section[:label] %><legend><%= section[:label] %></legend><% end %>
+          <% if section[:label] %><legend class="krudmin-ai-sr-only"><%= section[:label] %></legend><h2 class="krudmin-ai-section-heading" aria-hidden="true"><%= section[:label] %></h2><% end %>
           <% section_fields.each do |field| %>
             <% if (rel = resource.relationships[field.to_sym]) %>
               <% rendered_relationships << rel.name %>

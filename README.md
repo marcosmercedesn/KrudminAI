@@ -84,6 +84,7 @@ KrudminAI.configure do |config|
 	config.authorization_provider = HostAuthorizationProvider.new
 	config.audit_provider = HostAuditProvider.new
 	config.notification_provider = HostNotificationProvider.new
+	config.brand_name = "Acme Operations" # Optional sidebar name; defaults to "KrudminAI".
 end
 ```
 

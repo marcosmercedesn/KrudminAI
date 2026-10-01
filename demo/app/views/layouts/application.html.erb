@@ -18,8 +18,8 @@
   <body>
     <div class="app-shell">
       <header class="site-header">
-        <%= link_to root_path, class: "brand", aria: { label: "KrudminAI home" } do %>
-          <span class="brand-mark">K</span><span>Krudmin<span class="brand-accent">AI</span></span>
+        <%= link_to root_path, class: "brand", aria: { label: "#{KrudminAI.config.brand_name} home" } do %>
+          <span class="brand-mark"><%= KrudminAI.config.brand_name[0].upcase %></span><span><%= KrudminAI.config.brand_name %></span>
         <% end %>
         <% if signed_in? %>
           <nav id="primary-navigation" aria-label="Main navigation">

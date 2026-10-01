@@ -9,7 +9,7 @@
           <% sortable = resource.sortable_attributes.include?(field) %>
           <% direction = params[:sort].to_s.split(":", 2).last if sort_active?(field) %>
           <% aria_sort = direction == "asc" ? "ascending" : direction == "desc" ? "descending" : "none" %>
-          <th scope="col" class="krudmin-ai-priority--<%= resource.list_field_priorities.fetch(field, :standard) %>" aria-sort="<%= aria_sort %>">
+          <th scope="col" class="krudmin-ai-priority--<%= resource.list_field_priorities.fetch(field, :standard) %><%= ' krudmin-ai-table__record' if field == fields.first %>" aria-sort="<%= aria_sort %>">
             <% if sortable %><%= link_to resource.model_class.human_attribute_name(field), sort_path(field) %><% else %><%= resource.model_class.human_attribute_name(field) %><% end %>
           </th>
         <% end %>
@@ -21,7 +21,7 @@
         <tr>
           <% if resource.bulk_actions.any? %><td><%= check_box_tag "ids[]", record.id, false, form: "krudmin-ai-bulk-actions", aria: { label: "#{t("krudmin_ai.select_record")}: #{resource_label} #{record.id}" } %></td><% end %>
           <% fields.each_with_index do |field, index| %>
-            <td class="krudmin-ai-priority--<%= resource.list_field_priorities.fetch(field, :standard) %>">
+            <td class="krudmin-ai-priority--<%= resource.list_field_priorities.fetch(field, :standard) %><%= ' krudmin-ai-table__record' if index.zero? %>">
               <% if field_readable?(field, record) %>
                 <% adapter = resource.field_adapter(field) %>
                 <% belongs_to = adapter.is_a?(KrudminAI::Fields::BelongsTo) %>
@@ -51,8 +51,10 @@
             </td>
           <% end %>
           <% if show_actions %>
-            <td class="krudmin-ai-table-actions">
-              <% actions_by_record.fetch(record).each do |action| %><%= button_to resource_action_path(record, action.name), method: action.method, class: "krudmin-ai-button#{action.variant == :default ? "" : " krudmin-ai-button--#{action.variant}"}", data: (action.confirmation ? { turbo_confirm: action.confirmation } : {}) do %><%= krudmin_ai_icon(action.icon, class: "krudmin-ai-button__icon") %><span><%= action.label %></span><% end %><% end %>
+            <td>
+              <div class="krudmin-ai-table-actions">
+                <% actions_by_record.fetch(record).each do |action| %><%= button_to resource_action_path(record, action.name), method: action.method, class: "krudmin-ai-button#{action.variant == :default ? "" : " krudmin-ai-button--#{action.variant}"}", data: (action.confirmation ? { turbo_confirm: action.confirmation } : {}) do %><%= krudmin_ai_icon(action.icon, class: "krudmin-ai-button__icon") %><span><%= action.label %></span><% end %><% end %>
+              </div>
             </td>
           <% end %>
         </tr>

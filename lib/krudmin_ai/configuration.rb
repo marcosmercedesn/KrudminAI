@@ -6,6 +6,11 @@ module KrudminAI
     attr_accessor :authentication_provider, :authorization_provider, :tenant_provider, :audit_provider,
       :notification_provider, :observability_logger, :metrics_provider, :tracing_provider,
       :operation_store, :ai_trace_store
+    attr_writer :brand_name
+
+    def brand_name
+      @brand_name || "KrudminAI"
+    end
 
     def validate_providers!
       Providers.validate!(self)

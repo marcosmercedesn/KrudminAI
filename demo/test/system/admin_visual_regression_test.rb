@@ -48,6 +48,23 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     end
   end
 
+  test "uses the configured company name in the sidebar" do
+    original_brand_name = KrudminAI.config.brand_name
+    KrudminAI.config.brand_name = "Acme Operations"
+
+    resize_to(1440, 900)
+    visit new_session_path
+    page.execute_script("localStorage.removeItem('krudmin-ai-sidebar-collapsed')")
+    visit new_session_path
+    assert_selector "a.brand[aria-label='Acme Operations home']", text: "Acme Operations"
+    assert_selector "a.brand .brand-mark", text: "A"
+
+    click_button "Enter workspace", match: :first
+    assert_selector "a.brand[aria-label='Acme Operations home']", text: "Acme Operations"
+  ensure
+    KrudminAI.config.brand_name = original_brand_name
+  end
+
   test "edits a ticket through the engine-owned default resource pages" do
     sign_in
 
@@ -64,16 +81,65 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     assert_text "Printer queue restored"
   end
 
-  test "presents boolean values as localized badges" do
+  test "keeps ticket action column borders aligned with the row" do
+    @agent.update!(roles: [ "manager" ])
+    DemoTicket.create!(tenant: "northwind", title: "Another issue", description: "Follow up", state: "open", priority: "low", assignee: @agent.name)
     sign_in
+
+    assert_selector ".krudmin-ai-table-actions button", text: "Resolve"
+    assert page.evaluate_script(<<~JAVASCRIPT), "Expected the Actions cell to align with its neighboring table cells"
+      (() => {
+        const actions = document.querySelector('.krudmin-ai-table-actions')
+        const cell = actions.parentElement
+        const cells = [...cell.parentElement.children]
+        const bottoms = cells.map((entry) => entry.getBoundingClientRect().bottom)
+        return getComputedStyle(cell).display === 'table-cell' &&
+          getComputedStyle(actions).display === 'flex' &&
+          cells.every((entry) => getComputedStyle(entry).borderBottomWidth === '1px') &&
+          Math.max(...bottoms) - Math.min(...bottoms) < 1
+      })()
+    JAVASCRIPT
+  end
+
+  test "uses consistent button variants and regular button text" do
+    sign_in
+
+    primary = find_link("New ticket")
+    assert_equal "rgb(13, 110, 253)", page.evaluate_script("getComputedStyle(arguments[0]).backgroundColor", primary)
+    assert_equal "400", page.evaluate_script("getComputedStyle(arguments[0]).fontWeight", primary)
+    filter = find_button("Filters")
+    assert_equal "rgba(0, 0, 0, 0)", page.evaluate_script("getComputedStyle(arguments[0]).backgroundColor", filter)
+    assert_equal "rgb(108, 117, 125)", page.evaluate_script("getComputedStyle(arguments[0]).borderTopColor", filter)
+
+    visit new_ticket_path
+    save = find_button("Save ticket")
+    assert_equal "rgb(25, 135, 84)", page.evaluate_script("getComputedStyle(arguments[0]).backgroundColor", save)
+    assert_equal "400", page.evaluate_script("getComputedStyle(arguments[0]).fontWeight", save)
+    page.execute_script("arguments[0].disabled = true", save)
+    assert_equal "none", page.evaluate_script("getComputedStyle(arguments[0]).pointerEvents", save)
+
+    visit ticket_path(@ticket)
+    edit = find_link("Edit")
+    assert_equal "rgba(0, 0, 0, 0)", page.evaluate_script("getComputedStyle(arguments[0]).backgroundColor", edit)
+    assert_equal "rgb(13, 110, 253)", page.evaluate_script("getComputedStyle(arguments[0]).borderTopColor", edit)
+  end
+
+  test "presents boolean values as labelled check and x icons" do
+    sign_in
+    apply_theme("light")
 
     visit locations_path
 
-    assert_selector ".krudmin-ai-boolean-badge--true", text: "Yes"
-    assert_selector ".krudmin-ai-boolean-badge--false", text: "No"
+    assert_selector ".krudmin-ai-boolean-badge--true[role='img'][aria-label='Yes'] svg[aria-hidden='true']"
+    assert_selector ".krudmin-ai-boolean-badge--false[role='img'][aria-label='No'] svg[aria-hidden='true']"
+    assert_equal "", find(".krudmin-ai-boolean-badge--true").text
+    assert_equal "", find(".krudmin-ai-boolean-badge--false").text
+    capture_screen("locations-boolean-light")
+    apply_theme("dark")
+    capture_screen("locations-boolean-dark")
 
     visit location_path(@active_location)
-    assert_selector ".krudmin-ai-boolean-badge--true", text: "Yes"
+    assert_selector ".krudmin-ai-boolean-badge--true[role='img'][aria-label='Yes'] svg[aria-hidden='true']"
   end
 
   test "adds and removes passengers through the nested editor" do
@@ -134,6 +200,11 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     visit edit_asset_path(asset)
 
     assert_selector "fieldset", text: "Asset identity"
+    assert_selector "fieldset.krudmin-ai-form-section .krudmin-ai-section-heading", text: "Asset identity"
+    assert_selector "fieldset.krudmin-ai-form-section legend.krudmin-ai-sr-only", text: "Asset identity", visible: :all
+    name_field = find_field("Name")
+    assert_equal "400", page.evaluate_script("getComputedStyle(arguments[0]).fontWeight", name_field)
+    assert_equal "500", page.evaluate_script("getComputedStyle(arguments[0].closest('.krudmin-ai-field').querySelector('label')).fontWeight", name_field)
     assert_field "Name"
     assert_field "Contact email", type: "email"
     assert_field "Access code", type: "password"
@@ -210,6 +281,12 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     visit tickets_path
     apply_theme("light")
     assert_equal "false", find("[data-sidebar-toggle]")["aria-expanded"]
+    assert page.evaluate_script(<<~JAVASCRIPT), "Expected mobile pagination to start with a fully reachable first control"
+      (() => {
+        const pagination = document.querySelector('.krudmin-ai-pagination')
+        return pagination.firstElementChild.getBoundingClientRect().left >= pagination.getBoundingClientRect().left
+      })()
+    JAVASCRIPT
     capture_screen("navigation-mobile-closed-light")
 
     click_button "Open navigation"
@@ -249,6 +326,11 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
   def capture_screen(name)
     assert_selector "h1"
     assert_selector "svg.krudmin-ai-icon", minimum: 1
+    assert page.evaluate_async_script(<<~JAVASCRIPT), "Expected the locally bundled Open Sans font to load"
+      document.fonts.ready.then(() => arguments[0](
+        [...document.fonts].some((face) => face.family === 'Open Sans' && face.status === 'loaded')
+      ))
+    JAVASCRIPT
     assert_accessibility_baseline
 
     FileUtils.mkdir_p(SCREENSHOT_DIRECTORY)

@@ -1,5 +1,6 @@
 <fieldset class="krudmin-ai-nested-fields" data-controller="krudmin-ai-nested-fields" data-krudmin-ai-nested-fields-maximum-value="<%= relationship.maximum %>">
-  <legend><%= relationship.label %></legend>
+  <legend class="krudmin-ai-sr-only"><%= relationship.label %></legend>
+  <h2 class="krudmin-ai-section-heading" aria-hidden="true"><%= relationship.label %></h2>
   <div data-krudmin-ai-nested-fields-target="rows">
     <%= form.fields_for relationship.name do |child_form| %>
       <%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship %>

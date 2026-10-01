@@ -1,1 +1,4 @@
-<span class="krudmin-ai-boolean-badge krudmin-ai-boolean-badge--<%= value ? "true" : "false" %>"><%= t("krudmin_ai.boolean.#{value ? "true" : "false"}") %></span>
+<% label = t("krudmin_ai.boolean.#{value ? "true" : "false"}") %>
+<span class="krudmin-ai-boolean-badge krudmin-ai-boolean-badge--<%= value ? "true" : "false" %>" role="img" aria-label="<%= label %>" title="<%= label %>">
+	<%= krudmin_ai_icon(value ? :check : :x, class: "krudmin-ai-boolean-badge__icon") %>
+</span>
