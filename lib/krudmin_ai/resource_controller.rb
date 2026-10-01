@@ -304,9 +304,9 @@ module KrudminAI
     def relationship_records(relationship)
       records = model.public_send(relationship.name)
       return [ records ].compact if relationship.singular?
-      return records unless relationship.order && records.respond_to?(:order)
+      return records unless (relationship.sortable || relationship.order) && records.respond_to?(:order)
 
-      records.order(relationship.order)
+      records.order(relationship.sortable || relationship.order)
     end
 
     def readable_relationship_display_fields(relationship, record)

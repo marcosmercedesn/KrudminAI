@@ -15,12 +15,21 @@ class TicketsResource < KrudminAI::Resources::Base
     label: "Passengers",
     maximum: 6,
     order: :position,
+    sortable: :position,
     authorize: ->(passenger, action, context) { PassengerPolicy.new(context.actor, passenger).public_send("#{action}?") },
     tenant_record: ->(passenger, context) { passenger.tenant.blank? || passenger.tenant == context.tenant }
 end
 ```
 
-`fields` is the only child input allowlist. KrudminAI permits `id` and `_destroy` in addition to those fields, and it adds the parent tenant to newly built children before validation. `maximum` limits submitted rows as well as disabling the add control at that count. `order` records the host's ordering field for its own association scope; the current renderer does not reorder child records.
+`fields` is the only child input allowlist. KrudminAI permits `id` and `_destroy` in addition to those fields, and it adds the parent tenant to newly built children before validation. `maximum` limits submitted rows as well as disabling the add control at that count.
+
+### Optional Child Ordering
+
+Set `sortable: :position` on a `has_many` declaration to enable row ordering; omit it to retain the ordinary nested editor. Use a child integer column (for example `position` or `index`) that appears in `fields`, and declare `read` and `write` field authorizers for it. The host model must accept that column through Rails nested attributes. The engine rejects declarations without an editable sorting field and a write handler. The `order:` option remains available for read-only association display; `sortable:` orders the edit form and relationship details by the selected field without requiring a separate `order:` declaration.
+
+When every displayed child permits reading and writing the sorting field, the editor offers drag handles and Move up/Move down buttons. Dragging the handle previews the entire row and marks the insertion edge on the target; the original row remains visible but dimmed until drop or cancellation. The buttons support keyboard and touch interaction. Adding, removing, dragging, or moving a row renumbers **visible** children from 1 in displayed order, including newly built rows. Persisted rows marked for destruction are excluded. The form submits the new values through the same authorized nested-attribute mutation and audit pipeline when the parent is saved; moving a row alone does not write to the database. Other child fields and unsaved edits remain attached to their rows. If any existing child denies access to the sorting field, reorder controls are hidden for the collection, so the UI cannot imply that an unauthorized renumber will persist. Server-side child field-write authorization still rejects crafted submissions.
+
+The field should hold comparable integer positions; hosts with unique position constraints should account for their database's update order when renumbering multiple children in one save. Ordering is per parent association, not a global ordering across parents. After validation errors the form retains submitted children and sorts them by their submitted positions.
 
 The editor uses a native button, an HTML `template`, and the `krudmin-ai-nested-fields` Stimulus controller. It assigns deterministic numeric per-form client identifiers (`0`, `1`, and so on), which Rails strong parameters accept for nested collections. Removing a persisted row sets `_destroy=1` and hides it; removing a new row removes it from the form. Both controls remain keyboard accessible and require no jQuery.
 

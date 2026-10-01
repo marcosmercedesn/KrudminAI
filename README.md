@@ -23,7 +23,7 @@ KrudminAI is a modern successor direction to [Krudmin](../krudmin), the producti
 | --- | --- |
 | Resources | Generic index, new, edit, show, CRUD routes, labels, icons, sections, eager loading, archive lifecycle, and policy-aware one-level sidebar groups |
 | Fields | String, text, email, password, hidden, number, decimal, currency, percentage, boolean, date, time, datetime, JSON, enum, state machine, identifier, masked, rich text, image, file, computed, and relationship adapters |
-| Relationships | Protected local and remote belongs-to lookup; tenant-checked `has_one` and `has_many` nested editors; protected multi-select IDs |
+| Relationships | Protected local and remote belongs-to lookup; tenant-checked `has_one` and `has_many` nested editors with optional child drag/button ordering; protected multi-select IDs |
 | Discovery | Explicit typed filters, whitelisted sorting, bounded pagination, protected lookup endpoints, collapsible filter UI |
 | Workflows | Declared record/list actions, guarded transitions, confirmation and HTTP-method metadata, bulk operations, constrained inline editing |
 | Data operations | Field-aware CSV export, preview/commit imports, explicit profiles, idempotency contracts, sensitive-field masks |

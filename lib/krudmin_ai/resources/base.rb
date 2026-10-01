@@ -308,11 +308,14 @@ module KrudminAI
           !archive_attribute.nil?
         end
 
-        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {}, field_definitions: {})
+        def has_many(name, fields:, label: nil, display: nil, maximum: 25, order: nil, sortable: nil, authorize: nil, tenant_record: nil, field_authorizers: {}, belongs_to_fields: {}, field_definitions: {})
           raise ArgumentError, "Nested fields are required" if fields.empty?
           raise ArgumentError, "maximum must be positive" unless maximum.positive?
           raise ArgumentError, "A child authorization handler is required" unless authorize
           raise ArgumentError, "A child tenant record handler is required" unless tenant_record
+          if sortable && (!fields.map(&:to_sym).include?(sortable.to_sym) || !field_authorizers.dig(sortable.to_sym, :write))
+            raise ArgumentError, "Sortable field must be an editable, writable child field"
+          end
 
           relationships[name.to_sym] = Relationship.new(
             name:,
@@ -321,6 +324,7 @@ module KrudminAI
             display_fields: display || fields,
             maximum:,
             order:,
+            sortable:,
             authorizer: authorize,
             tenant_record_handler: tenant_record,
             field_authorizers:,

@@ -1,12 +1,16 @@
-<fieldset class="krudmin-ai-nested-fields" data-controller="krudmin-ai-nested-fields" data-krudmin-ai-nested-fields-maximum-value="<%= relationship.maximum %>">
+<% children = model.public_send(relationship.name).to_a %>
+<% children = children.sort_by { |child| [child.public_send(relationship.sortable).nil? ? 1 : 0, child.public_send(relationship.sortable) || 0] } if relationship.sortable %>
+<% template_child = model.public_send(relationship.name).build %>
+<% reorderable = relationship.sortable && (children + [template_child]).all? { |child| relationship_field_writable?(relationship, relationship.sortable, child) && relationship.field_readable?(relationship.sortable, child, krudmin_ai_access_context) } %>
+<fieldset class="krudmin-ai-nested-fields" data-controller="krudmin-ai-nested-fields" data-krudmin-ai-nested-fields-maximum-value="<%= relationship.maximum %>" data-krudmin-ai-nested-fields-sortable-value="<%= reorderable ? relationship.sortable : '' %>">
   <legend class="krudmin-ai-sr-only"><%= relationship.label %></legend>
   <h2 class="krudmin-ai-section-heading" aria-hidden="true"><%= relationship.label %></h2>
-  <div data-krudmin-ai-nested-fields-target="rows">
-    <%= form.fields_for relationship.name do |child_form| %>
-      <%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship %>
+  <div data-krudmin-ai-nested-fields-target="rows" data-action="dragover->krudmin-ai-nested-fields#dragOver drop->krudmin-ai-nested-fields#drop">
+    <%= form.fields_for relationship.name, children do |child_form| %>
+      <%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship, reorderable: reorderable %>
     <% end %>
   </div>
 
-  <template data-krudmin-ai-nested-fields-target="template"><%= form.fields_for relationship.name, model.public_send(relationship.name).build, child_index: "NEW_RECORD" do |child_form| %><%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship %><% end %></template>
+  <template data-krudmin-ai-nested-fields-target="template"><%= form.fields_for relationship.name, template_child, child_index: "NEW_RECORD" do |child_form| %><%= render "krudmin_ai/resources/nested_row", form: child_form, relationship: relationship, reorderable: reorderable %><% end %></template>
   <button class="krudmin-ai-button" type="button" data-krudmin-ai-nested-fields-target="addButton" data-action="krudmin-ai-nested-fields#add"><%= krudmin_ai_icon(:plus, class: "krudmin-ai-button__icon") %><span><%= t("krudmin_ai.add", resource: relationship.label.singularize) %></span></button>
 </fieldset>

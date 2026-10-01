@@ -23,6 +23,7 @@ class TicketsResource < KrudminAI::Resources::Base
     label: "Passengers",
     maximum: 6,
     order: :position,
+    sortable: :position,
     authorize: ->(passenger, action, context) {
       ticket = passenger.demo_ticket || DemoTicket.new(tenant: context.tenant, assignee: context.actor.name)
       policy = DemoTicketPolicy.new(context.actor, ticket)

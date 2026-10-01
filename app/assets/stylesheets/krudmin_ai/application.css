@@ -685,6 +685,31 @@
 .krudmin-ai-nested-row:last-child {
   border-bottom: 1px solid var(--krudmin-ai-border);
 }
+.krudmin-ai-nested-row[hidden] {
+  display: none;
+}
+.krudmin-ai-nested-row.is-dragging {
+  opacity: 0.4;
+}
+.krudmin-ai-nested-row.is-drop-before {
+  box-shadow: 0 -3px 0 var(--krudmin-ai-accent);
+}
+.krudmin-ai-nested-row.is-drop-after {
+  box-shadow: 0 3px 0 var(--krudmin-ai-accent);
+}
+.krudmin-ai-nested-row__ordering {
+  align-items: center;
+  display: flex;
+  gap: var(--krudmin-ai-space-1);
+}
+.krudmin-ai-nested-row__handle {
+  cursor: grab;
+  display: inline-flex;
+  touch-action: none;
+}
+.krudmin-ai-nested-row.is-dragging .krudmin-ai-nested-row__handle {
+  cursor: grabbing;
+}
 .krudmin-ai-field-error {
   color: var(--krudmin-ai-danger);
   display: grid;

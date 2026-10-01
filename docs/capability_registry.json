@@ -94,6 +94,7 @@
       "status": "implemented",
       "guarantees": [
         "direct has-many and has-one nested attributes enforce parent ownership, tenant, child action, and child field decisions before persistence",
+        "opt-in has-many sortable field displays position-ordered children and renumbers visible rows through authorized nested attributes on save",
         "explicit nested belongs-to fields use the P4 protected target-resource contract",
         "join-backed has-many IDs validate every target through the protected relation before assignment",
         "polymorphic and arbitrary-depth nested editing are explicitly unsupported"

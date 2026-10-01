@@ -37,6 +37,18 @@ RSpec.describe KrudminAI::Resources::Base do
     end.to raise_error(ArgumentError, "A child authorization handler is required")
   end
 
+  it "requires an editable position field and a write decision for sorting" do
+    expect do
+      resource.has_many :stops, fields: [ :name ], sortable: :position,
+        authorize: ->(*) { true }, tenant_record: ->(*) { true }
+    end.to raise_error(ArgumentError, /Sortable field/)
+
+    expect do
+      resource.has_many :stops, fields: [ :position ], sortable: :position,
+        authorize: ->(*) { true }, tenant_record: ->(*) { true }
+    end.to raise_error(ArgumentError, /Sortable field/)
+  end
+
   it "declares a has-one relationship with singular cardinality" do
     resource = Class.new(described_class) do
       has_one :insurance,

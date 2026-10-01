@@ -164,6 +164,82 @@ class AdminVisualRegressionTest < ApplicationSystemTestCase
     assert_equal [ "Added passenger" ], @ticket.passengers.reload.pluck(:name)
   end
 
+  test "moves passengers and persists contiguous positions" do
+    @ticket.passengers.create!(tenant: "northwind", name: "Last", position: 8)
+    @ticket.passengers.create!(tenant: "northwind", name: "First", position: 2)
+    sign_in
+
+    visit edit_ticket_path(@ticket)
+    rows = all(".krudmin-ai-nested-row")
+    assert_equal [ "First", "Last" ], rows.map { |row| row.find("input[name$='[name]']").value }
+    within rows.first do
+      assert_button "Move up", disabled: true
+      click_button "Move down"
+    end
+    assert_equal [ "Last", "First" ], all(".krudmin-ai-nested-row").map { |row| row.find("input[name$='[name]']").value }
+    assert_equal [ "1", "2" ], all(".krudmin-ai-nested-row").map { |row| row.find("input[name$='[position]']").value }
+
+    click_button "Save ticket"
+    assert_current_path ticket_path(@ticket)
+    assert_equal [ [ "Last", 1 ], [ "First", 2 ] ], @ticket.passengers.reload.order(:position).pluck(:name, :position)
+    visit edit_ticket_path(@ticket)
+    assert_equal [ "Last", "First" ], all(".krudmin-ai-nested-row").map { |row| row.find("input[name$='[name]']").value }
+  end
+
+  test "dragging a passenger updates the same positions" do
+    @ticket.passengers.create!(tenant: "northwind", name: "First", position: 1)
+    @ticket.passengers.create!(tenant: "northwind", name: "Second", position: 2)
+    sign_in
+
+    visit edit_ticket_path(@ticket)
+    page.execute_script <<~JS
+      const rows = document.querySelectorAll(".krudmin-ai-nested-row")
+      const transfer = new DataTransfer()
+      transfer.setDragImage = (element) => { window.dragImageIsRow = element === rows[0] }
+      rows[0].querySelector("[draggable]").dispatchEvent(new DragEvent("dragstart", { bubbles: true, dataTransfer: transfer }))
+    JS
+    assert page.evaluate_script("window.dragImageIsRow")
+    assert_selector ".krudmin-ai-nested-row.is-dragging", count: 1
+    assert_equal "0.4", page.evaluate_script("getComputedStyle(document.querySelector('.krudmin-ai-nested-row.is-dragging')).opacity")
+    page.execute_script <<~JS
+      const rows = document.querySelectorAll(".krudmin-ai-nested-row")
+      const transfer = new DataTransfer()
+      rows[1].dispatchEvent(new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer: transfer }))
+    JS
+    assert_selector ".krudmin-ai-nested-row.is-drop-after", count: 1
+    assert_not_equal "none", page.evaluate_script("getComputedStyle(document.querySelector('.krudmin-ai-nested-row.is-drop-after')).boxShadow")
+    page.execute_script <<~JS
+      const rows = document.querySelectorAll(".krudmin-ai-nested-row")
+      const transfer = new DataTransfer()
+      rows[1].dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: transfer }))
+    JS
+    assert_no_selector ".krudmin-ai-nested-row.is-dragging, .krudmin-ai-nested-row.is-drop-after"
+    assert_equal [ "Second", "First" ], all(".krudmin-ai-nested-row").map { |row| row.find("input[name$='[name]']").value }
+    assert_equal [ "1", "2" ], all(".krudmin-ai-nested-row").map { |row| row.find("input[name$='[position]']").value }
+  end
+
+  test "adding and removing passengers maintains visible positions" do
+    @ticket.passengers.create!(tenant: "northwind", name: "First", position: 4)
+    @ticket.passengers.create!(tenant: "northwind", name: "Second", position: 9)
+    sign_in
+
+    visit edit_ticket_path(@ticket)
+    within all(".krudmin-ai-nested-row").first do
+      click_button "Remove Passenger"
+    end
+    assert_equal [ "1" ], all(".krudmin-ai-nested-row:not([hidden])").map { |row| row.find("input[name$='[position]']").value }
+    click_button "Add Passenger"
+    rows = all(".krudmin-ai-nested-row:not([hidden])")
+    assert_equal [ "1", "2" ], rows.map { |row| row.find("input[name$='[position]']").value }
+    within rows.last do
+      fill_in "Name", with: "Third"
+    end
+
+    click_button "Save ticket"
+    assert_current_path ticket_path(@ticket)
+    assert_equal [ [ "Second", 1 ], [ "Third", 2 ] ], @ticket.passengers.reload.order(:position).pluck(:name, :position)
+  end
+
   test "supports keyboard filtering and announces validation errors" do
     sign_in
 

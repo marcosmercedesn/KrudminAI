@@ -665,6 +665,31 @@ form.button_to {
   border-bottom: 0;
   padding-bottom: 0;
 }
+.krudmin-ai-nested-row[hidden] {
+  display: none;
+}
+.krudmin-ai-nested-row.is-dragging {
+  opacity: 0.4;
+}
+.krudmin-ai-nested-row.is-drop-before {
+  box-shadow: 0 -3px 0 var(--accent);
+}
+.krudmin-ai-nested-row.is-drop-after {
+  box-shadow: 0 3px 0 var(--accent);
+}
+.krudmin-ai-nested-row__ordering {
+  align-items: center;
+  display: flex;
+  gap: 0.35rem;
+  grid-column: 1 / -1;
+}
+.krudmin-ai-nested-row__handle {
+  cursor: grab;
+  display: inline-flex;
+}
+.krudmin-ai-nested-row.is-dragging .krudmin-ai-nested-row__handle {
+  cursor: grabbing;
+}
 .krudmin-ai-field-error {
   color: var(--danger);
   font-size: 0.8125rem;

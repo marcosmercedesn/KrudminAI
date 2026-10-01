@@ -1,9 +1,9 @@
 module KrudminAI
   module Resources
     class Relationship
-      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :authorizer, :tenant_record_handler, :field_authorizers, :cardinality, :belongs_to_fields, :field_definitions
+      attr_reader :name, :fields, :label, :display_fields, :maximum, :order, :sortable, :authorizer, :tenant_record_handler, :field_authorizers, :cardinality, :belongs_to_fields, :field_definitions
 
-      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, authorizer:, tenant_record_handler:, field_authorizers:, cardinality: :many, belongs_to_fields: {}, field_definitions: {})
+      def initialize(name:, fields:, label:, display_fields:, maximum:, order:, sortable: nil, authorizer:, tenant_record_handler:, field_authorizers:, cardinality: :many, belongs_to_fields: {}, field_definitions: {})
         @name = name.to_sym
         @fields = fields.map(&:to_sym).freeze
         @label = label.to_s
@@ -12,6 +12,7 @@ module KrudminAI
         @cardinality = cardinality.to_sym
         raise ArgumentError, "Unsupported relationship cardinality" unless %i[one many].include?(@cardinality)
         @order = order
+        @sortable = sortable&.to_sym
         @authorizer = authorizer
         @tenant_record_handler = tenant_record_handler
         @field_authorizers = field_authorizers.transform_keys(&:to_sym).transform_values do |decisions|

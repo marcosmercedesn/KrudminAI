@@ -1,6 +1,13 @@
 <section class="krudmin-ai-nested-row" data-krudmin-ai-nested-fields-target="row" data-persisted="<%= form.object.persisted? %>">
   <%= form.hidden_field :id if form.object.persisted? %>
   <%= form.hidden_field :_destroy, value: "0", data: { krudmin_ai_nested_fields_target: "destroyInput" } %>
+  <% if local_assigns[:reorderable] %>
+    <div class="krudmin-ai-nested-row__ordering">
+      <span class="krudmin-ai-nested-row__handle" draggable="true" role="img" aria-label="<%= t('krudmin_ai.drag_to_reorder') %>" title="<%= t('krudmin_ai.drag_to_reorder') %>" data-action="dragstart->krudmin-ai-nested-fields#dragStart dragend->krudmin-ai-nested-fields#dragEnd"><%= krudmin_ai_icon(:grip_vertical) %></span>
+      <button class="krudmin-ai-button krudmin-ai-icon-button" type="button" aria-label="<%= t('krudmin_ai.move_up') %>" title="<%= t('krudmin_ai.move_up') %>" data-action="krudmin-ai-nested-fields#moveUp"><%= krudmin_ai_icon(:arrow_up) %></button>
+      <button class="krudmin-ai-button krudmin-ai-icon-button" type="button" aria-label="<%= t('krudmin_ai.move_down') %>" title="<%= t('krudmin_ai.move_down') %>" data-action="krudmin-ai-nested-fields#moveDown"><%= krudmin_ai_icon(:arrow_down) %></button>
+    </div>
+  <% end %>
   <% readable_relationship_fields(relationship, form.object).each do |field| %>
     <% writable = relationship_field_writable?(relationship, field, form.object) %>
     <% adapter = relationship.form_adapter(field, resource) %>
