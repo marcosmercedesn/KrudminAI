@@ -98,13 +98,17 @@ Then update the generated resource and policy together. A resource is not ready 
 
 Use one conventional Rails `resources` route. Declared actions and transitions use the generic member action route; do not add resource-specific controller actions for them. Put action implementations in the generator-managed resource extension location and retain managed markers.
 
-For relationships, require Rails nested attributes where appropriate, scope child records through the parent association, authorize the child operation, and test forged child IDs and cross-tenant IDs. For lookups, use the target resource's authorized relation and test both label-read permission and ID rejection.
+For relationships, read `nested_relationships.md` before configuring nested attributes, including opt-in `sortable: :position` child ordering. Scope child records through the parent association, authorize the child operation and sorting-field writes, and test forged child IDs and cross-tenant IDs. For lookups, use the target resource's authorized relation and test both label-read permission and ID rejection.
+
+For state transitions, read `state_machines.md` before generating or declaring an AASM workflow. Declare each transition, its field-write decision, and its action authorization on the resource; do not permit request-supplied state assignments by default.
 
 For fields, declare an adapter or use safe schema inference only when the adapter contract supports the field. A readable field is not automatically writable. Apply the same field policy to HTML, JSON, CSV, dashboards, and AI context.
 
 ## Admin Navigation
 
 Register sidebar links through `KrudminAI.configure`; do not build a parallel host sidebar for engine resources. Use a top-level `navigation_item` for an independent destination and `navigation_group` for one level of related destinations:
+
+Set `config.brand_name = "Acme Operations"` in the same configuration block to change the default sidebar name and accessible home label; this is presentation only, not an authorization decision.
 
 ```ruby
 KrudminAI.configure do |config|
@@ -186,58 +190,3 @@ Stop and ask for a host decision, or record an explicit blocking issue, when:
 - The correct owner could be either a resource or shared pipeline and the narrow test cannot distinguish them.
 
 Do not silently work around a stop condition. The useful handoff is the failing command or test, the exact contract that is missing, the affected resource/path, and the smallest host decision needed to continue.
-
-## Admin Navigation
-
-Register sidebar links through `KrudminAI.configure`; do not build a parallel host sidebar for engine resources. Use a top-level `navigation_item` for an independent destination. Use `navigation_group` when related destinations belong beneath one labeled parent. Groups support one parent-to-child level, matching the engine's default sidebar.
-
-```ruby
-KrudminAI.configure do |config|
-	config.navigation_group(label: "Configuration", icon: :settings) do |group|
-		group.navigation_item(label: "Countries", route: :countries_path)
-		group.navigation_item(label: "Regions", route: :regions_path)
-	end
-end
-```
-
-- Apply the same policy decision to every child that protects its destination. A group is rendered only when its own `visible:` predicate returns exactly `true` and at least one child is visible.
-- `visible:` receives the request `AccessContext`; `nil`, non-true values, and exceptions hide the item or group. Do not use visibility as a substitute for endpoint authorization.
-- The default disclosure is keyboard-accessible, opens automatically for an active child, and closes the mobile drawer after a destination is selected. Do not recreate those behaviors with host JavaScript.
-- Do not place a group inside another group. For deeper information architecture, use a resource index, dashboard, or explicitly designed host interface.
-
-## Dashboard Widgets
-
-Read `dashboard_widgets.md` before configuring dashboard widgets. Declare each widget's Lucide icon with `icon: :icon_name` and semantic color with `color: :blue`, `:teal`, `:green`, `:amber`, `:orange`, or `:red`; the rendered `WidgetResult` exposes them as `widget.icon` and `widget.color`. Host templates should render `krudmin_ai_icon(widget.icon || widget.resource.icon)` so widgets without an explicit icon retain the resource default.
-
-## Delivery Loop
-
-1. State the smallest behavior change and the owning resource.
-2. Name the authorization, tenant, field, audit, and UI decisions affected by the change.
-3. Add or update the focused request/system test before declaring the work complete.
-4. Implement through resource metadata, policies, adapters, and the shared pipeline. Keep controllers thin.
-5. Run the narrow test, then the domain suite. Run `git diff --check` before handoff.
-6. Update the host capability registry and the relevant host documentation whenever a capability changes.
-
-## Required Proof By Change Type
-
-| Change                 | Minimum evidence                                                                                                     |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Resource or query      | Anonymous denial, tenant separation, policy denial, filter/sort/pagination behavior                                  |
-| Create/update/delete   | Permitted mutation, forbidden mutation, cross-tenant ID rejection, audit emission                                    |
-| Relationship or lookup | Target tenant/policy scope, forged-ID rejection, label-read behavior, child validation retention                     |
-| File or rich text      | Contract enabled, denied read/write behavior, permitted upload/render, parameter filtering                           |
-| Role or membership     | Least-privilege policy matrix, UI/server decision parity, audit trail                                                |
-| Navigation             | Visible and hidden child decisions, active child keeps its parent group open, desktop and mobile navigation behavior |
-| AI feature             | AI field allowlist, scoped context, trace redaction, provider failure, no write without reviewed approval            |
-
-## Useful Commands
-
-```sh
-bin/rails generate krudmin_ai:docs_sync
-bin/rails test
-bin/rails test:system
-ruby -rjson -e 'JSON.parse(File.read("docs/krudmin_ai/capability_registry.json"))'
-git diff --check
-```
-
-Replace or supplement these commands with the host's documented test commands. Keep a short host-owned decision record for permissions, retention, imports, and any approved AI automation.

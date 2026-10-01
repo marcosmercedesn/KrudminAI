@@ -28,6 +28,8 @@ module KrudminAI
         writer.write("docs/krudmin_ai/provider_contracts.md", template("docs/provider_contracts.md"))
         writer.write("docs/krudmin_ai/coding_agent_workflow.md", template("docs/coding_agent_workflow.md"))
         writer.write("docs/krudmin_ai/dashboard_widgets.md", template("docs/dashboard_widgets.md"))
+        writer.write("docs/krudmin_ai/nested_relationships.md", engine_doc("nested_relationships.md"))
+        writer.write("docs/krudmin_ai/state_machines.md", engine_doc("state_machines.md"))
         writer.write("docs/krudmin_ai/member_administration_blueprint.md", template("docs/member_administration_blueprint.md"))
         writer.write("docs/krudmin_ai/member_administration_tasks.md", template("docs/member_administration_tasks.md"))
         manifest.install
@@ -47,6 +49,10 @@ module KrudminAI
 
       def template(path)
         File.read(File.join(template_root, path))
+      end
+
+      def engine_doc(path)
+        File.read(File.expand_path("../docs/#{path}", template_root))
       end
 
       def initializer

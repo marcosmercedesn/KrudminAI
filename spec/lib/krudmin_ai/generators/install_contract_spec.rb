@@ -23,9 +23,17 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/provider_contracts.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/coding_agent_workflow.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/dashboard_widgets.md"))
+    expect(File.read(File.join(destination_root, "docs/krudmin_ai/nested_relationships.md"))).to eq(File.read(File.expand_path("../../../../docs/nested_relationships.md", __dir__)))
+    expect(File.read(File.join(destination_root, "docs/krudmin_ai/state_machines.md"))).to eq(File.read(File.expand_path("../../../../docs/state_machines.md", __dir__)))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_blueprint.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_tasks.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/capability_registry.json"))
+
+    readme = File.read(File.join(destination_root, "docs/krudmin_ai/README.md"))
+    workflow = File.read(File.join(destination_root, "docs/krudmin_ai/coding_agent_workflow.md"))
+    expect(readme).to include("`nested_relationships.md`", "`state_machines.md`")
+    expect(workflow).to include("`nested_relationships.md`", "`state_machines.md`", "config.brand_name")
+    expect(workflow.scan("## Admin Navigation").size).to eq(1)
   end
 
   it "syncs only generated documentation and instruction artifacts", :aggregate_failures do
@@ -39,6 +47,8 @@ RSpec.describe KrudminAI::Generators::InstallContract do
     expect(File).not_to exist(File.join(destination_root, "config/initializers/krudmin_ai.rb"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/README.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/dashboard_widgets.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/nested_relationships.md"))
+    expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/state_machines.md"))
     expect(File).to exist(File.join(destination_root, "docs/krudmin_ai/member_administration_tasks.md"))
   end
 

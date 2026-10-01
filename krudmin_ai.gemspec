@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.description = "KrudminAI provides policy-aware, tenant-aware foundations for Rails admin applications."
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.3"
-  spec.files = Dir.chdir(__dir__) { Dir["{app,config,lib,templates}/**/*", "LICENSE", "README.md"] }
+  spec.files = Dir.chdir(__dir__) { Dir["{app,config,lib,templates}/**/*", "docs/{nested_relationships,state_machines}.md", "LICENSE", "README.md"] }
 
   spec.add_dependency "aasm", ">= 5.5", "< 6.0"
   spec.add_dependency "csv", ">= 3.3", "< 4.0"

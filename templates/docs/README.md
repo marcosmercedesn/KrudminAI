@@ -9,5 +9,7 @@ This documentation package is managed by KrudminAI generators. Refresh it with `
 3. For a new member-management application, use `member_administration_blueprint.md` as the domain boundary and work through `member_administration_tasks.md` in order.
 4. Read the **Admin Navigation** section in `coding_agent_workflow.md` before registering sidebar items or groups.
 5. Read `dashboard_widgets.md` before adding, changing, or styling a dashboard widget.
+6. Read `state_machines.md` before adding a workflow transition or using the state-machine generator.
+7. Read `nested_relationships.md` before editing child records or enabling drag ordering in a `has_many` resource.
 
 The generator overwrites only these managed documents. Add host-specific decisions, operational runbooks, diagrams, and records of approval outside this package or in clearly marked host-owned sections.

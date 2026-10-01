@@ -17,7 +17,11 @@ class TicketsResource < KrudminAI::Resources::Base
     order: :position,
     sortable: :position,
     authorize: ->(passenger, action, context) { PassengerPolicy.new(context.actor, passenger).public_send("#{action}?") },
-    tenant_record: ->(passenger, context) { passenger.tenant.blank? || passenger.tenant == context.tenant }
+    tenant_record: ->(passenger, context) { passenger.tenant.blank? || passenger.tenant == context.tenant },
+    field_authorizers: {
+      name: { read: ->(_passenger, _context) { true }, write: ->(_passenger, _context) { true } },
+      position: { read: ->(_passenger, _context) { true }, write: ->(_passenger, _context) { true } }
+    }
 end
 ```
 
