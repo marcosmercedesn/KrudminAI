@@ -55,7 +55,7 @@ class CarsResource < KrudminAI::Resources::Base
 end
 ```
 
-Add child field read/write predicates, parent `tenant_scope`, `policy_scope`, `tenant_record`, declared actions, and audit provider bindings before running the generated request test. A legacy manager containing `:HasOne`, `:BelongsToOne`, `:StateMachine`, `INLINE_EDITABLE_ATTRIBUTES`, or `BULK_ACTIONS` must not be converted automatically. Direct `:HasMany` and `:HasOne` receive assisted relationship mappings; `:BelongsToOne` and `:StateMachine` are blocked. Inline editing and bulk actions require explicit authorization and audit review. Redesign blocked behavior with an owner and tests before continuing.
+Add child field read/write predicates, parent `tenant_scope`, `policy_scope`, `tenant_record`, declared actions, and audit provider bindings before running the generated request test. A legacy manager containing `:HasOne`, `:StateMachine`, `INLINE_EDITABLE_ATTRIBUTES`, or `BULK_ACTIONS` requires assisted conversion and explicit policy review. Direct `:HasMany` and `:HasOne` receive assisted relationship mappings; `:StateMachine` maps to a state-machine field plus explicit authorized transitions and host event bindings. `:BelongsToOne` remains blocked. Redesign blocked behavior with an owner and tests before continuing.
 
 ## Migration Checklist
 

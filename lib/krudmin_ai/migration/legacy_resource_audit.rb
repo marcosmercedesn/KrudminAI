@@ -47,11 +47,11 @@ module KrudminAI
       ASSISTED_FIELD_TYPES = {
         "BelongsTo" => "belongs_to with target-resource, tenant, policy, and label-read declarations",
         "HasMany" => "has_many with child tenant, policy, field, and row-limit declarations",
-        "HasOne" => "has_one with child tenant, policy, and field declarations"
+        "HasOne" => "has_one with child tenant, policy, and field declarations",
+        "StateMachine" => "state_machine field with explicit authorized transition and host event declarations"
       }.freeze
       BLOCKED_FIELD_TYPES = {
         "BelongsToOne" => "BelongsToOne is not supported by the current generic relationship editor",
-        "StateMachine" => "StateMachine requires explicit resource actions or transitions",
         "Polymorphic" => "Polymorphic and arbitrary-depth nested editing are unsupported",
         "HasManyThrough" => "Polymorphic and arbitrary-depth nested editing are unsupported"
       }.freeze
@@ -102,7 +102,8 @@ module KrudminAI
           if SCALAR_FIELD_TYPES.key?(type)
             { source: "ATTRIBUTE_TYPES.#{field_name}", target: "field :#{field_name}, :#{SCALAR_FIELD_TYPES.fetch(type)}", classification: :automatic, reason: "Supported scalar adapter" }
           elsif ASSISTED_FIELD_TYPES.key?(type)
-            { source: "ATTRIBUTE_TYPES.#{field_name}", target: ASSISTED_FIELD_TYPES.fetch(type), classification: :assisted, reason: "Requires protected relationship declarations" }
+            reason = type == "StateMachine" ? "Requires explicit states, host event binding, field policy, and transition authorization" : "Requires protected relationship declarations"
+            { source: "ATTRIBUTE_TYPES.#{field_name}", target: ASSISTED_FIELD_TYPES.fetch(type), classification: :assisted, reason: }
           elsif BLOCKED_FIELD_TYPES.key?(type)
             { source: "ATTRIBUTE_TYPES.#{field_name}", target: "no automatic mapping", classification: :blocked, reason: BLOCKED_FIELD_TYPES.fetch(type) }
           end

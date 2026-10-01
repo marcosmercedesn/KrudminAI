@@ -1,3 +1,4 @@
+require "aasm"
 require "krudmin_ai/version"
 require "lucide-rails"
 require "krudmin_ai/migration/legacy_resource_audit"

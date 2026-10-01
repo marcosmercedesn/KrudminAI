@@ -77,6 +77,17 @@ module KrudminAI
 
       records = bulk_records
       authorize_bulk_records!(action, records)
+      unless records.all? { |record| action.available?(record, access_context) }
+        result = MutationResult.new(
+          action.name,
+          :invalid,
+          nil,
+          [ { code: "invalid", detail: "Bulk action is unavailable for the current state" } ],
+          nil
+        )
+        return render_bulk_failure([ result ])
+      end
+
       results = records.map { |record| mutation_pipeline.call(operation: action.name, record:) }
       return render_bulk_failure(results) unless results.all?(&:success?)
 
@@ -273,7 +284,9 @@ module KrudminAI
     end
 
     def resource_actions(record = model)
-      resource.resource_actions.values.select { |action| authorized_action?(action.name, record) }
+      resource.resource_actions.values.select do |action|
+        authorized_action?(action.name, record) && action.available?(record, access_context)
+      end
     end
 
     def resource_action_path(record, action)

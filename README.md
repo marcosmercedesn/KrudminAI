@@ -22,7 +22,7 @@ KrudminAI is a modern successor direction to [Krudmin](../krudmin), the producti
 | Area | Included capabilities |
 | --- | --- |
 | Resources | Generic index, new, edit, show, CRUD routes, labels, icons, sections, eager loading, archive lifecycle, and policy-aware one-level sidebar groups |
-| Fields | String, text, email, password, hidden, number, decimal, currency, percentage, boolean, date, time, datetime, JSON, enum, identifier, masked, rich text, image, file, computed, and relationship adapters |
+| Fields | String, text, email, password, hidden, number, decimal, currency, percentage, boolean, date, time, datetime, JSON, enum, state machine, identifier, masked, rich text, image, file, computed, and relationship adapters |
 | Relationships | Protected local and remote belongs-to lookup; tenant-checked `has_one` and `has_many` nested editors; protected multi-select IDs |
 | Discovery | Explicit typed filters, whitelisted sorting, bounded pagination, protected lookup endpoints, collapsible filter UI |
 | Workflows | Declared record/list actions, guarded transitions, confirmation and HTTP-method metadata, bulk operations, constrained inline editing |
@@ -140,7 +140,7 @@ class OrdersResource < KrudminAI::Resources::Base
 	show :number, :status, :total, :placed_on, :customer_id
 
 	field :number, :identifier, prefix: "ORD-", padding: 6
-	field :status, :enum, values: %w[draft submitted fulfilled]
+	field :status, :state_machine, states: %w[draft submitted fulfilled]
 	field :total, :currency, unit: "$"
 	field :placed_on, :date
 	field :customer_id, :remote_belongs_to,
@@ -167,6 +167,8 @@ class OrdersResource < KrudminAI::Resources::Base
 	authorize(:create) { |record, context| OrderPolicy.new(context.actor, record).create? }
 	authorize(:update) { |record, context| OrderPolicy.new(context.actor, record).update? }
 	authorize(:destroy) { |record, context| OrderPolicy.new(context.actor, record).destroy? }
+	authorize(:submit) { |record, context| OrderPolicy.new(context.actor, record).submit? }
+	transition :submit, from: :draft, to: :submitted, attribute: :status, via: :submit
 end
 ```
 
@@ -177,6 +179,8 @@ class OrdersController < KrudminAI::ResourceController
 	resource OrdersResource
 end
 ```
+
+The optional `via: :submit` binding expects the host model to expose `may_submit?` and `submit`, as AASM does. KrudminAI never dispatches a request-provided model method; only statically declared transitions can execute.
 
 Read [docs/resource_query_pipeline.md](docs/resource_query_pipeline.md) before adapting the example. The ordering of tenant scope and policy scope is a security invariant.
 
@@ -199,6 +203,7 @@ Open `http://localhost:3000/session/new`, choose a seeded account, and visit the
 ```sh
 bin/rails generate krudmin_ai:install
 bin/rails generate krudmin_ai:resource Order
+bin/rails generate krudmin_ai:state_machine Order --states draft submitted approved --events submit:draft:submitted approve:submitted:approved
 bin/rails generate krudmin_ai:action ApprovePayment --resource Order
 bin/rails generate krudmin_ai:dashboard Operations --resource Order
 bin/rails generate krudmin_ai:showcase --mode full
@@ -246,6 +251,7 @@ git diff --check
 - [Field adapters](docs/field_adapters.md)
 - [Client-side validation](docs/client_side_validation.md)
 - [Actions and bulk operations](docs/actions_and_bulk_operations.md)
+- [State machines](docs/state_machines.md)
 - [Data operations](docs/data_operations.md)
 - [Dashboards and audit](docs/dashboards_and_audit.md)
 - [AI assistant](docs/ai_assistant.md)

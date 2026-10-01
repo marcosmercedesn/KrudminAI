@@ -84,7 +84,7 @@ module KrudminAI
           action_authorizers[action.to_sym] = handler
         end
 
-        def action(name, label: nil, writes: [], icon: :play, placement: :record, confirmation: nil, method: :post, variant: :default, &block)
+        def action(name, label: nil, writes: [], icon: :play, placement: :record, confirmation: nil, method: :post, variant: :default, available_if: nil, &block)
           raise ArgumentError, "An action handler is required" unless block
           raise ArgumentError, "Action placement must be :record, :list, or :both" unless %i[record list both].include?(placement.to_sym)
           raise ArgumentError, "Action method must be :post, :patch, or :delete" unless %i[post patch delete].include?(method.to_sym)
@@ -100,19 +100,43 @@ module KrudminAI
             placement:,
             confirmation:,
             method:,
-            variant:
+            variant:,
+            available_if:
           )
         end
 
-        def transition(name, from:, to:, attribute: :state, label: nil)
+        def transition(name, from:, to:, attribute: :state, label: nil, via: nil, guard: nil, **options)
           allowed_states = Array(from).map(&:to_s).freeze
           target_state = to.to_s
           state_attribute = attribute.to_sym
+          event = via&.to_sym
+          guard_method = (guard || ("may_#{event}?" if event))&.to_sym
           raise ArgumentError, "At least one source state is required" if allowed_states.empty?
 
-          action(name, label:, writes: [ state_attribute ]) do |record, _context|
-            if allowed_states.include?(record.public_send(state_attribute).to_s)
-              record.public_send("#{state_attribute}=", target_state)
+          adapter = field_adapter(state_attribute)
+          transition_label = label || (adapter.transition_label(name) if adapter.respond_to?(:transition_label))
+
+          available_if = lambda do |record, _context|
+            allowed_states.include?(record.public_send(state_attribute).to_s) &&
+              (!event || (record.respond_to?(guard_method) && record.public_send(guard_method)))
+          end
+
+          action(name, label: transition_label, writes: [ state_attribute ], available_if:, **options) do |record, context|
+            if resource_actions.fetch(name.to_sym).available?(record, context)
+              if event
+                unless record.respond_to?(event)
+                  record.errors.add(state_attribute, "does not support the configured transition event") if record.respond_to?(:errors)
+                  next false
+                end
+
+                next false unless record.public_send(event)
+                unless record.public_send(state_attribute).to_s == target_state
+                  record.errors.add(state_attribute, "did not reach the configured target state") if record.respond_to?(:errors)
+                  next false
+                end
+              else
+                record.public_send("#{state_attribute}=", target_state)
+              end
               true
             else
               record.errors.add(state_attribute, "cannot transition from the current state") if record.respond_to?(:errors)
@@ -439,6 +463,8 @@ module KrudminAI
         end
 
         def inline_editable_adapter?(adapter)
+          return adapter.direct_write? if adapter.is_a?(Fields::StateMachine)
+
           adapter.is_a?(Fields::String) || adapter.is_a?(Fields::Text) || adapter.is_a?(Fields::Number) ||
             adapter.is_a?(Fields::Boolean) || adapter.is_a?(Fields::Date) || adapter.is_a?(Fields::DateTime) ||
             adapter.is_a?(Fields::Enum) || adapter.is_a?(Fields::BelongsTo)

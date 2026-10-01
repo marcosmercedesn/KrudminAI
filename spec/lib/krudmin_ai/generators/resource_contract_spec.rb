@@ -53,10 +53,10 @@ RSpec.describe KrudminAI::Generators::ResourceContract do
   end
 
   it "generates a typed Member-style resource from deterministic field declarations" do
-    described_class.new(destination_root:, name: "Member", fields: %w[name:string rank:enum joined_on:date]).install
+    described_class.new(destination_root:, name: "Member", fields: %w[name:string rank:enum lifecycle:state_machine joined_on:date]).install
 
     resource = File.read(File.join(destination_root, "app/resources/members_resource.rb"))
-    expect(resource).to include("permit :name, :rank, :joined_on", "field :name, :string", "field :rank, :enum", "form :name, :rank, :joined_on", "authorize_field :joined_on")
+    expect(resource).to include("permit :name, :rank, :lifecycle, :joined_on", "field :name, :string", "field :rank, :enum", "field :lifecycle, :state_machine", "form :name, :rank, :lifecycle, :joined_on", "authorize_field :joined_on")
     expect do
       described_class.new(destination_root:, name: "Member", fields: [ "unknown:qr_code" ])
     end.to raise_error(ArgumentError, "Unsupported field type: qr_code")
@@ -67,7 +67,7 @@ RSpec.describe KrudminAI::Generators::ResourceContract do
       destination_root:,
       name: "Car",
       associations: [ "passengers:has_many:name,seat", "insurance:has_one:provider" ],
-      workflows: [ "approve:submitted:approved" ]
+      workflows: [ "approve:submitted:approved:approve:may_approve?" ]
     ).install
 
     resource = File.read(File.join(destination_root, "app/resources/cars_resource.rb"))
@@ -75,7 +75,7 @@ RSpec.describe KrudminAI::Generators::ResourceContract do
       "has_many :passengers, fields: [:name, :seat], authorize: ->(_record, _action, _context) { false }",
       "has_one :insurance, fields: [:provider], authorize: ->(_record, _action, _context) { false }",
       "authorize(:approve) { |_record, _context| false }",
-      "transition :approve, from: :submitted, to: :approved"
+      "transition :approve, from: :submitted, to: :approved, via: :approve, guard: :may_approve?"
     )
   end
 end

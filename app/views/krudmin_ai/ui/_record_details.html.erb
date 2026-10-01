@@ -15,6 +15,8 @@
           <%= link_to value, association_link %>
         <% elsif adapter.is_a?(KrudminAI::Fields::Boolean) %>
           <%= render "krudmin_ai/ui/boolean_badge", value: value %>
+        <% elsif adapter.is_a?(KrudminAI::Fields::StateMachine) %>
+          <%= render "krudmin_ai/ui/state_badge", adapter: adapter, record: record, value: value %>
         <% else %>
           <%= adapter.blank?(value) ? t("krudmin_ai.not_provided") : value %>
         <% end %>

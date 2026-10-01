@@ -128,6 +128,8 @@
       "guarantees": [
         "member actions have explicit labels, Lucide icons, placement, confirmation, method, variant, and declared writes",
         "transitions reject invalid source states through the normal audited mutation path",
+        "host-selectable state-machine fields discover configured states and permitted events without dispatching request-provided model methods",
+        "explicit via event bindings require both the declared source state and the host model event guard, and direct state writes are denied by default",
         "bulk targets resolve from the canonical protected relation and the whole selection is authorized before mutation",
         "inline editing is opt-in and restricted to adapters that use the normal protected update pipeline"
       ],
@@ -245,12 +247,15 @@
       "status": "companion_evidence",
       "guarantees": [
         "resource-declared actions and state transitions require matching action authorization",
+        "AASM default and named machines expose only statically declared event and guard methods",
+        "transition-only state fields reject ordinary CRUD and inline assignment while AASM supplies the initial state",
         "tenant, provider, and declared field-write checks run before action handlers",
-        "successful actions persist and audit through the mutation transaction",
-        "generic show controls use the same endpoint authorization decision",
+        "successful transitions, event callbacks, persistence, and audit execute in one rollback-capable mutation transaction",
+        "generic list, show, and edit controls use the same endpoint authorization and state-availability decisions",
+        "bulk transitions preflight every selected record before mutation",
         "HTML, JSON, and Turbo Stream use the normalized mutation response contract"
       ],
-      "evidence_gap": "An independently generated Rails host must prove permitted, forbidden, invalid-state, and cross-tenant action behavior."
+      "evidence_gap": "The in-repository Rails demo and disposable generated host prove the runtime and generator contracts; P13 browser evaluation must still independently verify transition control visibility and interaction."
     },
     {
       "name": "dashboard_lifecycle_and_drill_downs",

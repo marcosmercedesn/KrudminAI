@@ -10,12 +10,21 @@ action :assign_to_me, label: "Assign to me", writes: [:assignee] do |record, con
 end
 ```
 
-`transition` is a state-column action with a source-state guard. It does not depend on a particular state-machine gem.
+`transition` is a state-column action with a source-state guard. It does not depend on a particular state-machine gem. Pass `via:` to run a statically declared host-model event after its `may_<event>?` predicate succeeds; this supports AASM and compatible state-machine libraries without dispatching request-provided method names.
 
 ```ruby
 authorize(:resolve) { |record, context| TicketPolicy.new(context.actor, record).resolve? }
 transition :resolve, from: %i[open assigned], to: :resolved, attribute: :state, label: "Resolve"
 ```
+
+For a host model backed by AASM or a compatible event API, bind the event explicitly:
+
+```ruby
+field :state, :state_machine
+transition :resolve, from: %i[open assigned], to: :resolved, attribute: :state, via: :resolve, label: "Resolve"
+```
+
+The state-machine adapter discovers states from the host model's configured machine and permitted events from each record. Direct state assignment is rejected by default; set `allow_direct_write: true` only when the host deliberately permits bypassing transition events. Unavailable transitions are omitted from record controls and rejected during bulk preflight.
 
 The action handler must return `true` after preparing its mutation. A transition from an invalid state adds a record error, returns the normal invalid response, and emits no audit event. Every action is tenant-checked, resource-policy-checked, provider-checked, field-policy-checked for declared writes, persisted, and audited in the same transaction.
 

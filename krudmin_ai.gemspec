@@ -11,6 +11,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = ">= 3.3"
   spec.files = Dir.chdir(__dir__) { Dir["{app,config,lib,templates}/**/*", "LICENSE", "README.md"] }
 
+  spec.add_dependency "aasm", ">= 5.5", "< 6.0"
   spec.add_dependency "csv", ">= 3.3", "< 4.0"
   spec.add_dependency "erb", ">= 4.0", "< 5.0"
   spec.add_dependency "json", ">= 2.0", "< 3.0"

@@ -87,14 +87,58 @@ RSpec.describe KrudminAI::Resources::Base do
   it "declares inheritable custom actions and state transitions" do
     resource = Class.new(described_class) do
       action(:assign_to_me, label: "Assign to me", writes: [ :assignee ]) { |_record, _context| true }
+      field :state, :state_machine, states: %i[open assigned resolved], transition_labels: { resolve: "Close ticket" }
       transition :resolve, from: %i[open assigned], to: :resolved
     end
     record = Struct.new(:state).new("open")
 
     expect(resource.action_for(:assign_to_me)).to have_attributes(label: "Assign to me", writes: [ :assignee ])
+    expect(resource.action_for(:resolve).label).to eq("Close ticket")
     expect(resource).to be_action(:resolve)
     expect(resource.action_for(:resolve).call(record, Object.new)).to be(true)
     expect(record.state).to eq("resolved")
+  end
+
+  it "executes an explicitly configured state-machine event and fails closed when its guard rejects" do
+    record_class = Struct.new(:state, :event_calls, :allowed) do
+      def may_submit? = allowed
+
+      def submit
+        self.event_calls += 1
+        self.state = "submitted"
+        true
+      end
+    end
+    resource = Class.new(described_class) do
+      transition :submit, from: :draft, to: :submitted, via: :submit
+    end
+    allowed_record = record_class.new("draft", 0, true)
+    denied_record = record_class.new("draft", 0, false)
+
+    expect(resource.action_for(:submit)).to be_available(allowed_record, Object.new)
+    expect(resource.action_for(:submit).call(allowed_record, Object.new)).to be(true)
+    expect(allowed_record).to have_attributes(state: "submitted", event_calls: 1)
+    expect(resource.action_for(:submit)).not_to be_available(denied_record, Object.new)
+    expect(resource.action_for(:submit).call(denied_record, Object.new)).to be(false)
+    expect(denied_record).to have_attributes(state: "draft", event_calls: 0)
+  end
+
+  it "rejects a host event that does not reach the declared target state" do
+    errors = Class.new do
+      attr_reader :messages
+      def initialize = @messages = []
+      def add(attribute, message) = messages << [ attribute, message ]
+    end.new
+    record = Struct.new(:state, :errors) do
+      def may_submit? = true
+      def submit = true
+    end.new("draft", errors)
+    resource = Class.new(described_class) do
+      transition :submit, from: :draft, to: :submitted, via: :submit
+    end
+
+    expect(resource.action_for(:submit).call(record, Object.new)).to be(false)
+    expect(errors.messages).to include([ :state, "did not reach the configured target state" ])
   end
 
   it "enables only previously declared actions for bulk workflows" do
@@ -119,6 +163,15 @@ RSpec.describe KrudminAI::Resources::Base do
     expect do
       Class.new(described_class) { field :token, :hidden; inline_edit :token }
     end.to raise_error(ArgumentError, "Inline editing is not supported for token")
+    expect do
+      Class.new(described_class) { field :status, :state_machine, states: %i[draft submitted]; inline_edit :status }
+    end.to raise_error(ArgumentError, "Inline editing is not supported for status")
+
+    direct_write_resource = Class.new(described_class) do
+      field :status, :state_machine, states: %i[draft submitted], allow_direct_write: true
+      inline_edit :status
+    end
+    expect(direct_write_resource.inline_editable_fields).to eq([ :status ])
   end
 
   describe "range field filters" do

@@ -5,7 +5,7 @@ require "active_support/core_ext/string/inflections"
 module KrudminAI
   module Generators
     class ResourceContract
-      SUPPORTED_FIELD_TYPES = %w[string text email number decimal currency percentage boolean date time datetime json enum identifier password hidden].freeze
+      SUPPORTED_FIELD_TYPES = %w[string text email number decimal currency percentage boolean date time datetime json enum state_machine identifier password hidden].freeze
 
       def initialize(destination_root:, name:, namespace: "admin", fields: [], associations: [], workflows: [])
         @writer = FileWriter.new(destination_root)
@@ -100,10 +100,10 @@ module KrudminAI
 
       def parse_workflows(values)
         Array(values).map do |value|
-          name, from, to = value.to_s.split(":", 3)
-          raise ArgumentError, "Workflows must use name:from:to" if name.to_s.empty? || from.to_s.empty? || to.to_s.empty?
+          name, from, to, event, guard = value.to_s.split(":", 5)
+          raise ArgumentError, "Workflows must use name:from:to[:event[:guard]]" if name.to_s.empty? || from.to_s.empty? || to.to_s.empty?
 
-          { name: name.underscore.to_sym, from: from, to: to }
+          { name: name.underscore.to_sym, from:, to:, event: event.presence, guard: guard.presence }
         end
       end
 
@@ -115,7 +115,10 @@ module KrudminAI
 
       def workflow_declarations
         workflows.map do |workflow|
-          "authorize(:#{workflow[:name]}) { |_record, _context| false }\n    transition :#{workflow[:name]}, from: :#{workflow[:from]}, to: :#{workflow[:to]}"
+          event_options = ""
+          event_options += ", via: :#{workflow[:event]}" if workflow[:event]
+          event_options += ", guard: :#{workflow[:guard]}" if workflow[:guard]
+          "authorize(:#{workflow[:name]}) { |_record, _context| false }\n    transition :#{workflow[:name]}, from: :#{workflow[:from]}, to: :#{workflow[:to]}#{event_options}"
         end.join("\n    ")
       end
 

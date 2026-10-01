@@ -57,12 +57,12 @@ class ClientSideValidationTest < ApplicationSystemTestCase
     fill_in "Title", with: "Recovered ticket"
     assert_no_selector "p#demo_ticket_title_error", text: "Title can't be blank"
 
-    fill_in "State", with: "open"
     fill_in "Priority", with: "normal"
     click_button "Save ticket"
 
     assert_text "Recovered ticket"
     assert_equal 1, DemoTicket.count
+    assert_equal "open", DemoTicket.last.state
   end
 
   test "a nested row added after load is validated like the rest of the form" do

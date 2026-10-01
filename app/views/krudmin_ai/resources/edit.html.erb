@@ -1,4 +1,9 @@
 <section id="krudmin-ai-resource-form" class="krudmin-ai-resource-form">
-  <h1><%= t("krudmin_ai.edit", resource: resource_label) %></h1>
+  <div class="krudmin-ai-resource-heading">
+    <h1><%= t("krudmin_ai.edit", resource: resource_label) %></h1>
+    <div class="krudmin-ai-resource-actions">
+      <% resource_actions.select { |action| %i[record both].include?(action.placement) }.each do |action| %><%= button_to resource_action_path(model, action.name), method: action.method, class: "krudmin-ai-button#{action.variant == :default ? "" : " krudmin-ai-button--#{action.variant}"}", data: (action.confirmation ? { turbo_confirm: action.confirmation } : {}) do %><%= krudmin_ai_icon(action.icon, class: "krudmin-ai-button__icon") %><span><%= action.label %></span><% end %><% end %>
+    </div>
+  </div>
   <%= render "krudmin_ai/resources/form" %>
 </section>

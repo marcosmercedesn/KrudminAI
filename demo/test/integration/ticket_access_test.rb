@@ -451,13 +451,29 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_response :not_found
 
     sign_in(@north_manager)
+    get tickets_path
+
+    assert_response :success
+    assert_select ".krudmin-ai-status-badge--warning", text: "open"
+    assert_select "form[action='#{action_ticket_path(@north_ticket, action_name: "resolve")}']"
+
+    get edit_ticket_path(@north_ticket)
+
+    assert_response :success
+    assert_includes response.body, "Use an available transition to change this state."
+    assert_select "form[action='#{action_ticket_path(@north_ticket, action_name: "resolve")}']"
+
     post action_ticket_path(@north_ticket, action_name: "resolve"), as: :json
 
     assert_response :success
     json = JSON.parse(response.body)
     assert_equal "success", json.fetch("outcome")
     assert_equal "resolved", json.fetch("data").fetch("state")
+    assert @north_ticket.reload.resolved_at
     assert_equal "resolve", DemoAuditEvent.order(:created_at).last.operation
+
+    get ticket_path(@north_ticket)
+    assert_not_includes response.body, "Resolve"
 
     @north_ticket.update!(state: "assigned")
     post action_ticket_path(@north_ticket, action_name: "resolve"), headers: { "Turbo-Frame" => "krudmin-ai-inline-#{@north_ticket.id}-state" }, as: :turbo_stream
@@ -467,10 +483,50 @@ class TicketAccessTest < ActionDispatch::IntegrationTest
     assert_equal ticket_path(@north_ticket), response.headers.fetch("Turbo-Location")
     assert_includes response.body, "krudmin-ai-flash"
 
-    post action_ticket_path(@north_ticket, action_name: "resolve")
+    assert_no_difference -> { DemoAuditEvent.count } do
+      post action_ticket_path(@north_ticket, action_name: "resolve")
+    end
 
     assert_response :unprocessable_entity
     assert_equal "resolved", @north_ticket.reload.state
+  end
+
+  test "AASM transition and callback roll back when auditing fails" do
+    sign_in(@north_manager)
+    original_audit_provider = KrudminAI.config.audit_provider
+    KrudminAI.config.audit_provider = Class.new do
+      def record(_event) = raise("audit unavailable")
+    end.new
+
+    assert_no_difference -> { DemoAuditEvent.count } do
+      post action_ticket_path(@north_ticket, action_name: "resolve"), as: :json
+    end
+
+    assert_response :internal_server_error
+    assert_equal "open", @north_ticket.reload.state
+    assert_nil @north_ticket.resolved_at
+  ensure
+    KrudminAI.config.audit_provider = original_audit_provider
+  end
+
+  test "bulk transitions reject mixed states before changing any record" do
+    resolved_ticket = DemoTicket.create!(
+      tenant: "northwind",
+      title: "Already resolved",
+      state: "resolved",
+      priority: "normal",
+      assignee: @north_agent.name
+    )
+    sign_in(@north_manager)
+
+    assert_no_difference -> { DemoAuditEvent.count } do
+      post bulk_action_tickets_path(action_name: "resolve"), params: { ids: [ @north_ticket.id, resolved_ticket.id ] }
+    end
+
+    assert_response :see_other
+    assert_redirected_to tickets_path
+    assert_equal "open", @north_ticket.reload.state
+    assert_equal "resolved", resolved_ticket.reload.state
   end
 
   test "the local companion is read-only, tenant-scoped, and traced" do

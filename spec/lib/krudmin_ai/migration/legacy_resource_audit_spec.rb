@@ -11,7 +11,7 @@ RSpec.describe KrudminAI::Migration::LegacyResourceAudit do
     end
   end
 
-  it "maps safe legacy constants and flags Car/Passenger migration decisions that cannot be automated" do
+  it "maps safe legacy constants and flags Car/Passenger migration decisions for assisted review" do
     report = audit(<<~RUBY)
       class CarsResourceManager < Krudmin::ResourceManagers::Base
         MODEL_CLASSNAME = "Car"
@@ -34,9 +34,9 @@ RSpec.describe KrudminAI::Migration::LegacyResourceAudit do
       "LISTABLE_ATTRIBUTES" => "list"
     )
     expect(report.warnings.join(" ")).to include("HasMany", "HasOne", "assisted", "pagination")
-    expect(report.blockers.join(" ")).to include("StateMachine")
+    expect(report.classifications).to include(a_hash_including(source: "ATTRIBUTE_TYPES.status", classification: :assisted))
     expect(report.blockers.join(" ")).not_to include("HasOne", "INLINE_EDITABLE_ATTRIBUTES", "BULK_ACTIONS")
-    expect(report).not_to be_success
+    expect(report).to be_success
   end
 
   it "passes a simple supported legacy resource to the manual migration checklist" do
@@ -76,7 +76,7 @@ RSpec.describe KrudminAI::Migration::LegacyResourceAudit do
       { source: "ATTRIBUTE_TYPES.model", target: "field :model, :text", classification: :automatic, reason: "Supported scalar adapter" },
       { source: "ATTRIBUTE_TYPES.passengers", target: "has_many with child tenant, policy, field, and row-limit declarations", classification: :assisted, reason: "Requires protected relationship declarations" },
       { source: "ATTRIBUTE_TYPES.car_insurance", target: "has_one with child tenant, policy, and field declarations", classification: :assisted, reason: "Requires protected relationship declarations" },
-      { source: "ATTRIBUTE_TYPES.status", target: "no automatic mapping", classification: :blocked, reason: "StateMachine requires explicit resource actions or transitions" }
+      { source: "ATTRIBUTE_TYPES.status", target: "state_machine field with explicit authorized transition and host event declarations", classification: :assisted, reason: "Requires explicit states, host event binding, field policy, and transition authorization" }
     )
     expect(report.classifications).to include(a_hash_including(source: "ATTRIBUTE_TYPES.car_owner", classification: :blocked))
   end

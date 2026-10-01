@@ -27,6 +27,10 @@
   <% else %>
     <%= form.text_field(field, class: "krudmin-ai-input", disabled: !writable, aria: { invalid: errors.any?, describedby: described_by }) %>
   <% end %>
-  <% unless writable %><p id="<%= access_note_id %>" class="krudmin-ai-field-note"><%= t("krudmin_ai.edit_field_denied") %></p><% end %>
+  <% if adapter.is_a?(KrudminAI::Fields::StateMachine) && !adapter.direct_write? %>
+    <p id="<%= access_note_id %>" class="krudmin-ai-field-note"><%= t("krudmin_ai.state_transition_only") %></p>
+  <% elsif !writable %>
+    <p id="<%= access_note_id %>" class="krudmin-ai-field-note"><%= t("krudmin_ai.edit_field_denied") %></p>
+  <% end %>
   <p id="<%= error_id %>" class="krudmin-ai-field-error" role="alert" data-krudmin-ai-validation-error <%= "hidden" unless errors.any? %>><% errors.each do |message| %><span><%= message %></span><% end %></p>
 </div>

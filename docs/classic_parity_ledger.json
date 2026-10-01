@@ -946,12 +946,18 @@
       "implementation_files": [
         "lib/krudmin_ai/resources/action.rb",
         "lib/krudmin_ai/resources/base.rb",
+        "lib/krudmin_ai/fields/state_machine.rb",
         "lib/krudmin_ai/resource_controller.rb",
         "lib/krudmin_ai/generators/resource_contract.rb",
+        "lib/krudmin_ai/generators/state_machine_contract.rb",
+        "lib/generators/krudmin_ai/state_machine/state_machine_generator.rb",
+        "bin/verify_generator_migration_host",
         "app/views/krudmin_ai/resources/show.html.erb",
         "app/views/krudmin_ai/resources/index.html.erb",
         "app/views/krudmin_ai/ui/_list_table.html.erb",
-        "docs/actions_and_bulk_operations.md"
+        "docs/actions_and_bulk_operations.md",
+        "docs/field_adapters.md",
+        "docs/state_machines.md"
       ],
       "tests": [
         {
@@ -959,11 +965,23 @@
           "result": "passed: declared action metadata, scoped bulk declaration, routing, controller, and mutation contracts"
         },
         {
+          "command": "bundle exec rspec spec/lib/krudmin_ai/fields/state_machine_spec.rb spec/lib/krudmin_ai/resources/base_spec.rb",
+          "result": "passed: default and named AASM discovery, labels, direct-write and inline-edit denial, guarded event execution, and declared target verification"
+        },
+        {
+          "command": "cd demo && bundle exec bin/rails test test/integration/ticket_access_test.rb",
+          "result": "passed: real AASM transition, callback persistence, invalid repeat rejection, mixed-state bulk preflight, and state/callback rollback when audit fails"
+        },
+        {
+          "command": "ruby bin/verify_generator_migration_host",
+          "result": "passed: disposable Rails host generates the AASM workflow idempotently and passes generated model and tenant-scoped integration tests"
+        },
+        {
           "command": "ruby bin/verify_field_adapters_host",
           "result": "passed: generated host proves declared state transition success and invalid repeat rejection, inline PATCH, bulk controls, approved multi-record transition, and cross-tenant bulk rejection without audit leakage"
         }
       ],
-      "independent_generated_host_evidence": "Passed: the disposable generated host renders declared action and bulk controls, successfully runs audited member and bulk publish transitions, rejects invalid repeated transitions and cross-tenant bulk IDs, and updates an inline-editable field through the normal mutation path.",
+      "independent_generated_host_evidence": "Passed: disposable generated hosts render declared action and bulk controls, run audited transitions, reject invalid repeats and cross-tenant bulk IDs, and generate, reload, and test an idempotent AASM workflow scaffold.",
       "browser_accessibility_evidence": "Deferred to P13 under the delivery/evidence phases.",
       "remaining_risks": [
         "P13 must independently verify confirmations, prohibited controls, Turbo outcomes, and keyboard interaction."

@@ -3,7 +3,10 @@ class TicketsResource < KrudminAI::Resources::Base
   routes :tickets
   icon :ticket
   tenant_key :tenant
-  permit :title, :description, :state, :priority, :assignee
+  permit :title, :description, :priority, :assignee
+  field :state, :state_machine,
+    colors: { open: :warning, assigned: :info, resolved: :success },
+    transition_labels: { resolve: "Resolve" }
   %i[title description state priority assignee].each do |field|
     authorize_field field, read: ->(_record, _context) { true }, write: ->(_record, _context) { true }
   end
@@ -57,7 +60,7 @@ class TicketsResource < KrudminAI::Resources::Base
     record.assignee = context.actor.name
     true
   end
-  transition :resolve, from: %i[open assigned], to: :resolved, label: "Resolve"
+  transition :resolve, from: %i[open assigned], to: :resolved, via: :resolve, placement: :both
   bulk_action :resolve
 
   ai_field :title

@@ -752,6 +752,12 @@
   gap: var(--krudmin-ai-space-2);
   margin-block-end: var(--krudmin-ai-space-3);
 }
+.krudmin-ai-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--krudmin-ai-space-2);
+  min-inline-size: max-content;
+}
 @media (max-width: 48rem) {
   .krudmin-ai-table .krudmin-ai-priority--secondary {
     display: none;
@@ -765,6 +771,26 @@
   font-size: 0.8125rem;
   font-weight: 650;
   padding: 0.2rem 0.5rem;
+}
+.krudmin-ai-status-badge--warning {
+  background: color-mix(in srgb, #b7791f 14%, var(--krudmin-ai-surface));
+  border-color: #b7791f;
+  color: #7a4c0d;
+}
+.krudmin-ai-status-badge--success {
+  background: color-mix(in srgb, var(--krudmin-ai-success) 14%, var(--krudmin-ai-surface));
+  border-color: var(--krudmin-ai-success);
+  color: var(--krudmin-ai-success-strong);
+}
+.krudmin-ai-status-badge--info {
+  background: color-mix(in srgb, var(--krudmin-ai-accent) 12%, var(--krudmin-ai-surface));
+  border-color: var(--krudmin-ai-accent);
+  color: var(--krudmin-ai-accent);
+}
+.krudmin-ai-status-badge--danger {
+  background: color-mix(in srgb, var(--krudmin-ai-danger) 12%, var(--krudmin-ai-surface));
+  border-color: var(--krudmin-ai-danger);
+  color: var(--krudmin-ai-danger);
 }
 .krudmin-ai-boolean-badge {
   border: 1px solid;

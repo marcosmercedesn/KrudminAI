@@ -1,5 +1,6 @@
 require "krudmin_ai/fields/string"
 require "krudmin_ai/fields/scalar"
+require "krudmin_ai/fields/state_machine"
 require "krudmin_ai/fields/sensitive"
 require "krudmin_ai/fields/media"
 require "krudmin_ai/fields/belongs_to"
@@ -37,7 +38,7 @@ module KrudminAI
           @adapters ||= {
             string: String, text: Text, email: Email, password: Password, hidden: Hidden, number: Number,
             decimal: Decimal, currency: Currency, percentage: Percentage, boolean: Boolean, date: Date,
-            time: Time, datetime: DateTime, json: Json, enum: Enum, identifier: Identifier, masked: Masked,
+            time: Time, datetime: DateTime, json: Json, enum: Enum, state_machine: StateMachine, identifier: Identifier, masked: Masked,
             rich_text: RichText, file: File, image: Image, computed: Computed,
             belongs_to: BelongsTo, remote_belongs_to: RemoteBelongsTo, has_many_ids: HasManyIds
           }

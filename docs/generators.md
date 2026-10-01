@@ -22,7 +22,7 @@ rails generate krudmin_ai:resource Order
 
 Rails inflection determines resource filenames and routes, so `Person` generates `PeopleResource` and `resources :people`. Use `--namespace backoffice` to generate a namespaced controller and route block. The generator never replaces an existing generated resource, controller, policy, or test file; it updates only its managed route marker on re-run.
 
-Use `--fields name:string rank:enum joined_on:date` for deterministic scalar declarations. `--associations passengers:has_many:name,seat insurance:has_one:provider` emits relationship declarations with child authorization and tenant predicates set to `false`; replace both predicates with the host policy before use. `--workflows approve:submitted:approved` emits a similarly deny-by-default transition. Resource themes are explicit host view overrides, and audit is configured through the required engine audit provider, so neither is silently enabled by a resource generator.
+Use `--fields name:string rank:enum lifecycle:state_machine joined_on:date` for deterministic field declarations. A generated `state_machine` field requires explicit states or a compatible host model machine and rejects direct assignment by default. `--associations passengers:has_many:name,seat insurance:has_one:provider` emits relationship declarations with child authorization and tenant predicates set to `false`; replace both predicates with the host policy before use. `--workflows approve:submitted:approved` emits a similarly deny-by-default transition; add `via: :approve` after defining the corresponding host-model event. Resource themes are explicit host view overrides, and audit is configured through the required engine audit provider, so neither is silently enabled by a resource generator.
 
 Generated controllers inherit `KrudminAI::ResourceController` and contain only `resource OrdersResource`. The engine controller owns authentication through configured providers, access-context creation, tenant/policy query composition, model loading, create/update/destroy, permitted attributes, engine-owned default index/new/edit/show pages, and generic `model`, `models`, `resource_path`, `new_resource_path`, `edit_resource_path`, and `collection_path` helpers. Generated resources declare singular and plural labels; their list, form, and show fields default to `permit` attributes unless explicitly set with `list`, `form`, or `show`.
 
@@ -39,6 +39,21 @@ rails generate krudmin_ai:action ApprovePayment --resource Order
 ```
 
 The command writes an isolated resource extension at `app/resources/orders_resource_actions/approve_payment.rb` and one managed `require_relative` block in `OrdersResource`. The action initially returns `false`; an agent or maintainer must replace it with a resource-owned action implementation, declare field writes, and supply the matching authorization policy before it is available. Re-runs preserve the resource body and do not duplicate the require marker.
+
+## State Machine Generator
+
+Generate the resource first, then add an AASM-backed workflow with:
+
+```sh
+rails generate krudmin_ai:state_machine Order \
+	--attribute status \
+	--states draft submitted approved \
+	--events submit:draft:submitted approve:submitted:approved
+```
+
+Events use `name:from:to`. Add `--machine review` for a named AASM machine; generated resource transitions bind its collision-safe methods, such as `accept_review` and `may_accept_review?`. The generator writes a model concern, reload-safe initializer, model test, isolated resource extension, and one managed require block. It rejects undeclared event states and requires the resource contract to exist first.
+
+Generated transition authorizers deny by default. Replace them with host policy decisions, keep transition-only state attributes out of the resource `permit` list, and run the generated model test before enabling the workflow. See [state_machines.md](state_machines.md) for the runtime contract and direct-write rules.
 
 ## Dashboard Generator
 

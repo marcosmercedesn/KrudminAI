@@ -15,7 +15,7 @@ end
 
 Dir.mktmpdir("krudmin_ai_generator_migration") do |directory|
   host = File.join(directory, "migration_host")
-  abort "Unable to create generated host" unless system(*rails, "new", host, "--skip-bundle", "--skip-test", "--quiet")
+  abort "Unable to create generated host" unless system(*rails, "new", host, "--skip-bundle", "--quiet")
 
   gemfile = File.join(host, "Gemfile")
   File.write(gemfile, File.read(gemfile).concat("\ngem \"krudmin_ai\", path: \"#{root}\"\n"))
@@ -46,7 +46,7 @@ Dir.mktmpdir("krudmin_ai_generator_migration") do |directory|
     end
   RUBY
   audit_output = `#{RbConfig.ruby} #{File.join(root, "bin/krudmin_ai_migrate")} #{classic}`
-  abort "Classic audit did not classify Car relationships" unless audit_output.include?("ATTRIBUTE_TYPES.passengers") && audit_output.include?("blocked")
+  abort "Classic audit did not classify Car relationships" unless audit_output.include?("ATTRIBUTE_TYPES.passengers") && audit_output.include?("assisted")
 
   write_file(host, "app/models/car.rb", "class Car < ApplicationRecord; end\n")
   write_file(host, "app/policies/application_policy.rb", <<~RUBY)
@@ -95,6 +95,7 @@ Dir.mktmpdir("krudmin_ai_generator_migration") do |directory|
         create_table :cars do |table|
           table.string :tenant, null: false
           table.string :model, null: false
+          table.string :status, null: false, default: "draft"
           table.timestamps
         end
       end
@@ -118,7 +119,10 @@ Dir.mktmpdir("krudmin_ai_generator_migration") do |directory|
     end
   RUBY
   run.call(*rails, "generate", "krudmin_ai:resource", "Car", "--fields", "model:text")
+  run.call(*rails, "generate", "krudmin_ai:state_machine", "Car", "--states", "draft", "submitted", "--events", "submit:draft:submitted")
+  run.call(*rails, "generate", "krudmin_ai:state_machine", "Car", "--states", "draft", "submitted", "--events", "submit:draft:submitted")
   run.call(*rails, "db:migrate")
+  run.call(*rails, "test", "test/models/concerns/car_workflow_test.rb")
   run.call(*rails, "test", "test/integration/migrated_cars_test.rb")
 end
 

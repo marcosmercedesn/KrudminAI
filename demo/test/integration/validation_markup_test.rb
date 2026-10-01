@@ -25,13 +25,13 @@ class ValidationMarkupTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "a projected inclusion set reaches the client without leaking server-only rules" do
+  test "a transition-only state field exposes no client-side write rules" do
     get new_ticket_path
 
     assert_select "div.krudmin-ai-field[data-krudmin-ai-validation-field=?]", "state" do |fields|
-      rules = JSON.parse(fields.first["data-krudmin-ai-validation-rules"])
-      assert_equal DemoTicket::STATES, rules["one_of"]
-      assert rules["required"]
+      assert_nil fields.first["data-krudmin-ai-validation-rules"]
+      assert_select "select#demo_ticket_state[disabled]"
+      assert_select ".krudmin-ai-field-note", text: "Use an available transition to change this state."
     end
   end
 
